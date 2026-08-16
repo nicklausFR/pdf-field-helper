@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pdf-field-helper-v102';
+const CACHE_NAME = 'pdf-field-helper-v1.1';
 const APP_SHELL = [
   './',
   './index.html',

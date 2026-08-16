@@ -35,4 +35,4 @@ HTML, CSS and JavaScript using PDF.js and pdf-lib.
 
 ## Status
 
-**v1.0**
+**v1.1**
