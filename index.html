@@ -436,8 +436,12 @@ function schedulePlacementTextAutoSize(px,py){
     }catch(_e){}
   },65);
 }
+function placementEventHitsExistingOverlay(ev){
+  const target=ev?.target;
+  return !!target?.closest?.('.field,.check-zone,.image-zone,.mask-zone,.text-resize,.check-resize,.image-resize,.mask-resize');
+}
 function handlePlacementPointerMove(ev){
-  if(!pendingPlacement)return;
+  if(!pendingPlacement||placementEventHitsExistingOverlay(ev))return;
   const pp=pendingPlacement,g=document.getElementById('placementGhost');if(!g)return;
   if(pp.type==='text'&&pp.stage==='anchored'){
     const surface=document.getElementById('pageSurface');if(!surface)return;
@@ -561,7 +565,11 @@ function finalizePlacement(pp){
   }
 }
 function handlePlacementClick(ev){
-  if(!pendingPlacement||ev.button!==0)return;
+  // A short resize/move of an existing overlay can still generate a browser click.
+  // The placement tool must never consume that click; otherwise a tiny resize may
+  // anchor/finalize a new text field, while a larger drag appears to work because
+  // browsers suppress the click after sufficient movement.
+  if(!pendingPlacement||ev.button!==0||placementEventHitsExistingOverlay(ev))return;
   const pp=pendingPlacement;
   // + Texte : 1er clic = point de départ, 2e clic = confirmation / largeur.
   if(pp.type==='text'&&pp.stage==='anchored'){
@@ -812,13 +820,19 @@ function updateFieldTextLayer(e){
   if(!e||!e.isConnected)return;
   removeFieldTextLayer(e.dataset.id);
   if(fieldBoxData(e).length){e.classList.remove('mirrored');return;}
+  // En mode édition, le textarea natif affiche le texte et le caret. En mode calque
+  // (ou dès que le champ n'a plus le focus), seul le calque miroir est visible.
+  // Cela évite que le texte natif et le miroir soient affichés simultanément pendant
+  // un redimensionnement, notamment pour les petits déplacements de la poignée.
+  const editing=document.activeElement===e&&!document.body.classList.contains('adjust');
+  if(editing){e.classList.remove('mirrored');lockEditorTextColor(e,fieldTextColor(e),false);return;}
   const o=document.getElementById('overlay');if(!o)return;
   const x=parseFloat(e.style.left)||0,y=parseFloat(e.style.top)||0,w=parseFloat(e.style.width)||40,h=parseFloat(e.style.height)||16;
   const ly=fieldLineData(e);
   const fsz=fieldFontSize(e);let top=(ly!=null&&autoLineOn)?((ly-y)-fsz*.92-1+autoYOffset):(Math.max(0,(h-fsz*1.18)/2)+autoYOffset);
   const l=document.createElement('div');l.className='field-text-layer';l.dataset.forId=e.dataset.id;l.textContent=e.value||'';
   Object.assign(l.style,{left:(x+2)+'px',top:(y+top)+'px',width:Math.max(1,w-4)+'px',minHeight:Math.max(h,fsz*1.3)+'px',fontFamily:cssFont(fieldFontFamily(e)),fontSize:fsz+'px',textAlign:e.style.textAlign||'left'});lockEditorTextColor(l,fieldTextColor(e),false);
-  o.appendChild(l);e.classList.add('mirrored');
+  o.appendChild(l);e.classList.add('mirrored');lockEditorTextColor(e,fieldTextColor(e),true);
 }
 function updateLineGuide(e){
   updateFieldBlueGeometry(e);
@@ -1571,10 +1585,32 @@ async function detectEditableFieldsOnPage(){
 }
 
 function addText(){beginPlacement('text');}
-function createTextDom(d){const o=document.getElementById('overlay');if(!o)return;const e=document.createElement('textarea');e.className='field';e.dataset.id=d.id;e.value=d.value||'';e.spellcheck=false;if(d.boxes&&d.boxes.length)e.dataset.boxes=JSON.stringify(d.boxes);if(Number.isFinite(+d.lineY))e.dataset.lineY=(+d.lineY).toFixed(2);e.dataset.fontFamily=d.fontFamily||fontFamily.value||'Helvetica';e.dataset.fontSize=String(Number.isFinite(+d.fontSize)?+d.fontSize:fs());e.dataset.textColor=d.textColor||textColor.value||'#000000';Object.assign(e.style,{left:d.x+'px',top:d.y+'px',width:d.w+'px',height:d.h+'px',textAlign:(d.textAlign==='center'||d.textAlign==='right')?d.textAlign:'left',fontFamily:cssFont(e.dataset.fontFamily),fontSize:fieldFontSize(e)+'px'});o.appendChild(e);lockEditorTextColor(e,fieldTextColor(e),!!(d.boxes&&d.boxes.length));const h=document.createElement('div');h.className='text-resize';h.dataset.forId=d.id;o.appendChild(h);updateTextHandle(e,h);enableTextDrag(e,h);enableTextResize(e,h);e.addEventListener('pointerdown',ev=>selectFromEvent(ev,e));e.addEventListener('focus',()=>{if(!selectedItems.has(e))select(e);removeFieldTextLayer(e.dataset.id);e.classList.remove('mirrored');scheduleTextRecognition(e,true);updateBoxCharLayer(e);});e.addEventListener('blur',()=>{updateBoxCharLayer(e);updateFieldTextLayer(e);});e.addEventListener('input',()=>{updateBoxCharLayer(e);updateLineGuide(e);updateFieldTextLayer(e);});e.addEventListener('click',()=>{if(e.classList.contains('box-detected'))updateBoxCharLayer(e);});e.addEventListener('keyup',()=>{if(e.classList.contains('box-detected'))updateBoxCharLayer(e);});e.addEventListener('select',()=>{if(e.classList.contains('box-detected'))updateBoxCharLayer(e);});if(d.boxes&&d.boxes.length){e.classList.add('box-detected');updateBoxCharLayer(e);}else if(Number.isFinite(+d.lineY)){e.classList.add('line-detected');updateLineGuide(e);}else scheduleTextRecognition(e,false);updateFieldTextLayer(e);}
+function createTextDom(d){const o=document.getElementById('overlay');if(!o)return;const e=document.createElement('textarea');e.className='field';e.dataset.id=d.id;e.value=d.value||'';e.spellcheck=false;if(d.boxes&&d.boxes.length)e.dataset.boxes=JSON.stringify(d.boxes);if(Number.isFinite(+d.lineY))e.dataset.lineY=(+d.lineY).toFixed(2);e.dataset.fontFamily=d.fontFamily||fontFamily.value||'Helvetica';e.dataset.fontSize=String(Number.isFinite(+d.fontSize)?+d.fontSize:fs());e.dataset.textColor=d.textColor||textColor.value||'#000000';Object.assign(e.style,{left:d.x+'px',top:d.y+'px',width:d.w+'px',height:d.h+'px',textAlign:(d.textAlign==='center'||d.textAlign==='right')?d.textAlign:'left',fontFamily:cssFont(e.dataset.fontFamily),fontSize:fieldFontSize(e)+'px'});o.appendChild(e);lockEditorTextColor(e,fieldTextColor(e),!!(d.boxes&&d.boxes.length));const h=document.createElement('div');h.className='text-resize';h.dataset.forId=d.id;o.appendChild(h);updateTextHandle(e,h);enableTextDrag(e,h);enableTextResize(e,h);e.addEventListener('pointerdown',ev=>selectFromEvent(ev,e));e.addEventListener('focus',()=>{if(!selectedItems.has(e))select(e);removeFieldTextLayer(e.dataset.id);e.classList.remove('mirrored');lockEditorTextColor(e,fieldTextColor(e),e.classList.contains('box-detected'));if(!fieldBoxData(e).length&&fieldLineData(e)!=null)updateLineGuide(e);else scheduleTextRecognition(e,true);updateBoxCharLayer(e);});e.addEventListener('blur',()=>{updateBoxCharLayer(e);updateFieldTextLayer(e);});e.addEventListener('input',()=>{updateBoxCharLayer(e);updateLineGuide(e);updateFieldTextLayer(e);});e.addEventListener('click',()=>{if(e.classList.contains('box-detected'))updateBoxCharLayer(e);});e.addEventListener('keyup',()=>{if(e.classList.contains('box-detected'))updateBoxCharLayer(e);});e.addEventListener('select',()=>{if(e.classList.contains('box-detected'))updateBoxCharLayer(e);});if(d.boxes&&d.boxes.length){e.classList.add('box-detected');updateBoxCharLayer(e);}else if(Number.isFinite(+d.lineY)){e.classList.add('line-detected');updateLineGuide(e);}else scheduleTextRecognition(e,false);updateFieldTextLayer(e);}
 function updateTextHandle(e,h){const x=parseFloat(e.style.left),y=parseFloat(e.style.top),w=parseFloat(e.style.width),hh=parseFloat(e.style.height);h.style.left=(x+w-5)+'px';h.style.top=(y+hh-5)+'px';}
-function enableTextDrag(e,h){let sx,sy,ox,oy,drag=false;e.addEventListener('pointerdown',ev=>{if(!document.body.classList.contains('adjust'))return;drag=true;e.classList.add('dragging');sx=ev.clientX;sy=ev.clientY;ox=parseFloat(e.style.left);oy=parseFloat(e.style.top);e.setPointerCapture(ev.pointerId);ev.preventDefault();});e.addEventListener('pointermove',ev=>{if(!drag)return;const w=parseFloat(e.style.width),hh=parseFloat(e.style.height);e.style.left=Math.max(0,Math.min(pageW-w,ox+(ev.clientX-sx)/scaleNow))+'px';e.style.top=Math.max(0,Math.min(pageH-hh,oy+(ev.clientY-sy)/scaleNow))+'px';updateTextHandle(e,h);syncBoxLayerGeometry(e);});e.addEventListener('pointerup',()=>{drag=false;e.classList.remove('dragging');scheduleTextRecognition(e,true);});e.addEventListener('pointercancel',()=>{drag=false;e.classList.remove('dragging');});}
-function enableTextResize(e,h){let sx,sy,ow,oh,on=false;h.addEventListener('pointerdown',ev=>{if(!document.body.classList.contains('adjust'))return;select(e);on=true;sx=ev.clientX;sy=ev.clientY;ow=parseFloat(e.style.width);oh=parseFloat(e.style.height);h.setPointerCapture(ev.pointerId);ev.preventDefault();ev.stopPropagation();});h.addEventListener('pointermove',ev=>{if(!on)return;const x=parseFloat(e.style.left),y=parseFloat(e.style.top);e.style.width=Math.max(4,Math.min(pageW-x,ow+(ev.clientX-sx)/scaleNow))+'px';e.style.height=Math.max(4,Math.min(pageH-y,oh+(ev.clientY-sy)/scaleNow))+'px';updateTextHandle(e,h);syncBoxLayerGeometry(e);});h.addEventListener('pointerup',()=>{on=false;scheduleTextRecognition(e,true);});}
+function applyBoxBaseline(e,boxes,announce=false){
+  if(!boxes||boxes.length<2)return false;
+  const ys=boxes.map(b=>+b.lineY).filter(Number.isFinite).sort((a,b)=>a-b);
+  if(ys.length){const m=Math.floor(ys.length/2),line=ys.length%2?ys[m]:(ys[m-1]+ys[m])/2;e.dataset.lineY=(+line).toFixed(2);e.classList.add('line-detected');updateLineGuide(e);}
+  updateBoxCharLayer(e);collectCurrentPage();if(announce)setStatus(`Boxes + baseline detected: ${boxes.length} characters`);return true;
+}
+function enableTextDrag(e,h){let sx,sy,ox,oy,drag=false,wasBoxed=false,startLineY=null;e.addEventListener('pointerdown',ev=>{if(!document.body.classList.contains('adjust'))return;drag=true;wasBoxed=fieldBoxData(e).length>0;startLineY=fieldLineData(e);clearTimeout(e._textDetectTimer);e.classList.add('dragging');sx=ev.clientX;sy=ev.clientY;ox=parseFloat(e.style.left);oy=parseFloat(e.style.top);e.setPointerCapture(ev.pointerId);ev.preventDefault();});e.addEventListener('pointermove',ev=>{if(!drag)return;const w=parseFloat(e.style.width),hh=parseFloat(e.style.height);e.style.left=Math.max(0,Math.min(pageW-w,ox+(ev.clientX-sx)/scaleNow))+'px';e.style.top=Math.max(0,Math.min(pageH-hh,oy+(ev.clientY-sy)/scaleNow))+'px';updateTextHandle(e,h);syncBoxLayerGeometry(e);});e.addEventListener('pointerup',()=>{if(!drag)return;drag=false;e.classList.remove('dragging');
+  // Une zone déjà à cases conserve exactement l'ancien comportement très agressif :
+  // après déplacement on réanalyse et elle se recale sur les cases imprimées.
+  if(wasBoxed){scheduleTextRecognition(e,true);return;}
+  // Pour un champ classique, on tente UNIQUEMENT la détection de cases. Cela permet
+  // de poser/déplacer un champ classique sur une rangée de cases et de retrouver le
+  // snap automatique, sans relancer le détecteur de ligne qui causait les régressions.
+  const boxes=autoBoxDetectOn?detectBoxesUnderField(e,false):[];
+  if(applyBoxBaseline(e,boxes,true))return;
+  const newY=parseFloat(e.style.top),dy=newY-oy;
+  if(Number.isFinite(startLineY)){e.dataset.lineY=(startLineY+dy).toFixed(2);e.classList.add('line-detected');updateLineGuide(e);}else{updateFieldBlueGeometry(e);updateFieldTextLayer(e);}collectCurrentPage();
+});e.addEventListener('pointercancel',()=>{drag=false;e.classList.remove('dragging');});}
+function enableTextResize(e,h){let sx,sy,ow,oh,on=false,wasBoxed=false;h.addEventListener('pointerdown',ev=>{if(!document.body.classList.contains('adjust'))return;select(e);on=true;wasBoxed=fieldBoxData(e).length>0;sx=ev.clientX;sy=ev.clientY;ow=parseFloat(e.style.width);oh=parseFloat(e.style.height);h.setPointerCapture(ev.pointerId);ev.preventDefault();ev.stopPropagation();});h.addEventListener('pointermove',ev=>{if(!on)return;const x=parseFloat(e.style.left),y=parseFloat(e.style.top);e.style.width=Math.max(4,Math.min(pageW-x,ow+(ev.clientX-sx)/scaleNow))+'px';e.style.height=Math.max(4,Math.min(pageH-y,oh+(ev.clientY-sy)/scaleNow))+'px';updateTextHandle(e,h);syncBoxLayerGeometry(e);});h.addEventListener('pointerup',()=>{if(!on)return;on=false;
+  // Les zones à cases gardent le comportement historique : le resize relance leur
+  // détection complète afin qu'elles se remettent précisément sur les séparateurs.
+  if(wasBoxed){scheduleTextRecognition(e,true);return;}
+  const classicBaseline=fieldLineData(e)!=null;if(classicBaseline){updateLineGuide(e);collectCurrentPage();}else scheduleTextRecognition(e,true);
+});}
 
 function addCheck(){beginPlacement('check');}
 function setCheckDetected(b,on){if(on){b.dataset.detected='1';b.classList.add('check-detected');}else{delete b.dataset.detected;b.classList.remove('check-detected');}const c=b.querySelector('input');b.classList.toggle('checked',!!c?.checked);}
@@ -1641,7 +1677,7 @@ function enableBoxDrag(b,h){let sx,sy,ox,oy,on=false;b.addEventListener('pointer
 function enableBoxResize(b,h){let sx,sy,ow,oh,on=false;h.addEventListener('pointerdown',ev=>{if(!document.body.classList.contains('adjust'))return;select(b);on=true;sx=ev.clientX;sy=ev.clientY;ow=parseFloat(b.style.width);oh=parseFloat(b.style.height);h.setPointerCapture(ev.pointerId);ev.preventDefault();ev.stopPropagation();});h.addEventListener('pointermove',ev=>{if(!on)return;const x=parseFloat(b.style.left),y=parseFloat(b.style.top);b.style.width=Math.max(10,Math.min(pageW-x,ow+(ev.clientX-sx)/scaleNow))+'px';b.style.height=Math.max(10,Math.min(pageH-y,oh+(ev.clientY-sy)/scaleNow))+'px';});h.addEventListener('pointerup',()=>on=false);}
 
 function collectCurrentPage(){const o=document.getElementById('overlay');if(!o||!pdfProxy)return;const st=getPageState(currentPage);st.fields=[...o.querySelectorAll('.field')].map(e=>({id:e.dataset.id,x:+parseFloat(e.style.left).toFixed(2),y:+parseFloat(e.style.top).toFixed(2),w:+parseFloat(e.style.width).toFixed(2),h:+parseFloat(e.style.height).toFixed(2),value:e.value,fontFamily:fieldFontFamily(e),fontSize:fieldFontSize(e),textColor:fieldTextColor(e),textAlign:(e.style.textAlign==='center'||e.style.textAlign==='right')?e.style.textAlign:'left',boxes:fieldBoxData(e),lineY:fieldLineData(e)}));st.checks=[...o.querySelectorAll('.check-zone')].map(e=>({id:e.dataset.id,x:+parseFloat(e.style.left).toFixed(2),y:+parseFloat(e.style.top).toFixed(2),w:+parseFloat(e.style.width).toFixed(2),h:+parseFloat(e.style.height).toFixed(2),checked:e.querySelector('input').checked,detected:e.dataset.detected==='1'}));st.images=[...o.querySelectorAll('.image-zone')].map(e=>({id:e.dataset.id,x:+parseFloat(e.style.left).toFixed(2),y:+parseFloat(e.style.top).toFixed(2),w:+parseFloat(e.style.width).toFixed(2),h:+parseFloat(e.style.height).toFixed(2),aspect:parseFloat(e.dataset.aspect)||1,src:e.querySelector('img').src}));st.masks=[...o.querySelectorAll('.mask-zone')].map(e=>({id:e.dataset.id,x:+parseFloat(e.style.left).toFixed(2),y:+parseFloat(e.style.top).toFixed(2),w:+parseFloat(e.style.width).toFixed(2),h:+parseFloat(e.style.height).toFixed(2)}));}
-function deleteSelected(){const items=[...selectedItems];if(!items.length){setStatus('Select an area');return;}for(const el of items){if(el.classList.contains('field')){const h=document.querySelector(`.text-resize[data-for-id="${el.dataset.id}"]`);if(h)h.remove();removeBoxCharLayer(el.dataset.id);removeLineGuide(el.dataset.id);}el.remove();}selectedItems.clear();selected=null;collectCurrentPage();setStatus(items.length>1?items.length+' areas deleted':'Area deleted');}
+function deleteSelected(){const items=[...selectedItems];if(!items.length){setStatus('Select an area');return;}for(const el of items){if(el.classList.contains('field')){const id=el.dataset.id;clearTimeout(el._textDetectTimer);clearTimeout(el._boxDetectTimer);const h=document.querySelector(`.text-resize[data-for-id="${id}"]`);if(h)h.remove();removeBoxCharLayer(id);removeLineGuide(id);removeFieldTextLayer(id);}el.remove();}selectedItems.clear();selected=null;collectCurrentPage();setStatus(items.length>1?items.length+' areas deleted':'Area deleted');}
 function selectedData(){if(!selected)return null;const base={x:parseFloat(selected.style.left)||0,y:parseFloat(selected.style.top)||0,w:parseFloat(selected.style.width)||18,h:parseFloat(selected.style.height)||18};if(selected.classList.contains('field'))return {...base,type:'field',value:selected.value||'',fontFamily:fieldFontFamily(selected),fontSize:fieldFontSize(selected),textColor:fieldTextColor(selected),textAlign:(selected.style.textAlign==='center'||selected.style.textAlign==='right')?selected.style.textAlign:'left',boxes:fieldBoxData(selected),lineY:fieldLineData(selected)};if(selected.classList.contains('check-zone'))return {...base,type:'check',checked:!!selected.querySelector('input')?.checked,detected:selected.dataset.detected==='1'};if(selected.classList.contains('image-zone'))return {...base,type:'image',aspect:parseFloat(selected.dataset.aspect)||1,src:selected.querySelector('img')?.src||''};if(selected.classList.contains('mask-zone'))return {...base,type:'mask'};return null;}
 function copySelected(){const d=selectedData();if(!d){setStatus('Select an area');return;}clipboardItem=JSON.parse(JSON.stringify(d));setStatus('Area copied');}
 function pasteSelected(){if(!pdfProxy||!clipboardItem){setStatus('Nothing to paste');return;}collectCurrentPage();const d=JSON.parse(JSON.stringify(clipboardItem)),off=12,oldX=d.x||0;d.x=Math.max(0,Math.min(pageW-d.w,oldX+off));d.y=Math.max(0,Math.min(pageH-d.h,(d.y||0)+off));if(d.type==='field'){const dx=d.x-oldX,dy=d.y-(clipboardItem.y||0);if(d.boxes?.length)d.boxes=d.boxes.map(b=>({...b,x:+(b.x+dx).toFixed(2)}));if(Number.isFinite(+d.lineY))d.lineY=+(+d.lineY+dy).toFixed(2);}let el=null;if(d.type==='field'){d.id=uid('text');getPageState(currentPage).fields.push(d);createTextDom(d);applyFont();el=document.querySelector(`.field[data-id="${d.id}"]`);}else if(d.type==='check'){d.id=uid('check');d.detected=false;getPageState(currentPage).checks.push(d);createCheckDom(d);el=document.querySelector(`.check-zone[data-id="${d.id}"]`);if(el)scheduleCheckDetection(el,false);}else if(d.type==='image'){d.id=uid('img');getPageState(currentPage).images.push(d);createImageDom(d);el=document.querySelector(`.image-zone[data-id="${d.id}"]`);}else if(d.type==='mask'){d.id=uid('mask');getPageState(currentPage).masks.push(d);createMaskDom(d);el=document.querySelector(`.mask-zone[data-id="${d.id}"]`);}if(el){select(el);clipboardItem={...clipboardItem,x:d.x,y:d.y};enterAdjust();collectCurrentPage();setStatus('Area pasted');}}
