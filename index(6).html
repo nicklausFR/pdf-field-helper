@@ -1,0 +1,1767 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PDF Field Helper v1.0</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1769aa">
+<link rel="icon" href="icons/icon-192.png">
+<style>
+:root{--blue:#1769aa;--red:#c52a2a;--menu-scale:1}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#eceff3;color:#222;overflow-x:hidden}
+.toolbar{position:sticky;top:0;z-index:50;display:flex;flex-direction:column;gap:8px;align-items:stretch;padding:calc(8px * var(--menu-scale));background:#eef1f4;border-bottom:1px solid #cfd4da;font-size:calc(14px * var(--menu-scale))}
+.toolgroup{display:flex;flex-wrap:wrap;gap:calc(6px * var(--menu-scale));align-items:center;width:100%;padding:calc(20px * var(--menu-scale)) calc(8px * var(--menu-scale)) calc(7px * var(--menu-scale));position:relative;background:#fff;border:1px solid #cfd4da;border-radius:7px}
+.group-title{position:absolute;left:8px;top:4px;font-size:.78em;font-weight:700;color:#65707c;text-transform:uppercase;letter-spacing:.04em}
+button,select,input[type=number]{font-family:inherit;font-size:calc(14px * var(--menu-scale));padding:calc(7px * var(--menu-scale)) calc(9px * var(--menu-scale));border:1px solid #aeb6bf;border-radius:calc(6px * var(--menu-scale));background:#fff}
+button{cursor:pointer}button.save-ok{font-weight:700;box-shadow:0 0 0 2px rgba(46,125,50,.18) inset}button.primary{background:var(--blue);color:#fff;border-color:var(--blue)}button.danger{color:#9d1c1c}
+button.bigctl{box-sizing:border-box;-webkit-appearance:none;appearance:none;font:inherit;line-height:normal;min-width:calc(38px * var(--menu-scale));height:auto;min-height:0;padding:calc(7px * var(--menu-scale)) calc(9px * var(--menu-scale));margin:0;font-weight:600;display:inline-flex;flex:0 0 auto;align-items:center;justify-content:center;vertical-align:middle}button.bigctl:focus{outline:auto}
+label.inline{display:flex;align-items:center;gap:calc(5px * var(--menu-scale));font-size:calc(13px * var(--menu-scale))}.status{font-size:calc(12px * var(--menu-scale));white-space:pre-wrap;word-break:break-word}.messages-panel{width:100%;background:#fff;border:1px solid #cfd4da;border-radius:7px;overflow:hidden}.messages-title{cursor:pointer;display:block;padding:calc(6px * var(--menu-scale)) calc(8px * var(--menu-scale));font-size:calc(11px * var(--menu-scale));font-weight:700;color:#65707c;text-transform:uppercase;letter-spacing:.04em;user-select:none}.messages-panel[open] .messages-title{border-bottom:1px solid #e2e5e8}.messages-panel .status{max-height:calc(110px * var(--menu-scale));overflow:auto;padding:calc(7px * var(--menu-scale)) calc(8px * var(--menu-scale))}.debug-footer{padding:0 18px 18px;width:100%}
+.navbar{display:flex;align-items:center;gap:calc(5px * var(--menu-scale))}.pair{display:inline-flex;flex-wrap:nowrap;align-items:center}.navbar.nav-disabled{opacity:.55}.navbar.nav-disabled button,.navbar.nav-disabled input{pointer-events:none}.pair{display:flex;gap:calc(3px * var(--menu-scale));align-items:center}.sep{width:1px;align-self:stretch;min-height:calc(28px * var(--menu-scale));background:#cfd4da;margin:0 calc(5px * var(--menu-scale));flex:0 0 1px}.menuval{font-size:calc(12px * var(--menu-scale));min-width:calc(40px * var(--menu-scale));text-align:center}
+#pageNumber{width:calc(54px * var(--menu-scale));text-align:center}.zoomval{font-size:calc(12px * var(--menu-scale));min-width:calc(42px * var(--menu-scale));text-align:center}.stage{padding:18px;display:block;width:100%;max-width:100vw;overflow-x:auto;overflow-y:visible;scrollbar-width:none}.stage::-webkit-scrollbar{height:0}.horizontal-scrollbar{position:fixed;left:0;right:0;bottom:0;height:17px;overflow-x:auto;overflow-y:hidden;z-index:90;background:#eef1f4;border-top:1px solid #cfd4da;display:none}.horizontal-scrollbar-inner{height:1px}.horizontal-scrollbar.visible{display:block}body.has-horizontal-scrollbar{padding-bottom:17px}.viewport{position:relative;margin-left:auto;margin-right:auto}.pageSurface{position:absolute;left:0;top:0;transform-origin:top left;background:#fff;box-shadow:0 2px 14px rgba(0,0,0,.22);overflow:hidden;isolation:isolate;contain:paint;backface-visibility:hidden}
+#pdfCanvas{position:absolute;left:0;top:0;width:100%;height:100%;z-index:1}.overlay{position:absolute;left:0;top:0;width:100%;height:100%;z-index:2}
+.field{position:absolute;box-sizing:border-box;color:#111;background:rgba(35,135,210,.14);border:0;padding:1px 2px;outline:none;border-radius:1px;z-index:4;resize:none;overflow:hidden;white-space:pre-wrap}
+.field:focus{background:#fff}.field.selected{outline:0;box-shadow:none;background:rgba(35,135,210,.14)}
+body.adjust .field{cursor:move;outline:0;box-shadow:none;background:rgba(35,135,210,.14);user-select:none}body.adjust .field.selected,body.adjust .field.dragging{outline:0;box-shadow:none;background:rgba(35,135,210,.26)}body.clean .field{border-color:transparent!important;background:transparent!important;outline:0!important;box-shadow:none!important}body.clean .field.selected{outline:0!important;box-shadow:none!important}.field.dragging{will-change:left,top;backface-visibility:hidden}
+.field-text-layer{position:absolute;pointer-events:none;z-index:6;box-sizing:border-box;overflow:visible;white-space:pre-wrap;word-break:break-word;line-height:1.2;background:transparent}.field.mirrored:not(:focus){color:transparent!important}.field:focus + .field-text-layer{display:none}body.clean .field-text-layer{display:block}
+.box-char-layer{position:absolute;pointer-events:none;z-index:6;color:#111;overflow:visible}.box-char{position:absolute;top:0;height:100%;display:flex;align-items:center;justify-content:center;white-space:pre;line-height:1}.box-guide{position:absolute;top:0;height:100%;box-sizing:border-box;border:0;background:transparent;pointer-events:none;display:none}body.adjust .box-guide{display:block;background:rgba(35,135,210,.12)}.field.box-detected{color:transparent;caret-color:#111;background:rgba(35,135,210,.12)}.field.box-detected::selection{background:rgba(200,0,0,.12);color:transparent}body.adjust .field.box-detected{outline:0;box-shadow:none;background:rgba(35,135,210,.12)}body.adjust .field.box-detected.selected{outline:0;box-shadow:none;background:rgba(35,135,210,.24)}.field.box-detected.selected{outline:0;box-shadow:none;background:rgba(35,135,210,.12)}body.adjust .box-char-layer{pointer-events:none}body.clean .box-char-layer{color:#111}body.clean .box-guide{display:none!important}body.clean .field.box-detected{border-color:transparent!important;background:transparent!important;box-shadow:none!important}
+.line-guide-layer{position:absolute;pointer-events:none;z-index:6}.line-guide{position:absolute;height:0;border-top:1px dashed #1687a7;pointer-events:none}.field.line-detected{background:rgba(22,135,167,.025)}body.clean .line-guide-layer{display:none!important}body.clean .field.line-detected{background:transparent!important}
+.text-resize{position:absolute;width:6px;height:6px;display:none;cursor:nwse-resize;z-index:8;background:var(--red);border-radius:2px}body.adjust .text-resize{display:block}body.clean .text-resize{display:none!important}
+.image-zone{position:absolute;box-sizing:border-box;border:0;background:transparent;z-index:4}.image-zone img{width:100%;height:100%;display:block;object-fit:contain;pointer-events:none}.image-zone::after{content:"";position:absolute;inset:0;pointer-events:none;background:rgba(35,135,210,.14)}.image-zone.selected{outline:0}body.adjust .image-zone{cursor:move;outline:0}body.adjust .image-zone::after{background:rgba(35,135,210,.14)}body.adjust .image-zone.selected::after,body.adjust .image-zone.dragging::after{background:rgba(35,135,210,.26)}body.clean .image-zone::after{display:none}
+.image-resize,.mask-resize{position:absolute;width:6px;height:6px;right:-3px;bottom:-3px;display:none;cursor:nwse-resize;z-index:9;background:var(--red);border-radius:2px}body.adjust .image-resize,body.adjust .mask-resize{display:block}body.clean .image-resize,body.clean .mask-resize{display:none!important}
+.mask-zone{position:absolute;box-sizing:border-box;background:#fff;border:0;outline:0;z-index:3;pointer-events:none}.mask-zone.selected{border:0;outline:0}body.adjust .mask-zone{border:0;cursor:move;pointer-events:auto;background:linear-gradient(rgba(90,90,90,.18),rgba(90,90,90,.18)),#fff}body.adjust .mask-zone.selected,body.adjust .mask-zone.dragging{border:0;background:linear-gradient(rgba(90,90,90,.30),rgba(90,90,90,.30)),#fff}body.clean .mask-zone{border:0!important;outline:0!important;pointer-events:none!important;background:#fff!important}
+.check-zone{position:absolute;box-sizing:border-box;z-index:5;display:flex;align-items:center;justify-content:center;background:rgba(35,135,210,.16)}.check-zone input{margin:0;width:100%;height:100%;cursor:pointer}.check-zone.selected{outline:0}body.adjust .check-zone{cursor:move;background:rgba(35,135,210,.16)}body.adjust .check-zone.selected,body.adjust .check-zone.dragging{background:rgba(35,135,210,.30)}body.clean .check-zone{background:transparent!important}.check-resize{position:absolute;width:6px;height:6px;right:-3px;bottom:-3px;display:none;cursor:nwse-resize;z-index:9;background:var(--red);border-radius:2px}body.adjust .check-resize{display:block}.check-zone.check-detected input{-webkit-appearance:none;appearance:none;border:0;background:transparent;outline:0}.check-zone.check-detected .check-mark{display:none;position:absolute;inset:0;pointer-events:none}.check-zone.check-detected.checked .check-mark{display:block}.check-zone.check-detected .check-mark:before,.check-zone.check-detected .check-mark:after{content:"";position:absolute;left:12%;top:47%;width:76%;height:1.6px;background:#111;transform-origin:center}.check-zone.check-detected .check-mark:before{transform:rotate(45deg)}.check-zone.check-detected .check-mark:after{transform:rotate(-45deg)}body.adjust .check-zone.check-detected.selected{outline:0;box-shadow:none;background:rgba(35,135,210,.30)}.check-zone.check-detected input{display:block;box-sizing:border-box;width:100%;height:100%;padding:0;margin:0}.check-zone.check-detected .check-resize{background:#2b8a3e}body.clean .check-zone.selected,body.clean .check-zone.check-detected.selected{outline:0!important;box-shadow:none!important}body.clean .check-resize{display:none!important}
+.placement-ghost{position:absolute;z-index:30;pointer-events:none;box-sizing:border-box;border:0;background:rgba(35,135,210,.20);display:none}.placement-ghost.check{border-radius:2px}.placement-ghost.mask{background:linear-gradient(rgba(90,90,90,.22),rgba(90,90,90,.22)),rgba(255,255,255,.92)}.placement-ghost.image{background:rgba(35,135,210,.16)}
+.empty{padding:60px 20px;text-align:center;color:#666}
+.toolbar-top{display:flex;justify-content:space-between;align-items:center;min-height:calc(28px * var(--menu-scale));padding:0 calc(2px * var(--menu-scale));gap:calc(8px * var(--menu-scale))}
+.app-heading{display:flex;align-items:baseline;gap:calc(8px * var(--menu-scale));min-width:0;color:#65707c}
+.app-name{font-size:calc(16px * var(--menu-scale));font-weight:700;line-height:1;white-space:nowrap}
+.app-version{font-size:calc(12px * var(--menu-scale));font-weight:700;opacity:.75;line-height:1;white-space:nowrap}
+.language-switch{display:flex;align-items:center;gap:calc(6px * var(--menu-scale));font-size:calc(12px * var(--menu-scale));font-weight:700;color:#65707c;line-height:1}
+.language-switch span{display:inline-flex;align-items:center;line-height:1;padding-top:1px}
+.language-switch select{height:calc(30px * var(--menu-scale));padding:calc(3px * var(--menu-scale)) calc(6px * var(--menu-scale));font-size:calc(12px * var(--menu-scale));margin:0}
+@media(max-width:700px){.toolbar-top{justify-content:space-between;flex-wrap:wrap}.app-heading{order:1}.language-switch{order:2;margin-left:auto}.toolgroup{width:100%}}
+
+/* v73: hors mode réglage, conserver exactement le bleutage des zones éditables.
+   Le mode clean (Masquer cadres) reste le seul mode qui retire le bleutage. */
+body:not(.adjust):not(.clean) .field,
+body:not(.adjust):not(.clean) .field.line-detected,
+body:not(.adjust):not(.clean) .field.box-detected {
+  background:rgba(35,135,210,.14)!important;
+}
+body:not(.adjust):not(.clean) .check-zone {
+  background:rgba(35,135,210,.16)!important;
+}
+body:not(.adjust):not(.clean) .image-zone::after {
+  display:block!important;
+  background:rgba(35,135,210,.14)!important;
+}
+body:not(.adjust) .text-resize,
+body:not(.adjust) .check-resize,
+body:not(.adjust) .image-resize,
+body:not(.adjust) .mask-resize {
+  display:none!important;
+}
+
+/* v81: le bleutage suit la ligne de base détectée au lieu d'être simplement aminci.
+   --blue-top/--blue-bottom sont calculés par JS pour que le ruban se termine sur
+   la ligne détectée et remonte d'une hauteur cohérente avec la taille du texte. */
+.field,
+.field.selected,
+body.adjust .field,
+body:not(.adjust):not(.clean) .field,
+body:not(.adjust):not(.clean) .field.line-detected,
+body:not(.adjust):not(.clean) .field.box-detected,
+body.adjust .field.box-detected,
+body.adjust .field.box-detected.selected,
+.field.box-detected,
+.field.box-detected.selected {
+  --blue-top:18%;
+  --blue-bottom:88%;
+  background:linear-gradient(to bottom,
+    transparent 0 var(--blue-top),
+    rgba(35,135,210,.14) var(--blue-top) var(--blue-bottom),
+    transparent var(--blue-bottom) 100%)!important;
+}
+body.adjust .field.selected,
+body.adjust .field.dragging,
+body.adjust .field.box-detected.selected {
+  background:linear-gradient(to bottom,
+    transparent 0 var(--blue-top),
+    rgba(35,135,210,.26) var(--blue-top) var(--blue-bottom),
+    transparent var(--blue-bottom) 100%)!important;
+}
+.field:focus {
+  background:#fff!important;
+}
+body.clean .field,
+body.clean .field.line-detected,
+body.clean .field.box-detected {
+  background:transparent!important;
+}
+body.adjust .box-guide {
+  top:var(--blue-top,18%);
+  height:calc(var(--blue-bottom,88%) - var(--blue-top,18%));
+  background:rgba(35,135,210,.10);
+}
+
+/* v86 : Dark Reader reste libre d'assombrir l'interface.
+   On corrige uniquement le texte des zones PDF afin qu'il reste lisible sur
+   la page blanche. Dark Reader marque <html> avec data-darkreader-scheme. */
+html[data-darkreader-scheme="dark"] .field:not(.box-detected),
+html[data-darkreader-scheme="dark"] .field-text-layer,
+html[data-darkreader-scheme="dark"] .box-char-layer,
+html[data-darkreader-scheme="dark"] .box-char {
+  -webkit-text-fill-color:#111!important;
+  color:#111!important;
+}
+html[data-darkreader-scheme="dark"] .field { caret-color:#111!important; }
+html[data-darkreader-scheme="dark"] .field.box-detected {
+  -webkit-text-fill-color:transparent!important;
+  color:transparent!important;
+  caret-color:#111!important;
+}
+/* v93 : organisation de la barre d’outils. */
+.edit-group{display:block}
+.edit-section{display:block;width:100%;padding:0;background:transparent;border:0}
+.edit-tabs{display:flex;gap:calc(2px * var(--menu-scale));align-items:flex-end;margin:0;padding:0 calc(8px * var(--menu-scale));border-bottom:2px solid #8f9aa5}
+.edit-tab-button{position:relative;margin:0 0 -2px 0;border:1px solid #9da7b2;border-bottom:2px solid #8f9aa5;border-radius:calc(8px * var(--menu-scale)) calc(8px * var(--menu-scale)) 0 0;background:#e9edf1;color:#39434d;padding:calc(9px * var(--menu-scale)) calc(18px * var(--menu-scale));font-weight:700;box-shadow:none}
+.edit-tab-button:hover{background:#f3f5f7;border-color:#7f8b97}
+.edit-tab-button.active{z-index:2;background:#fff;color:#1f2933;border-color:#8f9aa5;border-bottom:2px solid #fff;box-shadow:0 -1px 2px rgba(0,0,0,.06)}
+.edit-tab-panel{display:none;flex-wrap:wrap;gap:calc(6px * var(--menu-scale));align-items:center;width:100%;padding:calc(10px * var(--menu-scale)) calc(8px * var(--menu-scale));background:#fff;border:1px solid #cfd4da;border-top:0;border-radius:0 0 7px 7px}
+.edit-tab-panel.active{display:flex}
+.align-icon-button{width:calc(34px * var(--menu-scale));height:calc(30px * var(--menu-scale));padding:calc(5px * var(--menu-scale));display:inline-flex;align-items:center;justify-content:center}
+.align-icon{display:flex;flex-direction:column;justify-content:center;gap:calc(2px * var(--menu-scale));width:calc(18px * var(--menu-scale));height:calc(16px * var(--menu-scale))}
+.align-icon i{display:block;height:calc(2px * var(--menu-scale));background:currentColor;border-radius:1px}
+.align-icon i:nth-child(1){width:100%}.align-icon i:nth-child(2){width:72%}.align-icon i:nth-child(3){width:88%}
+.align-icon.align-left{align-items:flex-start}.align-icon.align-center{align-items:center}.align-icon.align-right{align-items:flex-end}
+.subsection-label{font-size:calc(12px * var(--menu-scale));font-weight:700;color:#65707c;margin-left:calc(3px * var(--menu-scale));white-space:nowrap}
+
+/* v93 : verrou uniquement sur le texte du PDF ; l'interface reste gérée par Dark Reader. */
+.field[data-darkreader-lock], .field-text-layer[data-darkreader-lock], .box-char-layer[data-darkreader-lock], .box-char[data-darkreader-lock]{forced-color-adjust:none}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <div class="toolbar-top">
+    <div class="app-heading"><span class="app-name">PDF Field Helper</span><span class="app-version">v1.0</span></div>
+    <div class="language-switch"><span id="languageLabel">Language</span><select id="languageSelect" aria-label="Language"><option value="en">ENG</option><option value="fr">FR</option></select></div>
+  </div>
+  <div class="toolgroup">
+    <span class="group-title"><span id="documentTitleLabel">Document</span></span>
+    <button id="openPdf" class="primary" title="Open a PDF">Open</button>
+    <input id="pdfPicker" type="file" accept="application/pdf" hidden>
+    <button id="closePdf">Close</button>
+    <button id="resetDocument" class="danger">Reset</button>
+    <button id="save">Save</button>
+    <button id="exportLayout">Save overlay</button>
+    <button id="importLayout">Load overlay</button>
+    <input id="layoutPicker" type="file" accept="application/json,.json" hidden>
+    <button id="clear">Clear values</button>
+    <button id="exportPdf" class="primary">Generate PDF</button>
+  </div>
+
+  <div class="toolgroup">
+    <span class="group-title" id="viewTitleLabel">View</span>
+    <button id="toggleClean">Hide frames</button>
+    <span class="sep"></span>
+    <span id="zoomLabel">Zoom</span>
+    <div class="pair"><button id="zoomOut" class="bigctl" title="Zoom out">−</button><button id="zoomIn" class="bigctl" title="Zoom in">+</button></div>
+    <span id="zoomPercent" class="zoomval">100%</span>
+    <div class="navbar" id="navbar">
+      <span class="sep"></span>
+      <span id="pagesLabel">Pages</span>
+      <div class="pair"><button id="prevPage" class="bigctl" title="Previous page">&lt;&lt;</button><button id="nextPage" class="bigctl" title="Next page">&gt;&gt;</button></div>
+      <span id="pageLabel">Page</span><input id="pageNumber" type="number" min="1" value="1"><span>/ <b id="pageCount">0</b></span>
+    </div>
+    <span class="sep"></span>
+    <span id="menuLabel">Menu</span>
+    <div class="pair"><button id="menuSmaller" class="bigctl" title="Reduce menu size">−</button><button id="menuLarger" class="bigctl" title="Increase menu size">+</button></div>
+    <span id="menuPercent" class="menuval">100%</span>
+  </div>
+
+  <div class="edit-section">
+    <div class="edit-tabs" role="tablist" aria-label="Editing">
+      <button id="tabLayerButton" class="edit-tab-button active" type="button" role="tab" aria-selected="true" aria-controls="tabLayer">Overlay creation mode</button>
+      <button id="tabEditButton" class="edit-tab-button" type="button" role="tab" aria-selected="false" aria-controls="tabEdit">Edit mode</button>
+    </div>
+
+    <div id="tabLayer" class="edit-tab-panel active" role="tabpanel" aria-labelledby="tabLayerButton">
+      <button id="addField">+ Text</button>
+      <button id="addCheck">+ Checkbox</button>
+      <button id="addImage">+ Image</button>
+      <input id="imagePicker" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+      <button id="addMask">+ Mask</button>
+      <button id="deleteItem" class="danger">Delete</button>
+      <span class="sep"></span>
+      <button id="alignVertical" title="Same vertical axis">Align vertically</button>
+      <button id="alignHorizontal" title="Same horizontal axis">Align horizontally</button>
+      <span class="sep"></span>
+      <span class="subsection-label" id="automaticDetectionLabel">Automatic detection</span>
+      <!-- Features kept for possible reactivation:
+      <button id="detectPageFields" title="Analyze the current page and create detected text areas / checkboxes">Detect page fields</button>
+      <label class="inline" title="Clicking a free area searches for a nearby field; if nothing usable is found, a text area is created at the clicked position"><input id="clickDetect" type="checkbox" checked> Add editable area on click</label>
+      -->
+      <label class="inline" title="While placing + Text, automatically detect the start, end and height of the input area"><input id="autoTextSize" type="checkbox" checked> <span id="autoTextSizeLabel">Automatic width / height</span></label>
+      <span class="sep"></span>
+      <label class="inline" title="Automatically detect and snap + Checkbox areas to printed checkboxes in the PDF"><input id="autoCheckDetect" type="checkbox" checked> <span id="autoCheckDetectLabel">Checkbox</span></label>
+      <span class="sep"></span>
+      <label class="inline" title="Detect sequences of small boxes under text areas and distribute one character per box"><input id="autoBoxDetect" type="checkbox" checked> <span id="autoBoxDetectLabel">Delimited text area</span></label>
+      <span class="sep"></span>
+      <label class="inline" title="Automatically align text vertically to the detected baseline"><input id="autoLineEnabled" type="checkbox" checked> <span id="autoLineEnabledLabel">Vertical alignment</span></label>
+      <div class="pair"><button id="autoYUp" class="bigctl" title="Move automatically aligned text slightly upward">↑</button><button id="autoYDown" class="bigctl" title="Move automatically aligned text slightly downward">↓</button></div>
+      <span id="autoYValue" class="menuval">0.0 px</span>
+    </div>
+
+    <div id="tabEdit" class="edit-tab-panel" role="tabpanel" aria-labelledby="tabEditButton" hidden>
+      <label class="inline" ><span id="fontLabel">Font</span> <select id="fontFamily"><option value="Helvetica">Helvetica / Arial</option><option value="TimesRoman">Times</option><option value="Courier">Courier</option></select></label>
+      <label class="inline" ><span id="sizeLabel">Size</span> <input id="fontSize" type="number" min="5" max="48" step="0.5" value="8" style="width:58px"></label>
+      <label class="inline" ><span id="colorLabel">Color</span> <input id="textColor" type="color" value="#000000" title="Text color"></label>
+      <label class="inline" title="Apply font, size and color to all text areas in the document"><input id="fontAllDocument" type="checkbox"> <span class="entireDocumentLabel">Entire document</span></label>
+      <span class="sep"></span>
+      <span class="subsection-label" id="alignmentLabel">Alignment:</span>
+      <button id="textAlignLeft" class="align-icon-button" title="Align text left" aria-label="Align text left"><span class="align-icon align-left" aria-hidden="true"><i></i><i></i><i></i></span></button>
+      <button id="textAlignCenter" class="align-icon-button" title="Center text" aria-label="Center text"><span class="align-icon align-center" aria-hidden="true"><i></i><i></i><i></i></span></button>
+      <button id="textAlignRight" class="align-icon-button" title="Align text right" aria-label="Align text right"><span class="align-icon align-right" aria-hidden="true"><i></i><i></i><i></i></span></button>
+      <label class="inline" title="Apply content settings to all text areas in the document"><input id="textAlignAllDocument" type="checkbox"> <span class="entireDocumentLabel">Entire document</span></label>
+    </div>
+  </div>
+</div>
+<div id="stage" class="stage"><div class="empty" id="emptyMessage">Open a PDF document to begin.</div></div>
+<div id="horizontalScrollbar" class="horizontal-scrollbar" aria-label="Horizontal document scroll"><div id="horizontalScrollbarInner" class="horizontal-scrollbar-inner"></div></div>
+<div class="debug-footer"><details class="messages-panel"><summary class="messages-title" id="messagesLabel">Messages / Debug</summary><div id="status" class="status">Ready.</div></details></div>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script>
+'use strict';
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+const DB_NAME='generic_pdf_editor_db', DB_VERSION=1, STORE='documents', LAST_KEY='generic_pdf_editor_last';
+let pdfBytes=null,pdfProxy=null,docKey=null,docName='',currentPage=1,pageStates={},selected=null,selectedItems=new Set(),clipboardItem=null,renderToken=0,scaleNow=1,userZoom=1,menuScale=1;
+let pageW=595,pageH=842;
+let pendingPlacement=null;
+const stage=document.getElementById('stage'),status=document.getElementById('status');
+const horizontalScrollbar=document.getElementById('horizontalScrollbar'),horizontalScrollbarInner=document.getElementById('horizontalScrollbarInner');
+let syncingHorizontalScroll=false;
+function updateHorizontalScrollbar(){
+  if(!horizontalScrollbar||!horizontalScrollbarInner)return;
+  const vp=document.getElementById('viewport');
+  const contentWidth=vp?Math.ceil(vp.getBoundingClientRect().width):0;
+  const available=stage.clientWidth;
+  const needed=!!pdfProxy && contentWidth>available+1;
+  horizontalScrollbar.classList.toggle('visible',needed);
+  document.body.classList.toggle('has-horizontal-scrollbar',needed);
+  horizontalScrollbarInner.style.width=Math.max(available,contentWidth+36)+'px';
+  if(!needed){stage.scrollLeft=0;horizontalScrollbar.scrollLeft=0;}
+  else horizontalScrollbar.scrollLeft=stage.scrollLeft;
+}
+stage.addEventListener('scroll',()=>{if(syncingHorizontalScroll||!horizontalScrollbar)return;syncingHorizontalScroll=true;horizontalScrollbar.scrollLeft=stage.scrollLeft;syncingHorizontalScroll=false;});
+horizontalScrollbar?.addEventListener('scroll',()=>{if(syncingHorizontalScroll)return;syncingHorizontalScroll=true;stage.scrollLeft=horizontalScrollbar.scrollLeft;syncingHorizontalScroll=false;});
+const APP_VERSION='1.0';
+const SNAP_GUARD_BUILD='2026-08-16c'; // internal build marker; public version remains v1.0
+console.log('PDF Field Helper snap-guard build',SNAP_GUARD_BUILD);
+let uiLanguage=localStorage.getItem('pdfFieldHelperLanguage')||'en';
+const UI_TEXT={
+  en:{language:'Language',document:'Document',open:'Open',close:'Close',reset:'Reset',save:'Save',saveOverlay:'Save overlay',loadOverlay:'Load overlay',clear:'Clear values',generate:'Generate PDF',view:'View',hideFrames:'Hide frames',showFrames:'Show frames',zoom:'Zoom',pages:'Pages',page:'Page',menu:'Menu',layerMode:'Overlay creation mode',editMode:'Edit mode',addText:'+ Text',addCheck:'+ Checkbox',addImage:'+ Image',addMask:'+ Mask',delete:'Delete',alignV:'Align vertically',alignH:'Align horizontally',autoDetection:'Automatic detection',autoSize:'Automatic width / height',checkbox:'Checkbox',delimited:'Delimited text area',verticalAlign:'Vertical alignment',font:'Font',size:'Size',color:'Color',entire:'Entire document',alignment:'Alignment:',messages:'Messages / Debug',ready:'Ready.',empty:'Open a PDF document to begin.'},
+  fr:{language:'Langue',document:'Document',open:'Ouvrir',close:'Fermer',reset:'Réinitialiser',save:'Enregistrer',saveOverlay:'Enregistrer calque',loadOverlay:'Charger calque',clear:'Effacer valeurs',generate:'Générer PDF',view:'Affichage',hideFrames:'Masquer cadres',showFrames:'Afficher cadres',zoom:'Zoom',pages:'Pages',page:'Page',menu:'Menu',layerMode:'Mode création calque',editMode:'Mode édition',addText:'+ Texte',addCheck:'+ Case',addImage:'+ Image',addMask:'+ Masque',delete:'Supprimer',alignV:'Aligner verticalement',alignH:'Aligner horizontalement',autoDetection:'Détection automatique',autoSize:'Largeur / hauteur automatique',checkbox:'Case à cocher',delimited:'Zone texte avec délimitation',verticalAlign:'Alignement vertical',font:'Police',size:'Taille',color:'Couleur',entire:'Tout le document',alignment:'Alignement :',messages:'Messages / Debug',ready:'Prêt.',empty:'Ouvrir un document PDF pour commencer.'}
+};
+function t(k){return (UI_TEXT[uiLanguage]&&UI_TEXT[uiLanguage][k])||UI_TEXT.en[k]||k;}
+function updateWindowTitle(){document.title='PDF Field Helper v'+APP_VERSION+(docName?' — '+docName:'');}
+function applyLanguage(lang){
+  uiLanguage=(lang==='fr')?'fr':'en';
+  localStorage.setItem('pdfFieldHelperLanguage',uiLanguage);
+  document.documentElement.lang=uiLanguage;
+  const q=(id)=>document.getElementById(id);
+  if(q('languageSelect'))q('languageSelect').value=uiLanguage;
+  if(q('languageLabel'))q('languageLabel').textContent=t('language');
+  if(q('documentTitleLabel'))q('documentTitleLabel').textContent=t('document');
+  if(q('viewTitleLabel'))q('viewTitleLabel').textContent=t('view');
+  if(q('zoomLabel'))q('zoomLabel').textContent=t('zoom'); if(q('pagesLabel'))q('pagesLabel').textContent=t('pages'); if(q('pageLabel'))q('pageLabel').textContent=t('page'); if(q('menuLabel'))q('menuLabel').textContent=t('menu');
+  const map={openPdf:'open',closePdf:'close',resetDocument:'reset',save:'save',exportLayout:'saveOverlay',importLayout:'loadOverlay',clear:'clear',exportPdf:'generate',tabLayerButton:'layerMode',tabEditButton:'editMode',addField:'addText',addCheck:'addCheck',addImage:'addImage',addMask:'addMask',deleteItem:'delete',alignVertical:'alignV',alignHorizontal:'alignH'};
+  for(const [id,key] of Object.entries(map)){const e=q(id);if(e)e.textContent=t(key);}
+  if(q('toggleClean'))q('toggleClean').textContent=document.body.classList.contains('clean')?t('showFrames'):t('hideFrames');
+  if(q('automaticDetectionLabel'))q('automaticDetectionLabel').textContent=t('autoDetection');
+  if(q('autoTextSizeLabel'))q('autoTextSizeLabel').textContent=t('autoSize'); if(q('autoCheckDetectLabel'))q('autoCheckDetectLabel').textContent=t('checkbox'); if(q('autoBoxDetectLabel'))q('autoBoxDetectLabel').textContent=t('delimited'); if(q('autoLineEnabledLabel'))q('autoLineEnabledLabel').textContent=t('verticalAlign');
+  if(q('fontLabel'))q('fontLabel').textContent=t('font'); if(q('sizeLabel'))q('sizeLabel').textContent=t('size'); if(q('colorLabel'))q('colorLabel').textContent=t('color'); if(q('alignmentLabel'))q('alignmentLabel').textContent=t('alignment');
+  document.querySelectorAll('.entireDocumentLabel').forEach(e=>e.textContent=t('entire'));
+  if(q('messagesLabel'))q('messagesLabel').textContent=t('messages');
+  if(status && (status.textContent==='Ready.' || status.textContent==='Prêt.')) status.textContent=t('ready');
+  const empty=stage.querySelector('.empty'); if(empty)empty.textContent=t('empty');
+  updateOpenPdfButton(); updateWindowTitle();
+}
+
+const fontFamily=document.getElementById('fontFamily'),fontSize=document.getElementById('fontSize'),textColor=document.getElementById('textColor'),fontAllDocument=document.getElementById('fontAllDocument');
+const autoYValue=document.getElementById('autoYValue');const autoLineEnabled=document.getElementById('autoLineEnabled'),autoCheckDetect=document.getElementById('autoCheckDetect'),autoBoxDetect=document.getElementById('autoBoxDetect'),autoTextSize=document.getElementById('autoTextSize');let autoYOffset=0;let autoLineOn=true,autoCheckDetectOn=true,autoBoxDetectOn=true,autoTextSizeOn=true;let placementAutoTimer=null,placementAutoSeq=0;
+const tabLayerButton=document.getElementById('tabLayerButton'),tabEditButton=document.getElementById('tabEditButton'),tabLayer=document.getElementById('tabLayer'),tabEdit=document.getElementById('tabEdit');
+function setEditTab(which){
+  const layer=which!=='edit';
+  if(!layer) cancelPlacement(false);
+  document.body.classList.toggle('adjust',layer);
+  tabLayerButton.classList.toggle('active',layer);
+  tabEditButton.classList.toggle('active',!layer);
+  tabLayerButton.setAttribute('aria-selected',layer?'true':'false');
+  tabEditButton.setAttribute('aria-selected',layer?'false':'true');
+  tabLayer.classList.toggle('active',layer);
+  tabEdit.classList.toggle('active',!layer);
+  tabLayer.hidden=!layer;
+  tabEdit.hidden=layer;
+  setStatus(layer?'Overlay creation mode':'Edit mode');
+}
+tabLayerButton.addEventListener('click',()=>setEditTab('layer'));
+tabEditButton.addEventListener('click',()=>setEditTab('edit'));
+setEditTab('layer');
+
+function openDb(){return new Promise((resolve,reject)=>{const r=indexedDB.open(DB_NAME,DB_VERSION);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains(STORE))r.result.createObjectStore(STORE,{keyPath:'key'});};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
+async function dbPut(rec){const db=await openDb();return new Promise((res,rej)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(rec);tx.oncomplete=()=>{db.close();res();};tx.onerror=()=>rej(tx.error);});}
+async function dbDelete(key){const db=await openDb();return new Promise((res,rej)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).delete(key);tx.oncomplete=()=>{db.close();res();};tx.onerror=()=>rej(tx.error);});}
+async function dbGet(key){const db=await openDb();return new Promise((res,rej)=>{const rq=db.transaction(STORE,'readonly').objectStore(STORE).get(key);rq.onsuccess=()=>{db.close();res(rq.result||null);};rq.onerror=()=>rej(rq.error);});}
+function blankPageState(){return {fields:[],checks:[],images:[],masks:[]};}
+function getPageState(n){if(!pageStates[n])pageStates[n]=blankPageState();return pageStates[n];}
+function cssFont(n){return n==='TimesRoman'?'Times New Roman, Times, serif':n==='Courier'?'Courier New, Courier, monospace':'Arial, Helvetica, sans-serif';}
+function fs(){return Math.max(5,Math.min(48,parseFloat(fontSize.value)||8));}
+function setAutoYOffset(v){
+  autoYOffset=Math.max(-30,Math.min(30,Math.round(v*2)/2));
+  if(autoYValue)autoYValue.textContent=autoYOffset.toFixed(1)+' px';
+  // Réappliquer immédiatement le décalage à TOUTES les zones texte de la page.
+  // Avant v75, seules les zones possédant un lineY exploitable étaient réellement
+  // déplacées, ce qui donnait une impression aléatoire.
+  applyFont();
+  collectCurrentPage();
+}
+function setAutoLineEnabled(v){autoLineOn=!!v;if(autoLineEnabled)autoLineEnabled.checked=autoLineOn;document.querySelectorAll('.field').forEach(e=>{if(autoLineOn)scheduleTextRecognition(e,false);else clearFieldLine(e);});applyFont();}
+function setAutoCheckDetect(v){autoCheckDetectOn=!!v;if(autoCheckDetect)autoCheckDetect.checked=autoCheckDetectOn;document.querySelectorAll('.check-zone').forEach(e=>{if(autoCheckDetectOn)scheduleCheckDetection(e,false);else setCheckDetected(e,false);});}
+function setAutoBoxDetect(v){autoBoxDetectOn=!!v;if(autoBoxDetect)autoBoxDetect.checked=autoBoxDetectOn;document.querySelectorAll('.field').forEach(e=>{if(autoBoxDetectOn)scheduleTextRecognition(e,false);else{setFieldBoxData(e,[]);if(autoLineOn)detectTextLineUnderField(e,false);}});}
+function setAutoTextSize(v){autoTextSizeOn=!!v;if(autoTextSize)autoTextSize.checked=autoTextSizeOn;}
+function hexToRgb01(hex){const h=(hex||'#000000').replace('#','').padEnd(6,'0').slice(0,6);return {r:parseInt(h.slice(0,2),16)/255,g:parseInt(h.slice(2,4),16)/255,b:parseInt(h.slice(4,6),16)/255};}
+function uid(prefix){return prefix+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);}
+function setStatus(s){
+  const msg=String(s??'');
+  const stamp=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const lines=(status.textContent||'').split('\n').filter(Boolean);
+  lines.push('['+stamp+'] '+msg);
+  status.textContent=lines.slice(-8).join('\n');
+  status.parentElement.scrollTop=status.parentElement.scrollHeight;
+}
+const _consoleLog=console.log.bind(console),_consoleWarn=console.warn.bind(console),_consoleError=console.error.bind(console);
+function debugToPanel(level,args){
+  try{const txt=args.map(v=>v instanceof Error?v.message:(typeof v==='object'?JSON.stringify(v):String(v))).join(' ');setStatus(level+': '+txt);}catch(_e){}
+}
+console.log=(...a)=>{_consoleLog(...a);debugToPanel('DEBUG',a);};
+console.warn=(...a)=>{_consoleWarn(...a);debugToPanel('WARN',a);};
+console.error=(...a)=>{_consoleError(...a);debugToPanel('ERREUR',a);};
+
+function select(el,additive=false){if(!additive){for(const x of selectedItems)x.classList.remove('selected');selectedItems.clear();}if(!el){selected=null;return;}if(additive&&selectedItems.has(el)){el.classList.remove('selected');selectedItems.delete(el);selected=[...selectedItems].at(-1)||null;return;}selectedItems.add(el);el.classList.add('selected');selected=el;if(el.classList.contains('field')){fontFamily.value=fieldFontFamily(el);fontSize.value=fieldFontSize(el);textColor.value=fieldTextColor(el);}}
+function selectFromEvent(ev,el){select(el,!!(ev.ctrlKey||ev.metaKey));}
+function enterAdjust(){setEditTab('layer');}
+function cancelPlacement(announce=false){
+  const g=document.getElementById('placementGhost');if(g)g.remove();
+  if(placementAutoTimer){clearTimeout(placementAutoTimer);placementAutoTimer=null;}
+  placementAutoSeq++;
+  pendingPlacement=null;
+  if(announce)setStatus('Placement cancelled');
+}
+function beginPlacement(type,opts={}){
+  if(!pdfProxy)return;
+  cancelPlacement(false);
+  enterAdjust();
+  let w=210,h=16;
+  if(type==='check'){w=h=12;}
+  else if(type==='mask'){w=Math.min(220,pageW*.4);h=30;}
+  else if(type==='image'){w=opts.w||Math.min(190,pageW*.35);h=opts.h||120;}
+  pendingPlacement={type,w,h,baseW:w,baseH:h,opts,x:0,y:0,visible:false,autoFitted:false,lastPX:null,lastPY:null,stage:'hover',anchorX:null,anchorY:null,detectedWidth:false};
+  const o=document.getElementById('overlay');
+  if(o){const g=document.createElement('div');g.id='placementGhost';g.className='placement-ghost '+type;g.style.width=w+'px';g.style.height=h+'px';o.appendChild(g);}
+  setStatus((type==='text'?'Text area':type==='check'?'Checkbox':type==='image'?'Image':'Mask')+(type==='text'?' : 1st click = area start, 2nd click = width / confirm':' : move the mouse over the page, then left-click to place'));
+}
+function placementCoords(ev){
+  const surface=document.getElementById('pageSurface');if(!surface||!pendingPlacement)return null;
+  const r=surface.getBoundingClientRect();
+  const px=(ev.clientX-r.left)/Math.max(.01,scaleNow),py=(ev.clientY-r.top)/Math.max(.01,scaleNow);
+  if(px<0||py<0||px>pageW||py>pageH)return null;
+  const {w,h}=pendingPlacement;
+  // Placement manuel : la zone commence à droite du pointeur, et non plus centrée dessus.
+  const gap=7;
+  const x=px+gap;
+  const avail=Math.max(0,pageW-x);
+  const ww=Math.min(w,avail);
+  if(ww<4)return null;
+  return {x,y:Math.max(0,Math.min(pageH-h,py-h/2)),px,py,w:ww};
+}
+function applyPlacementGhost(){
+  const g=document.getElementById('placementGhost');if(!pendingPlacement||!g)return;
+  g.style.left=pendingPlacement.x+'px';g.style.top=pendingPlacement.y+'px';
+  g.style.width=pendingPlacement.w+'px';g.style.height=pendingPlacement.h+'px';g.style.display='block';
+}
+function schedulePlacementTextAutoSize(px,py){
+  if(!pendingPlacement||pendingPlacement.type!=='text'||!autoTextSizeOn)return;
+  if(placementAutoTimer)clearTimeout(placementAutoTimer);
+  const seq=++placementAutoSeq;
+  placementAutoTimer=setTimeout(async()=>{
+    if(!pendingPlacement||pendingPlacement.type!=='text'||seq!==placementAutoSeq||!autoTextSizeOn)return;
+    try{
+      const ac=makeAnalysisCanvas();if(!ac)return;
+      const textBoxes=await getPagePrintedTextBoxes();
+      if(!pendingPlacement||seq!==placementAutoSeq)return;
+      const {ctx,q}=ac,W=ac.canvas.width,H=ac.canvas.height;
+      const local=detectLocalHorizontalAtPoint(ctx,W,H,q,px,py,textBoxes);
+      if(local){
+        const hh=normalizedEditableHeight(local.y,textBoxes,16);
+        const raw={x:local.x,y:Math.max(0,local.y-hh+2),w:local.w,h:hh};
+        const fitted=fitDetectedLineSegment(raw,textBoxes,px,2)||raw;
+        const minX=Math.min(pageW-4,px+7);
+        const endX=Math.min(pageW,fitted.x+fitted.w);
+        const fx=Math.max(minX,fitted.x);
+        const fw=endX-fx;
+        if(fw>=18){
+          const candidate={x:fx,y:Math.max(0,Math.min(pageH-fitted.h,fitted.y)),w:fw,h:Math.max(9,fitted.h)};
+          if(!placementSnapConflictsExisting(candidate,5)){
+            pendingPlacement.x=candidate.x;
+            pendingPlacement.y=candidate.y;
+            pendingPlacement.w=candidate.w;pendingPlacement.h=candidate.h;pendingPlacement.autoFitted=true;
+            applyPlacementGhost();return;
+          }
+        }
+      }
+      // Aucune ligne nette : hauteur adaptée à la ligne courante et largeur libre à droite du pointeur.
+      const hh=normalizedEditableHeight(py,textBoxes,16);
+      const gap=7,startX=Math.min(pageW-18,px+gap);
+      const raw={x:startX,y:Math.max(0,Math.min(pageH-hh,py-hh/2)),w:Math.min(pendingPlacement.baseW||210,pageW-startX),h:hh};
+      const fitted=fitDetectedLineSegment(raw,textBoxes,startX+2,2);
+      if(fitted){
+        const fx=Math.max(startX,fitted.x),endX=Math.min(pageW,fitted.x+fitted.w),fw=endX-fx;
+        if(fw>=18){const candidate={x:fx,y:fitted.y,w:fw,h:fitted.h};if(!placementSnapConflictsExisting(candidate,5)){Object.assign(pendingPlacement,{...candidate,autoFitted:true});applyPlacementGhost();}}
+      }
+    }catch(_e){}
+  },65);
+}
+function handlePlacementPointerMove(ev){
+  if(!pendingPlacement)return;
+  const pp=pendingPlacement,g=document.getElementById('placementGhost');if(!g)return;
+  if(pp.type==='text'&&pp.stage==='anchored'){
+    const surface=document.getElementById('pageSurface');if(!surface)return;
+    const r=surface.getBoundingClientRect();
+    const px=(ev.clientX-r.left)/Math.max(.01,scaleNow),py=(ev.clientY-r.top)/Math.max(.01,scaleNow);
+    if(px<0||py<0||px>pageW||py>pageH)return;
+    pp.lastPX=px;pp.lastPY=py;
+    // Le détecteur peut proposer une largeur au 1er clic, mais le fantôme ne doit
+    // jamais rester figé. Dès que la souris s'écarte réellement du point de départ,
+    // on repasse en réglage manuel de largeur, exactement comme pour un champ normal.
+    const movedX=Math.abs(px-pp.anchorX);
+    // Hystérésis : lorsqu'une largeur a été détectée automatiquement, on la
+    // conserve malgré les petits mouvements involontaires de la souris.
+    // Il faut s'écarter franchement du point de départ avant de repasser en
+    // réglage manuel de largeur.
+    const detectedWidthReleasePx=40;
+    if(!pp.detectedWidth || movedX>=detectedWidthReleasePx){
+      if(pp.detectedWidth && movedX>=detectedWidthReleasePx){pp.detectedWidth=false;pp.autoFitted=false;}
+      const minW=18;
+      pp.w=Math.max(minW,Math.min(pageW-pp.anchorX,px-pp.anchorX));
+      pp.x=pp.anchorX;
+      applyPlacementGhost();
+      setStatus('Start set: adjust the width with the mouse, then click again');
+    }
+    return;
+  }
+  const pos=placementCoords(ev);if(!pos)return;
+  pp.x=pos.x;pp.y=pos.y;if(Number.isFinite(pos.w))pp.w=pos.w;pp.visible=true;pp.autoFitted=false;pp.lastPX=pos.px;pp.lastPY=pos.py;
+  applyPlacementGhost();
+  if(pp.type==='text'&&autoTextSizeOn)schedulePlacementTextAutoSize(pos.px,pos.py);
+}
+function findRowPeerForPlacement(anchorX, anchorY, h){
+  // Une zone existante ne doit jamais attirer une nouvelle zone qui est posée
+  // au-dessus/dedans ou sur une autre ligne. L'alignement entre zones n'est
+  // conservé que pour deux champs réellement voisins sur la même ligne
+  // (ex. les deux parties d'une adresse e-mail séparées par @).
+  const peers=[...document.querySelectorAll('.field')];
+  let best=null;
+  for(const o of peers){
+    const ox=parseFloat(o.style.left)||0,oy=parseFloat(o.style.top)||0,ow=parseFloat(o.style.width)||0,oh=parseFloat(o.style.height)||0;
+    const ocy=oy+oh/2;
+    const vdist=Math.abs(anchorY-ocy);
+    if(vdist>6)continue;
+
+    // Le point d'ancrage doit être clairement à côté du champ existant,
+    // jamais à l'intérieur de sa largeur.
+    let gap=null;
+    if(anchorX>=ox+ow+3) gap=anchorX-(ox+ow);
+    else if(anchorX<=ox-3) gap=ox-anchorX;
+    else continue;
+    if(gap>90)continue;
+
+    const score=vdist+gap*.03+Math.abs((h||16)-oh)*.05;
+    if(!best||score<best.score)best={el:o,y:oy,h:oh,score};
+  }
+  return best;
+}
+async function anchorTextPlacement(pos){
+  const pp=pendingPlacement;if(!pp||pp.type!=='text')return;
+  pp.stage='anchored';pp.anchorX=pos.x;pp.anchorY=pos.py;pp.x=pos.x;pp.y=pos.y;pp.detectedWidth=false;pp.autoFitted=false;pp.anchoredAt=performance.now();
+  // Les zones déjà créées ne servent jamais de cible d'aimantation.
+  // L'auto-placement doit uniquement se baser sur la géométrie du PDF.
+  pp.peerAligned=false;
+  // Largeur courte par défaut pendant l'attente du second clic.
+  pp.w=Math.max(18,Math.min(70,pageW-pp.x));
+  applyPlacementGhost();
+  if(autoTextSizeOn){
+    try{
+      const ac=makeAnalysisCanvas();if(ac){
+        const textBoxes=await getPagePrintedTextBoxes();
+        if(!pendingPlacement||pendingPlacement!==pp||pp.stage!=='anchored')return;
+        const {ctx,q}=ac,W=ac.canvas.width,H=ac.canvas.height;
+        const local=detectLocalHorizontalAtPoint(ctx,W,H,q,pos.px,pos.py,textBoxes);
+        if(local){
+          const hh=normalizedEditableHeight(local.y,textBoxes,16);
+          const raw={x:Math.max(pp.anchorX,local.x),y:Math.max(0,local.y-hh+2),w:Math.max(0,local.x+local.w-Math.max(pp.anchorX,local.x)),h:hh};
+          const fitted=fitDetectedLineSegment(raw,textBoxes,pp.anchorX+2,2)||raw;
+          const fx=Math.max(pp.anchorX,fitted.x),endX=Math.min(pageW,fitted.x+fitted.w),fw=endX-fx;
+          if(fw>=18){
+            const candidate={x:fx,y:fitted.y,w:fw,h:Math.max(9,fitted.h)};
+            if(!placementSnapConflictsExisting(candidate,5)){
+              pp.x=candidate.x;pp.y=candidate.y;pp.w=candidate.w;pp.h=candidate.h;pp.detectedWidth=true;pp.autoFitted=true;applyPlacementGhost();
+            }else{
+              // Keep the user's click as the anchor instead of snapping onto the previous field.
+              pp.x=pp.anchorX;pp.y=pos.y;pp.w=Math.max(18,Math.min(70,pageW-pp.x));pp.h=Math.max(9,pp.h||16);pp.detectedWidth=false;pp.autoFitted=false;applyPlacementGhost();
+              setStatus('Automatic snap ignored because that position is already occupied');
+            }
+          }
+        }
+      }
+    }catch(_e){}
+  }
+  if(!status.textContent.includes('already occupied'))setStatus(pp.detectedWidth?'Start set: width detected — click again to confirm':'Start set: move the mouse to adjust the width, then click again');
+}
+function finalizePlacement(pp){
+  collectCurrentPage();const st=getPageState(currentPage);let el=null;
+  if(pp.type==='text'){
+    const d={id:uid('text'),x:pp.x,y:pp.y,w:pp.w,h:pp.h,value:''};st.fields.push(d);createTextDom(d);el=document.querySelector(`.field[data-id="${d.id}"]`);applyFont();setStatus('Text area placed');
+  }else if(pp.type==='check'){
+    const d={id:uid('check'),x:pp.x,y:pp.y,w:pp.w,h:pp.h,checked:false,detected:false};st.checks.push(d);createCheckDom(d);el=document.querySelector(`.check-zone[data-id="${d.id}"]`);if(el)scheduleCheckDetection(el,true);setStatus('Checkbox placed');
+  }else if(pp.type==='mask'){
+    const d={id:uid('mask'),x:pp.x,y:pp.y,w:pp.w,h:pp.h};st.masks.push(d);createMaskDom(d);el=document.querySelector(`.mask-zone[data-id="${d.id}"]`);setStatus('Mask placed');
+  }else if(pp.type==='image'){
+    const d={id:uid('img'),x:pp.x,y:pp.y,w:pp.w,h:pp.h,aspect:pp.opts.aspect||1,src:pp.opts.src};st.images.push(d);createImageDom(d);el=document.querySelector(`.image-zone[data-id="${d.id}"]`);setStatus('Image placed');
+  }
+  const repeatType=(pp.type==='text'||pp.type==='check')?pp.type:null;
+  cancelPlacement(false);collectCurrentPage();if(el)select(el);
+  // IMPORTANT : ne jamais recréer le prochain placement pendant le même événement click.
+  // Sur certains PDF / navigateurs, le clic de validation pouvait alors être réutilisé
+  // par le nouveau placement et l'ancrer immédiatement à l'ancien point de départ.
+  // On réarme l'outil au tour d'événement suivant : le prochain clic est donc TOUJOURS
+  // un nouveau point de départ.
+  if(repeatType){
+    setTimeout(()=>{
+      if(!pdfProxy || pendingPlacement)return;
+      beginPlacement(repeatType);
+      setStatus(repeatType==='text'
+        ? 'Text area placed — ready for a NEW start point (1st click), then width / confirmation (2nd click)'
+        : 'Checkbox placed — + Checkbox tool remains active: move the mouse, then left-click');
+    },0);
+  }
+}
+function handlePlacementClick(ev){
+  if(!pendingPlacement||ev.button!==0)return;
+  const pp=pendingPlacement;
+  // + Texte : 1er clic = point de départ, 2e clic = confirmation / largeur.
+  if(pp.type==='text'&&pp.stage==='anchored'){
+    ev.preventDefault();ev.stopPropagation();ev.stopImmediatePropagation();
+    // Le 2e clic est toujours obligatoire. Quand une largeur a été détectée,
+    // on laisse volontairement un court temps d'observation avant d'accepter la
+    // confirmation : cela évite de valider aussitôt sans avoir le temps de voir
+    // la largeur proposée. Sans détection, la protection reste plus courte.
+    const elapsed=performance.now()-(pp.anchoredAt||0);
+    const minConfirmDelay=pp.detectedWidth?650:220;
+    if(elapsed<minConfirmDelay){
+      setStatus(pp.detectedWidth
+        ? 'Width detected: wait a moment, then click again to confirm'
+        : 'Start set: move the mouse, then click again to confirm');
+      return;
+    }
+    // Verrouiller immédiatement cet ancien placement avant de le finaliser.
+    // Le prochain placement sera créé de façon asynchrone dans finalizePlacement().
+    pp.stage='finalizing';
+    finalizePlacement(pp);return;
+  }
+  const pos=placementCoords(ev);if(!pos)return;
+  ev.preventDefault();ev.stopPropagation();ev.stopImmediatePropagation();
+  if(pp.type==='text'){anchorTextPlacement(pos);return;}
+  pp.x=pos.x;pp.y=pos.y;finalizePlacement(pp);
+}
+function visibleInsertY(itemH=20){
+  const surface=document.getElementById('pageSurface');
+  if(!surface)return 28;
+  const rect=surface.getBoundingClientRect();
+  const tb=document.querySelector('.toolbar');
+  const toolbarBottom=tb?tb.getBoundingClientRect().bottom:0;
+  // Zone réellement visible de la page dans la fenêtre. On ne se base plus
+  // sur le haut du document : l'élément est créé dans la partie actuellement affichée.
+  const visibleTop=Math.max(rect.top,toolbarBottom)+14;
+  const visibleBottom=Math.min(rect.bottom,window.innerHeight)-14;
+  let screenY;
+  if(visibleBottom>visibleTop){
+    screenY=visibleTop;
+  }else{
+    // Cas limite : la page est presque hors écran. On prend le centre de la fenêtre
+    // et on rabat ensuite dans les limites de la page.
+    screenY=Math.max(toolbarBottom+14,Math.min(window.innerHeight-14,(toolbarBottom+window.innerHeight)/2));
+  }
+  const y=(screenY-rect.top)/Math.max(.01,scaleNow);
+  return Math.max(8,Math.min(pageH-itemH-8,y));
+}
+
+function setNavigationEnabled(on){
+  const nav=document.getElementById('navbar');
+  if(!nav)return;
+  nav.classList.toggle('nav-disabled',!on);
+  document.getElementById('prevPage').disabled=!on;
+  document.getElementById('nextPage').disabled=!on;
+  document.getElementById('pageNumber').disabled=!on;
+}
+
+function updateOpenPdfButton(){
+  const b=document.getElementById('openPdf');if(!b)return;
+  if(docName){b.textContent=docName;b.title=(uiLanguage==='fr'?'Ouvrir un autre PDF — ':'Open another PDF — ')+docName;}
+  else{b.textContent=t('open');b.title=uiLanguage==='fr'?'Ouvrir un PDF':'Open a PDF';}
+}
+
+async function loadPdf(data,name,savedState=null){
+  try{
+    setStatus('Loading…');
+    pdfBytes=data instanceof Uint8Array?new Uint8Array(data):new Uint8Array(data);
+    const task=pdfjsLib.getDocument({data:new Uint8Array(pdfBytes)});pdfProxy=await task.promise;
+    docKey=(pdfProxy.fingerprints&&pdfProxy.fingerprints[0])||('doc_'+pdfBytes.length+'_'+name);
+    docName=name||'document.pdf';updateOpenPdfButton();updateWindowTitle();
+    pageStates=(savedState&&savedState.pageStates)||{};
+    if(savedState){fontFamily.value=savedState.fontFamily||'Helvetica';fontSize.value=savedState.fontSize||8;textColor.value=savedState.textColor||'#000000';autoYOffset=Number.isFinite(+savedState.autoYOffset)?+savedState.autoYOffset:0;autoLineOn=savedState.autoLineOn!==false;autoCheckDetectOn=savedState.autoCheckDetectOn!==false;autoBoxDetectOn=savedState.autoBoxDetectOn!==false;autoTextSizeOn=savedState.autoTextSizeOn!==false;if(autoLineEnabled)autoLineEnabled.checked=autoLineOn;if(autoCheckDetect)autoCheckDetect.checked=autoCheckDetectOn;if(autoBoxDetect)autoBoxDetect.checked=autoBoxDetectOn;if(autoTextSize)autoTextSize.checked=autoTextSizeOn;if(document.getElementById('clickDetect'))document.getElementById('clickDetect').checked=savedState.clickDetectOn!==false;if(autoYValue)autoYValue.textContent=autoYOffset.toFixed(1)+' px';userZoom=savedState.userZoom||1;menuScale=1;applyMenuScale();currentPage=Math.min(Math.max(1,savedState.currentPage||1),pdfProxy.numPages);}else{currentPage=1;userZoom=1;menuScale=1;autoYOffset=0;autoLineOn=true;autoCheckDetectOn=true;autoBoxDetectOn=true;autoTextSizeOn=true;if(autoLineEnabled)autoLineEnabled.checked=true;if(autoCheckDetect)autoCheckDetect.checked=true;if(autoBoxDetect)autoBoxDetect.checked=true;if(autoTextSize)autoTextSize.checked=true;if(autoYValue)autoYValue.textContent='0.0 px';applyMenuScale();}updateZoomLabel();
+    document.getElementById('pageCount').textContent=pdfProxy.numPages;setNavigationEnabled(true);
+    localStorage.setItem(LAST_KEY,docKey);
+    await renderPage(currentPage);setStatus(savedState?'Document and state restored':'PDF loaded');
+  }catch(err){console.error(err);setStatus('PDF error: '+err.message);}
+}
+
+async function renderPage(n){cancelPlacement(false);
+  if(!pdfProxy)return;collectCurrentPage();select(null);currentPage=Math.max(1,Math.min(pdfProxy.numPages,n));document.getElementById('pageNumber').value=currentPage;
+  const token=++renderToken;const pg=await pdfProxy.getPage(currentPage);if(token!==renderToken)return;
+  const vp=pg.getViewport({scale:1});pageW=vp.width;pageH=vp.height;
+  stage.innerHTML='<div id="viewport" class="viewport"><div id="pageSurface" class="pageSurface"><canvas id="pdfCanvas"></canvas><div id="overlay" class="overlay"></div></div></div>';
+  const viewport=document.getElementById('viewport'),surface=document.getElementById('pageSurface'),canvas=document.getElementById('pdfCanvas');
+  surface.style.width=pageW+'px';surface.style.height=pageH+'px';
+  // Rendu haute définition : le canvas est calculé bien au-dessus de sa taille CSS,
+  // puis réduit à l'écran. Cela évite le flou provoqué par l'agrandissement CSS.
+  const avail=Math.max(300,window.innerWidth-36);
+  const baseScale=avail/pageW;
+  scaleNow=Math.max(.15,Math.min(4,baseScale*userZoom));
+  updateZoomLabel();
+  surface.style.transform=`scale(${scaleNow})`;
+  viewport.style.width=(pageW*scaleNow)+'px';viewport.style.height=(pageH*scaleNow)+'px';requestAnimationFrame(updateHorizontalScrollbar);
+  const dpr=Math.max(1,window.devicePixelRatio||1);
+  const quality=Math.min(4,Math.max(3,scaleNow*dpr*1.6));
+  const rv=pg.getViewport({scale:quality});
+  canvas.width=Math.ceil(rv.width);canvas.height=Math.ceil(rv.height);
+  canvas.style.width=pageW+'px';canvas.style.height=pageH+'px';
+  const ctx=canvas.getContext('2d',{alpha:false});
+  await pg.render({canvasContext:ctx,viewport:rv}).promise;if(token!==renderToken)return;
+  buildOverlays();
+  surface.addEventListener('pointermove',handlePlacementPointerMove);
+  surface.addEventListener('click',handlePlacementClick,true);
+  // Ancien ajout/détection au clic conservé pour réactivation :
+  // surface.addEventListener('click',detectFieldAtClick);
+}
+function updateZoomLabel(){const e=document.getElementById('zoomPercent');if(e)e.textContent=Math.round(userZoom*100)+'%';}
+function resizeView(){const surface=document.getElementById('pageSurface'),viewport=document.getElementById('viewport');if(!surface||!viewport)return;const avail=Math.max(300,window.innerWidth-36),baseScale=avail/pageW;scaleNow=Math.max(.15,Math.min(4,baseScale*userZoom));surface.style.transform=`scale(${scaleNow})`;viewport.style.width=(pageW*scaleNow)+'px';viewport.style.height=(pageH*scaleNow)+'px';updateZoomLabel();requestAnimationFrame(updateHorizontalScrollbar);}
+function setZoom(z){userZoom=Math.max(.35,Math.min(3,z));updateZoomLabel();if(pdfProxy)renderPage(currentPage);}
+function closeDocument(){collectCurrentPage();pdfBytes=null;pdfProxy=null;docKey=null;docName='';updateOpenPdfButton();currentPage=1;pageStates={};selected=null;selectedItems.clear();clipboardItem=null;setNavigationEnabled(false);document.getElementById('pageCount').textContent='0';document.getElementById('pageNumber').value='1';updateWindowTitle();stage.innerHTML='<div class="empty">'+t('empty')+'</div>';updateHorizontalScrollbar();localStorage.removeItem(LAST_KEY);setStatus('Document closed');}
+async function resetDocument(){if(!pdfProxy)return;cancelPlacement(false);selected=null;selectedItems.clear();clipboardItem=null;pageStates={};autoYOffset=0;autoLineOn=true;autoCheckDetectOn=true;autoBoxDetectOn=true;autoTextSizeOn=true;if(autoLineEnabled)autoLineEnabled.checked=true;if(autoCheckDetect)autoCheckDetect.checked=true;if(autoBoxDetect)autoBoxDetect.checked=true;if(autoTextSize)autoTextSize.checked=true;if(document.getElementById('clickDetect'))document.getElementById('clickDetect').checked=true;if(autoYValue)autoYValue.textContent='0.0 px';try{if(docKey)await dbDelete(docKey);}catch(_e){}// Important : vider l'ancien overlay avant renderPage, sinon collectCurrentPage() le réinjecte dans pageStates.
+stage.innerHTML='';await renderPage(currentPage);setStatus('Document reset');}
+
+function buildOverlays(){const o=document.getElementById('overlay');if(!o)return;const st=getPageState(currentPage);st.fields.forEach(createTextDom);(st.checks||[]).forEach(createCheckDom);st.images.forEach(createImageDom);st.masks.forEach(createMaskDom);refreshEditorTextColors();}
+function lockEditorTextColor(el,color,transparent=false){
+  if(!el)return;
+  // Le verrou est limité aux zones de saisie : Dark Reader peut continuer
+  // à assombrir tout le reste de l'interface.
+  el.setAttribute('data-darkreader-lock','');
+  const c=transparent?'transparent':(color||'#000000');
+  el.style.setProperty('color',c,'important');
+  el.style.setProperty('-webkit-text-fill-color',c,'important');
+  el.style.setProperty('caret-color',color||'#000000','important');
+}
+function fieldFontFamily(e){return e?.dataset?.fontFamily||'Helvetica';}
+function fieldFontSize(e){const n=parseFloat(e?.dataset?.fontSize);return Number.isFinite(n)?Math.max(5,Math.min(48,n)):8;}
+function fieldTextColor(e){return e?.dataset?.textColor||'#000000';}
+function applyFieldTypography(e,prop,value){
+  if(!e)return;
+  if(prop==='fontFamily')e.dataset.fontFamily=value||'Helvetica';
+  else if(prop==='fontSize')e.dataset.fontSize=String(value);
+  else if(prop==='textColor')e.dataset.textColor=value||'#000000';
+  e.style.fontFamily=cssFont(fieldFontFamily(e));
+  e.style.fontSize=fieldFontSize(e)+'px';
+  lockEditorTextColor(e,fieldTextColor(e),e.classList.contains('box-detected'));
+  // Rafraîchir seulement les représentations dépendantes de la typographie.
+  // Ne pas reconstruire la page entière : cela évite les pertes de sélection et artefacts.
+  updateBoxCharLayer(e);
+  updateLineGuide(e);
+  if(document.activeElement===e){removeFieldTextLayer(e.dataset.id);e.classList.remove('mirrored');}
+  else updateFieldTextLayer(e);
+}
+function refreshEditorTextColors(){
+  document.querySelectorAll('.field').forEach(e=>lockEditorTextColor(e,fieldTextColor(e),e.classList.contains('box-detected')));
+  document.querySelectorAll('.field-text-layer,.box-char-layer').forEach(layer=>{const id=layer.dataset.forId;const e=id?document.querySelector(`.field[data-id="${id}"]`):null;lockEditorTextColor(layer,e?fieldTextColor(e):'#000000',false);});
+  document.querySelectorAll('.box-char').forEach(sp=>{const layer=sp.closest('.box-char-layer');const id=layer?.dataset?.forId;const e=id?document.querySelector(`.field[data-id="${id}"]`):null;lockEditorTextColor(sp,e?fieldTextColor(e):'#000000',false);});
+}
+function applyTypographyChange(prop,value,label){
+  const all=fontAllDocument?.checked===true;
+  collectCurrentPage();
+  if(all){
+    let count=0;
+    // Mise à jour de toutes les pages déjà connues du calque.
+    for(const st of Object.values(pageStates)){
+      for(const f of st.fields||[]){f[prop]=value;count++;}
+    }
+    // Mise à jour immédiate de toutes les zones de la page affichée.
+    document.querySelectorAll('.field').forEach(e=>applyFieldTypography(e,prop,value));
+    // Resynchroniser la page visible sans écraser les autres pages.
+    collectCurrentPage();
+    setStatus(`${label} applied to ${count} text area(s) in the document`);
+    return;
+  }
+  if(!selected||!selected.classList.contains('field')){setStatus('Select an active text area');return;}
+  applyFieldTypography(selected,prop,value);
+  collectCurrentPage();
+  setStatus(`${label} applied to the active area`);
+}
+function applyFontFamily(){applyTypographyChange('fontFamily',fontFamily.value||'Helvetica','Font');}
+function applyFontSize(){applyTypographyChange('fontSize',fs(),'Size');}
+function applyTextColor(){applyTypographyChange('textColor',textColor.value||'#000000','Color');}
+
+function fieldBoxData(e){try{return e.dataset.boxes?JSON.parse(e.dataset.boxes):[];}catch(_){return [];}}
+function setFieldBoxData(e,boxes){if(boxes&&boxes.length>=2){e.dataset.boxes=JSON.stringify(boxes);e.classList.add('box-detected');e.style.color='transparent';e.style.caretColor=fieldTextColor(e);removeFieldTextLayer(e.dataset.id);e.classList.remove('mirrored');}else{delete e.dataset.boxes;e.classList.remove('box-detected');e.style.color=textColor.value;e.style.caretColor=fieldTextColor(e);}updateBoxCharLayer(e);updateFieldTextLayer(e);}
+function removeBoxCharLayer(id){document.querySelector(`.box-char-layer[data-for-id="${id}"]`)?.remove();}
+function updateBoxCharLayer(e){
+  removeBoxCharLayer(e.dataset.id);
+  const boxes=fieldBoxData(e);if(!boxes.length)return;
+  const o=document.getElementById('overlay');if(!o)return;
+  const layer=document.createElement('div');layer.className='box-char-layer';layer.dataset.forId=e.dataset.id;
+  const fsz=fieldFontSize(e);Object.assign(layer.style,{left:e.style.left,top:e.style.top,width:e.style.width,height:e.style.height,fontFamily:cssFont(fieldFontFamily(e)),fontSize:fsz+'px'});lockEditorTextColor(layer,fieldTextColor(e),false);
+  const baseX=parseFloat(e.style.left),baseY=parseFloat(e.style.top),lineY=fieldLineData(e),chars=Array.from((e.value||'').replace(/\r?\n/g,''));
+  // Position de référence homogène. Si une vraie ligne a été détectée on l'utilise ;
+  // sinon on centre verticalement les caractères dans la zone. Dans les deux cas,
+  // autoYOffset agit de la même façon.
+  const zoneH=parseFloat(e.style.height)||16;
+  const baseTop=(lineY!=null&&autoLineOn)?((lineY-baseY)-fsz*1.10):Math.max(0,(zoneH-fsz*1.18)/2);
+  const charTop=baseTop+autoYOffset;
+  for(let i=0;i<boxes.length;i++){
+    const b=boxes[i],left=(b.x-baseX),guide=document.createElement('span');guide.className='box-guide';guide.style.left=left+'px';guide.style.width=(b.w||10)+'px';layer.appendChild(guide);
+    if(i<chars.length&&!/\s/.test(chars[i])){const sp=document.createElement('span');sp.className='box-char';sp.textContent=chars[i];sp.style.left=left+'px';sp.style.width=(b.w||10)+'px';sp.style.top=charTop+'px';sp.style.height=(fsz*1.18)+'px';sp.style.alignItems='flex-start';layer.appendChild(sp);}
+  }
+  o.appendChild(layer);
+}
+function syncBoxLayerGeometry(e){updateFieldBlueGeometry(e);const l=document.querySelector(`.box-char-layer[data-for-id="${e.dataset.id}"]`);if(l){l.style.left=e.style.left;l.style.top=e.style.top;l.style.width=e.style.width;l.style.height=e.style.height;}const gl=document.querySelector(`.line-guide-layer[data-for-id="${e.dataset.id}"]`);if(gl){gl.style.left=e.style.left;gl.style.top=e.style.top;gl.style.width=e.style.width;gl.style.height=e.style.height;updateLineGuide(e);}updateFieldTextLayer(e);}
+function darkPixel(data,idx){return data[idx]<145&&data[idx+1]<145&&data[idx+2]<145;}
+function fieldLineData(e){const v=parseFloat(e?.dataset?.lineY);return Number.isFinite(v)?v:null;}
+function updateFieldBlueGeometry(e){
+  if(!e)return;
+  const y=parseFloat(e.style.top)||0,h=Math.max(1,parseFloat(e.style.height)||16),ly=fieldLineData(e);
+  let topPct=18,bottomPct=88;
+  if(ly!=null){
+    const baseline=Math.max(0,Math.min(h,ly-y));
+    const fsz=fieldFontSize(e);const visualH=Math.min(h,Math.max(10,fsz*1.30));
+    const top=Math.max(0,baseline-visualH);
+    const bottom=Math.max(top+2,Math.min(h,baseline+1));
+    topPct=(top/h)*100; bottomPct=(bottom/h)*100;
+  }
+  e.style.setProperty('--blue-top',topPct.toFixed(2)+'%');
+  e.style.setProperty('--blue-bottom',bottomPct.toFixed(2)+'%');
+}
+function removeLineGuide(id){document.querySelector(`.line-guide-layer[data-for-id="${id}"]`)?.remove();}
+function clearFieldLine(e){if(!e)return;delete e.dataset.lineY;e.classList.remove('line-detected');e.style.paddingTop='1px';updateFieldBlueGeometry(e);removeLineGuide(e.dataset.id);}
+function removeFieldTextLayer(id){document.querySelector(`.field-text-layer[data-for-id="${id}"]`)?.remove();}
+function updateFieldTextLayer(e){
+  if(!e||!e.isConnected)return;
+  removeFieldTextLayer(e.dataset.id);
+  if(fieldBoxData(e).length){e.classList.remove('mirrored');return;}
+  const o=document.getElementById('overlay');if(!o)return;
+  const x=parseFloat(e.style.left)||0,y=parseFloat(e.style.top)||0,w=parseFloat(e.style.width)||40,h=parseFloat(e.style.height)||16;
+  const ly=fieldLineData(e);
+  const fsz=fieldFontSize(e);let top=(ly!=null&&autoLineOn)?((ly-y)-fsz*.92-1+autoYOffset):(Math.max(0,(h-fsz*1.18)/2)+autoYOffset);
+  const l=document.createElement('div');l.className='field-text-layer';l.dataset.forId=e.dataset.id;l.textContent=e.value||'';
+  Object.assign(l.style,{left:(x+2)+'px',top:(y+top)+'px',width:Math.max(1,w-4)+'px',minHeight:Math.max(h,fsz*1.3)+'px',fontFamily:cssFont(fieldFontFamily(e)),fontSize:fsz+'px',textAlign:e.style.textAlign||'left'});lockEditorTextColor(l,fieldTextColor(e),false);
+  o.appendChild(l);e.classList.add('mirrored');
+}
+function updateLineGuide(e){
+  updateFieldBlueGeometry(e);
+  removeLineGuide(e.dataset.id);
+  const ly=fieldLineData(e),x=parseFloat(e.style.left),y=parseFloat(e.style.top),w=parseFloat(e.style.width),h=parseFloat(e.style.height)||16;
+  // Même sans ligne détectée, le réglage ↑/↓ doit agir de façon déterministe sur
+  // toutes les zones texte. On utilise alors un centrage vertical comme référence.
+  let top;
+  if(ly!=null){
+    const o=document.getElementById('overlay');if(o){const layer=document.createElement('div');layer.className='line-guide-layer';layer.dataset.forId=e.dataset.id;Object.assign(layer.style,{left:x+'px',top:y+'px',width:w+'px',height:e.style.height});const g=document.createElement('span');g.className='line-guide';g.style.left='0px';g.style.top=(ly-y)+'px';g.style.width=w+'px';layer.appendChild(g);o.appendChild(layer);}
+    top=autoLineOn?((ly-y)-fieldFontSize(e)*.92-1+autoYOffset):1;
+  }else{
+    top=Math.max(0,(h-fieldFontSize(e)*1.18)/2)+autoYOffset;
+  }
+  e.style.paddingTop=Math.max(0,top)+'px';
+  updateFieldTextLayer(e);
+}
+function detectTextLineUnderField(e,announce=false){
+  const canvas=document.getElementById('pdfCanvas');
+  if(!canvas||!e||!e.isConnected){clearFieldLine(e);return null;}
+  const x=parseFloat(e.style.left),y=parseFloat(e.style.top),w=parseFloat(e.style.width),h=parseFloat(e.style.height);
+  if(w<25||h<8){clearFieldLine(e);return null;}
+  const sx=canvas.width/pageW,sy=canvas.height/pageH;
+  const padX=Math.min(3,w*.03),ux0=Math.max(0,x+padX),ux1=Math.min(pageW,x+w-padX);
+  const py0=Math.max(0,Math.floor((y+h*.38)*sy)),py1=Math.min(canvas.height-1,Math.ceil((y+h+3)*sy));
+  const px0=Math.max(0,Math.floor(ux0*sx)),px1=Math.min(canvas.width-1,Math.ceil(ux1*sx));
+  if(px1-px0<15||py1-py0<3){clearFieldLine(e);return null;}
+  const ctx=canvas.getContext('2d',{willReadFrequently:true}),img=ctx.getImageData(px0,py0,px1-px0+1,py1-py0+1),W=img.width,H=img.height,d=img.data;
+  let best=null;
+  for(let yy=0;yy<H;yy++){
+    let dark=0,first=W,last=-1,runs=0,inRun=false;
+    for(let xx=0;xx<W;xx++){
+      const on=darkPixel(d,(yy*W+xx)*4);
+      if(on){dark++;if(first===W)first=xx;last=xx;if(!inRun){runs++;inRun=true;}}else inRun=false;
+    }
+    if(dark<Math.max(7,W*.075)||last<0)continue;
+    const span=(last-first+1)/W,ratio=dark/W;
+    if(span<.58)continue;
+    // Favorise une ligne fine (continue ou pointillée) qui s'étend largement.
+    const score=span*1.6+Math.min(.55,ratio)*1.2-Math.max(0,runs-W*.12)*.002;
+    if(!best||score>best.score)best={yy,score,ratio,span};
+  }
+  if(!best||best.score<1.05){clearFieldLine(e);return null;}
+  const lineY=+(py0+best.yy)/sy;
+  // La ligne doit rester dans la zone ou juste sous son bord inférieur.
+  if(lineY<y+h*.35||lineY>y+h+4){clearFieldLine(e);return null;}
+  e.dataset.lineY=lineY.toFixed(2);e.classList.add('line-detected');updateLineGuide(e);
+  if(announce)setStatus('Input baseline detected: text aligned automatically');
+  return lineY;
+}
+
+function autoAlignFieldWithRowPeers(e,announce=false){
+  // Disabled: existing overlay fields must never attract or reposition other fields.
+  return false;
+}
+
+function scheduleTextRecognition(e,announce=false){clearTimeout(e._textDetectTimer);e._textDetectTimer=setTimeout(()=>{
+  const boxes=autoBoxDetectOn?detectBoxesUnderField(e,false):(setFieldBoxData(e,[]),[]);
+  let line=null;
+  if(!autoLineOn){clearFieldLine(e);}
+  else if(boxes.length>=2){
+    // Pour une suite de cases, la référence verticale vient directement de la
+    // ligne basse de chaque case. C'est beaucoup plus fiable lorsque deux lignes
+    // du formulaire sont proches l'une de l'autre.
+    const ys=boxes.map(b=>+b.lineY).filter(Number.isFinite).sort((a,b)=>a-b);
+    if(ys.length){
+      const m=Math.floor(ys.length/2);
+      line=ys.length%2?ys[m]:(ys[m-1]+ys[m])/2;
+      e.dataset.lineY=(+line).toFixed(2);e.classList.add('line-detected');updateLineGuide(e);
+    }else line=detectTextLineUnderField(e,false);
+  }else if(autoLineOn) line=detectTextLineUnderField(e,false);
+  updateBoxCharLayer(e);
+  if(announce){if(boxes.length>=2&&line!=null)setStatus(`Boxes + baseline detected: ${boxes.length} characters`);else if(boxes.length>=2)setStatus(`Box mode detected: ${boxes.length} characters`);else if(line!=null)setStatus('Input baseline detected: text aligned automatically');}
+},80);}
+function detectBoxesUnderField(e,announce=false){
+  if(!autoBoxDetectOn){setFieldBoxData(e,[]);return [];}
+  const canvas=document.getElementById('pdfCanvas');
+  if(!canvas||!e||!e.isConnected)return [];
+  const x=parseFloat(e.style.left),y=parseFloat(e.style.top),w=parseFloat(e.style.width),h=parseFloat(e.style.height);
+  if(w<16||h<8)return [];
+  const sx=canvas.width/pageW,sy=canvas.height/pageH;
+  const px0=Math.max(0,Math.floor(x*sx)),px1=Math.min(canvas.width-1,Math.ceil((x+w)*sx)),py0=Math.max(0,Math.floor(y*sy)),py1=Math.min(canvas.height-1,Math.ceil((y+h)*sy));
+  if(px1-px0<10||py1-py0<6)return [];
+  const ctx=canvas.getContext('2d',{willReadFrequently:true}),img=ctx.getImageData(px0,py0,px1-px0+1,py1-py0+1),W=img.width,H=img.height,d=img.data;
+
+  // Les séparateurs de formulaires sont souvent très courts. On cherche donc
+  // une séquence verticale continue plutôt qu'une grande proportion de pixels
+  // noirs sur toute la hauteur de la zone texte.
+  const yStart=Math.floor(H*.16),yEnd=Math.max(yStart+2,Math.floor(H*.98));
+  const minRun=Math.max(3,Math.min(12,Math.round(H*.11)));
+  const vert=[];
+  for(let xx=0;xx<W;xx++){
+    let run=0,bestRun=0;
+    for(let yy=yStart;yy<yEnd;yy++){
+      if(darkPixel(d,(yy*W+xx)*4)){run++;if(run>bestRun)bestRun=run;}else run=0;
+    }
+    if(bestRun>=minRun)vert.push(xx);
+  }
+  const centers=[];
+  for(let i=0;i<vert.length;){
+    let j=i+1;while(j<vert.length&&vert[j]<=vert[j-1]+1)j++;
+    centers.push((vert[i]+vert[j-1])/2);i=j;
+  }
+  if(centers.length<3){setFieldBoxData(e,[]);return [];}
+
+  // Construit les cellules ayant une vraie ligne horizontale en partie basse.
+  const candidates=[];
+  for(let i=0;i<centers.length-1;i++){
+    const a=centers[i],b=centers[i+1],pw=b-a,uw=pw/sx;
+    if(uw<4||uw>32)continue;
+    let best=0,bestY=-1;
+    const ys=Math.floor(H*.42);
+    for(let yy=ys;yy<H;yy++){
+      let c=0,n=0;
+      for(let xx=Math.ceil(a);xx<=Math.floor(b);xx++){
+        n++;if(darkPixel(d,(yy*W+xx)*4))c++;
+      }
+      if(n){const r=c/n;if(r>best){best=r;bestY=yy;}}
+    }
+    if(best<.50||bestY<0)continue;
+    // Mémorise aussi la ligne basse réellement détectée de chaque cellule.
+    // Cela permet d'aligner le texte sur les cases elles-mêmes et non sur une
+    // ligne voisine quand plusieurs lignes de formulaire sont très proches.
+    candidates.push({x:+(x+a/sx).toFixed(2),w:+Math.max(3,uw).toFixed(2),lineY:+(y+bestY/sy).toFixed(2)});
+  }
+
+  // Evite de considérer l'espace entre deux groupes (ex. JJ  MM  AAAA)
+  // comme une cellule. C'était ce qui pouvait centrer un caractère entre 2 cases.
+  let boxes=candidates;
+  if(candidates.length>=3){
+    const widths=candidates.map(b=>b.w).sort((a,b)=>a-b);
+    const mid=Math.floor(widths.length/2);
+    const median=widths.length%2?widths[mid]:(widths[mid-1]+widths[mid])/2;
+    const lo=median*.68,hi=median*1.34;
+    const filtered=candidates.filter(b=>b.w>=lo&&b.w<=hi);
+    if(filtered.length>=2)boxes=filtered;
+  }
+
+  if(boxes.length>=2){
+    setFieldBoxData(e,boxes);
+    if(announce)setStatus(`Box mode detected: ${boxes.length} characters`);
+  }else setFieldBoxData(e,[]);
+  return boxes;
+}
+function scheduleBoxDetection(e,announce=false){clearTimeout(e._boxDetectTimer);e._boxDetectTimer=setTimeout(()=>detectBoxesUnderField(e,announce),80);}
+
+function rectOverlap(a,b,pad=2){return !(a.x+a.w+pad<b.x||b.x+b.w+pad<a.x||a.y+a.h+pad<b.y||b.y+b.h+pad<a.y);}
+function existingRects(){const o=document.getElementById('overlay');if(!o)return[];return [...o.querySelectorAll('.field,.check-zone')].map(e=>({x:parseFloat(e.style.left)||0,y:parseFloat(e.style.top)||0,w:parseFloat(e.style.width)||0,h:parseFloat(e.style.height)||0}));}
+function placementSnapConflictsExisting(rect,pad=5){
+  // A PDF snap must never pull a NEW text area onto an overlay area that already exists.
+  // This is intentionally only a guard for automatic snapping: manual placement remains free.
+  return existingRects().some(r=>rectOverlap(rect,r,pad));
+}
+function makeAnalysisCanvas(){const src=document.getElementById('pdfCanvas');if(!src)return null;const q=1.6,c=document.createElement('canvas');c.width=Math.max(1,Math.round(pageW*q));c.height=Math.max(1,Math.round(pageH*q));const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(src,0,0,c.width,c.height);return {canvas:c,ctx:x,q};}
+async function getPagePrintedTextBoxes(){
+  try{
+    const pg=await pdfProxy.getPage(currentPage),tc=await pg.getTextContent(),vp=pg.getViewport({scale:1}),out=[];
+    for(const it of tc.items||[]){
+      if(!it.str||!it.str.trim())continue;
+      const m=pdfjsLib.Util.transform(vp.transform,it.transform),h=Math.max(3,Math.hypot(m[2],m[3])),w=Math.max(1,Math.abs(it.width||0)),str=it.str;
+      const wholeGuide=/^[\s._·•-]{6,}$/.test(str)&&/[._·•-]/.test(str);
+      out.push({x:m[4],y:m[5]-h,w,h:h*1.08,text:str,isGuide:wholeGuide});
+
+      // Beaucoup de PDF n'ont PAS un item texte séparé pour la ligne pointillée :
+      // le libellé + les points peuvent être dans le même item PDF.js. On extrait
+      // donc chaque longue suite de points et on estime sa position dans l'item.
+      // Cette détection est volontairement indépendante du raster.
+      if(!wholeGuide){
+        const re=/[._·•]{6,}/g;let mt;
+        while((mt=re.exec(str))){
+          const before=str.slice(0,mt.index),run=mt[0],after=str.slice(mt.index+run.length);
+          // Approximation par avance typographique. Elle est bien meilleure qu'une
+          // absence totale de champ et sera ensuite affinée par le détecteur de ligne.
+          const total=Math.max(1,str.length),start=before.length/total,end=(before.length+run.length)/total;
+          const gx=m[4]+w*start,gw=Math.max(18,w*(end-start));
+          out.push({x:gx,y:m[5]-h,w:gw,h:h*1.08,text:run,isGuide:true,embeddedGuide:true});
+        }
+      }
+    }
+    return out;
+  }catch(_){return [];}
+}
+function rectIntersectionWidth(a,b){return Math.max(0,Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x));}
+function rectIntersectionHeight(a,b){return Math.max(0,Math.min(a.y+a.h,b.y+b.h)-Math.max(a.y,b.y));}
+function pointNearPrintedText(x,y,textBoxes,pad=2){return textBoxes.some(t=>x>=t.x-pad&&x<=t.x+t.w+pad&&y>=t.y-pad&&y<=t.y+t.h+pad);}
+function fitRectBetweenPrintedText(rect,textBoxes,anchorX=null,pad=2){
+  // Une zone éditable ne doit jamais recouvrir du texte déjà imprimé dans le PDF.
+  // On recherche l'intervalle horizontal libre qui contient le point visé.
+  const y0=rect.y,y1=rect.y+rect.h;
+  const blocks=textBoxes.filter(t=>!t.isGuide&&t.y<y1+pad&&t.y+t.h>y0-pad)
+    .map(t=>({x1:Math.max(0,t.x-pad),x2:Math.min(pageW,t.x+t.w+pad)}))
+    .sort((a,b)=>a.x1-b.x1);
+  const merged=[];
+  for(const b of blocks){const m=merged[merged.length-1];if(m&&b.x1<=m.x2+1)m.x2=Math.max(m.x2,b.x2);else merged.push({...b});}
+  let ax=Number.isFinite(anchorX)?anchorX:(rect.x+rect.w*.5);
+  ax=Math.max(0,Math.min(pageW,ax));
+  // Si le clic tombe juste dans un texte, place l'ancre immédiatement après celui-ci,
+  // plutôt que de fabriquer une zone par-dessus le libellé.
+  const hit=merged.find(b=>ax>=b.x1&&ax<=b.x2);
+  if(hit)ax=Math.min(pageW,hit.x2+1);
+  let left=0,right=pageW;
+  for(const b of merged){
+    if(b.x2<=ax)left=Math.max(left,b.x2);
+    else if(b.x1>=ax){right=Math.min(right,b.x1);break;}
+  }
+  const requestedLeft=Math.max(left,rect.x),requestedRight=Math.min(right,rect.x+rect.w);
+  let x=requestedLeft,w=requestedRight-requestedLeft;
+  // Pour un fallback au clic, la largeur peut s'étendre dans tout l'espace libre à droite,
+  // sans jamais franchir le prochain texte PDF.
+  if(w<24){x=Math.max(left,Math.min(ax,right));w=Math.max(0,right-x);}
+  if(w<12)return null;
+  return {x:+x.toFixed(2),y:+rect.y.toFixed(2),w:+w.toFixed(2),h:+rect.h.toFixed(2)};
+}
+function rectTouchesPrintedText(rect,textBoxes,pad=.5){
+  return textBoxes.some(t=>!t.isGuide&&rectOverlap(rect,{x:t.x,y:t.y,w:t.w,h:t.h},pad));
+}
+function lineHasNearbyLabel(ln,textBoxes){
+  // Same row, immediately to the left; or a short label just above the line.
+  for(const t of textBoxes){
+    const cy=t.y+t.h*.55;
+    const sameRow=Math.abs(cy-ln.y)<=Math.max(8,t.h*.9)&&t.x+t.w<=ln.x+8&&ln.x-(t.x+t.w)<=150;
+    const above=t.y+t.h<=ln.y+2&&ln.y-(t.y+t.h)<=28&&t.x<ln.x+ln.w&&t.x+t.w>ln.x-80;
+    if(sameRow||above)return true;
+  }
+  return false;
+}
+function lineTouchesPrintedText(ln,textBoxes){
+  const band={x:ln.x-1,y:ln.y-3,w:ln.w+2,h:7};
+  for(const t of textBoxes){
+    const iw=rectIntersectionWidth(band,t),ih=rectIntersectionHeight(band,t);
+    if(iw>Math.max(5,Math.min(14,ln.w*.06))&&ih>0)return true;
+  }
+  return false;
+}
+function buildPrintedTextMask(W,H,q,textBoxes,padCss=1.5){
+  const mask=new Uint8Array(W*H),pad=Math.max(1,Math.round(padCss*q));
+  for(const t of textBoxes){
+    // Les pointillés / soulignés sont eux-mêmes des zones de saisie : ne surtout pas les masquer.
+    if(t.isGuide)continue;
+    const x0=Math.max(0,Math.floor(t.x*q)-pad),y0=Math.max(0,Math.floor(t.y*q)-pad),x1=Math.min(W-1,Math.ceil((t.x+t.w)*q)+pad),y1=Math.min(H-1,Math.ceil((t.y+t.h)*q)+pad);
+    for(let y=y0;y<=y1;y++)mask.fill(1,y*W+x0,y*W+x1+1);
+  }
+  return mask;
+}
+function formInk(data,idx,soft=false){const lim=soft?218:175;return data[idx]<lim&&data[idx+1]<lim&&data[idx+2]<lim;}
+function buildTextRows(textBoxes=[]){
+  // Regroupe le contenu PDF par ligne visuelle. Le but est de ne plus analyser
+  // une page dense comme une seule image : chaque ligne est traitée séparément.
+  const items=textBoxes.filter(t=>!t.isGuide).map(t=>({...t,cy:t.y+t.h*.55})).sort((a,b)=>a.cy-b.cy||a.x-b.x),rows=[];
+  for(const t of items){
+    let best=null,bestD=1e9;
+    for(let i=rows.length-1;i>=0;i--){
+      const r=rows[i],d=Math.abs(r.cy-t.cy),tol=Math.max(3.5,Math.min(8,(r.h+t.h)*.34));
+      if(t.cy-r.cy>14)break;
+      if(d<=tol&&d<bestD){best=r;bestD=d;}
+    }
+    if(!best){best={items:[],cy:t.cy,h:t.h,minY:t.y,maxY:t.y+t.h};rows.push(best);}
+    best.items.push(t);best.minY=Math.min(best.minY,t.y);best.maxY=Math.max(best.maxY,t.y+t.h);best.h=Math.max(best.h,t.h);
+    best.cy=best.items.reduce((a,x)=>a+x.cy,0)/best.items.length;
+  }
+  for(const r of rows)r.items.sort((a,b)=>a.x-b.x);
+  return rows;
+}
+function nearestTextRow(y,rows){
+  let best=null,bd=1e9;
+  for(const r of rows){const d=Math.abs(r.cy-y);if(d<bd){bd=d;best=r;}}
+  return best&&bd<=Math.max(20,best.h*2.15)?best:null;
+}
+function lineConflictsWithRowText(ln,row){
+  if(!row)return false;
+  const band={x:ln.x,y:ln.y-3,w:ln.w,h:6};
+  let covered=0;
+  for(const t of row.items){
+    const iw=rectIntersectionWidth(band,t),ih=rectIntersectionHeight(band,t);
+    if(iw>0&&ih>0)covered+=iw;
+  }
+  return covered>Math.max(10,ln.w*.18);
+}
+function detectPageHorizontalLines(ctx,W,H,q,textBoxes=[]){
+  const rows=buildTextRows(textBoxes);
+  // 1) Beaucoup de formulaires PDF utilisent une longue chaîne de points comme ligne
+  // de saisie. PDF.js la voit alors comme du TEXTE. C'est la source principale des
+  // champs pointillés du formulaire CAF : on les exploite directement.
+  const direct=[];
+  for(const t of textBoxes){
+    if(!t.isGuide)continue;
+    const txt=(t.text||'').trim();
+    if(txt.length<6||t.w<28)continue;
+    const row=nearestTextRow(t.y+t.h*.55,rows);
+    let x=t.x,w=t.w;
+    // Coupe la zone au contact du texte réel de la même ligne. Cela évite les
+    // grands rectangles qui chevauchent plusieurs libellés sur les lignes chargées.
+    if(row){
+      for(const z of row.items){
+        if(z.x>x&&z.x<x+w){w=Math.max(0,z.x-x-1.5);break;}
+      }
+    }
+    if(w>=24)direct.push({x,y:t.y+t.h*.78,w,h:1,ratio:1,fromTextGuide:true,_row:row});
+  }
+
+  // 2) Complément raster pour les traits continus ou pointillés réellement dessinés.
+  const img=ctx.getImageData(0,0,W,H),d=img.data,mask=buildPrintedTextMask(W,H,q,textBoxes,1.0),raw=[];
+  const maxGap=Math.max(7,Math.round(9*q)),minSpan=Math.max(42,Math.round(34*q)),minHits=Math.max(8,Math.round(6*q));
+  for(let y=1;y<H-1;y++){
+    let first=-1,last=-1,hits=0,gap=0;
+    const flush=()=>{
+      if(first<0)return;
+      const span=last-first+1,density=hits/Math.max(1,span);
+      if(span>=minSpan&&hits>=minHits&&density>=.055)raw.push({x:first,y,w:span,hits,density});
+      first=last=-1;hits=gap=0;
+    };
+    for(let x=1;x<W-1;x++){
+      const idx=y*W+x,ink=!mask[idx]&&formInk(d,idx*4,true);
+      if(ink){if(first<0)first=x;last=x;hits++;gap=0;}
+      else if(first>=0){gap++;if(gap>maxGap)flush();}
+    }
+    flush();
+  }
+  raw.sort((a,b)=>a.y-b.y||a.x-b.x);
+  const merged=[];
+  for(const r of raw){
+    let best=null;
+    for(let i=merged.length-1;i>=0;i--){
+      const m=merged[i];if(r.y-m.y2>Math.max(5,Math.round(3*q)))break;
+      const ov=Math.max(0,Math.min(r.x+r.w,m.x+m.w)-Math.max(r.x,m.x));
+      if(ov>Math.min(r.w,m.w)*.5){best=m;break;}
+    }
+    if(best){best.y2=r.y;best.x=Math.min(best.x,r.x);best.w=Math.max(best.x+best.w,r.x+r.w)-best.x;best.hits=Math.max(best.hits,r.hits);}
+    else merged.push({...r,y2:r.y});
+  }
+  const raster=merged.map(r=>({x:r.x/q,y:((r.y+r.y2)/2)/q,w:r.w/q,h:Math.max(1,(r.y2-r.y+1)/q),ratio:r.density,fromTextGuide:false}))
+    .filter(r=>r.w>=26&&r.w<pageW*.96&&r.y>15&&r.y<pageH-15)
+    .filter(r=>{
+      const row=nearestTextRow(r.y,rows);r._row=row;if(!row)return false;
+      // Lecture réellement ligne par ligne : une ligne de saisie peut être située
+      // légèrement sous la ligne de texte (adresse, SIRET, montants...). On accepte
+      // donc toute ligne comprise dans la bande verticale de sa ligne de texte,
+      // même si le libellé n'est pas immédiatement à gauche.
+      const dy=r.y-row.cy;
+      if(dy < -Math.max(8,row.h*.8) || dy > Math.max(18,row.h*1.9))return false;
+      // Elle doit toutefois commencer après le début d'au moins un élément de la ligne
+      // ou être une longue zone libre ; cela élimine la plupart des séparateurs de page.
+      const minX=Math.min(...row.items.map(t=>t.x));
+      if(r.x+r.w < minX+12)return false;
+      return true;
+    })
+    // Ne rejette plus une ligne entière parce qu'elle croise un peu de texte : sur les
+    // lignes chargées, c'était précisément ce qui faisait disparaître Adresse/SIRET/etc.
+    .filter(r=>{
+      if(!lineConflictsWithRowText(r,r._row))return true;
+      const band={x:r.x,y:r.y-3,w:r.w,h:6};let covered=0;
+      for(const t of r._row.items){const iw=rectIntersectionWidth(band,t),ih=rectIntersectionHeight(band,t);if(iw>0&&ih>0)covered+=iw;}
+      return covered < Math.max(18,r.w*.38);
+    });
+
+  // Déduplique direct + raster, en donnant priorité aux guides provenant du texte PDF.
+  const all=[...direct,...raster].sort((a,b)=>a.y-b.y||a.x-b.x),out=[];
+  for(const r of all){
+    const dup=out.find(o=>Math.abs(o.y-r.y)<4&&Math.max(0,Math.min(o.x+o.w,r.x+r.w)-Math.max(o.x,r.x))>Math.min(o.w,r.w)*.65);
+    if(dup){if(r.fromTextGuide&&!dup.fromTextGuide)Object.assign(dup,r);continue;}
+    out.push(r);
+  }
+  return out;
+}
+
+function detectPageBoxGroups(ctx,W,H,q,textBoxes=[]){
+  // Détection dédiée aux lignes de petites cellules (code, date, téléphone...).
+  // On retire d'abord le texte imprimé, puis on recherche les séparateurs verticaux
+  // et on les regroupe PAR LIGNE selon leur base commune. Cela évite de mélanger
+  // deux lignes proches ou une ligne très chargée.
+  const img=ctx.getImageData(0,0,W,H),d=img.data,mask=buildPrintedTextMask(W,H,q,textBoxes,.35);
+  const ink=(x,y)=>{x=Math.round(x);y=Math.round(y);if(x<0||y<0||x>=W||y>=H)return false;const i=y*W+x,k=i*4;return !mask[i]&&d[k]<225&&d[k+1]<225&&d[k+2]<225;};
+  const minRun=Math.max(5,Math.round(5*q)),maxRun=Math.max(minRun+2,Math.round(22*q));
+  const raw=[];
+  // Pour chaque colonne, conserve les traits verticaux de hauteur compatible avec une cellule.
+  for(let x=1;x<W-1;x++){
+    let y=1;
+    while(y<H-1){
+      while(y<H-1&&!ink(x,y))y++;
+      const y0=y;while(y<H-1&&(ink(x,y)||ink(x-1,y)||ink(x+1,y)))y++;
+      const len=y-y0;
+      if(len>=minRun&&len<=maxRun)raw.push({x,y0,y1:y-1});
+    }
+  }
+  // Fusionne les colonnes contiguës appartenant au même trait vertical.
+  raw.sort((a,b)=>a.x-b.x||a.y0-b.y0);
+  const strokes=[];
+  for(const r of raw){
+    let best=null;
+    for(let i=strokes.length-1;i>=0;i--){
+      const s=strokes[i];if(r.x-s.x2>2)break;
+      const ov=Math.max(0,Math.min(r.y1,s.y1)-Math.max(r.y0,s.y0));
+      if(r.x<=s.x2+1&&ov>=Math.min(r.y1-r.y0,s.y1-s.y0)*.55){best=s;break;}
+    }
+    if(best){best.x2=Math.max(best.x2,r.x);best.y0=Math.min(best.y0,r.y0);best.y1=Math.max(best.y1,r.y1);}
+    else strokes.push({x1:r.x,x2:r.x,y0:r.y0,y1:r.y1});
+  }
+  const reps=strokes.map(s=>({x:(s.x1+s.x2)/2,y0:s.y0,y1:s.y1,h:s.y1-s.y0+1}));
+  // Une ligne de cellules partage surtout la même ligne basse. On groupe donc par y1,
+  // et non par centre vertical (beaucoup plus fiable quand les lignes se touchent presque).
+  const rows=[];
+  for(const v of reps.sort((a,b)=>a.y1-b.y1||a.x-b.x)){
+    let row=null,bd=1e9;
+    for(const r of rows){const dd=Math.abs(r.base-v.y1);if(dd<=Math.max(2,2.2*q)&&dd<bd){row=r;bd=dd;}}
+    if(!row){row={base:v.y1,items:[]};rows.push(row);}
+    row.items.push(v);row.base=row.items.reduce((a,z)=>a+z.y1,0)/row.items.length;
+  }
+  const out=[];
+  const hRatio=(x1,x2,y)=>{let n=0,k=0;for(let x=Math.round(x1);x<=Math.round(x2);x++){n++;if(ink(x,y)||ink(x,y-1)||ink(x,y+1))k++;}return n?k/n:0;};
+  for(const row of rows){
+    const vs=row.items.sort((a,b)=>a.x-b.x);
+    let group=[];
+    const flush=()=>{
+      if(group.length<3){group=[];return;} // >= 2 cellules
+      // Vérifie la régularité des espacements et la présence de la ligne basse entre séparateurs.
+      const gaps=[];for(let i=0;i<group.length-1;i++)gaps.push((group[i+1].x-group[i].x)/q);
+      const okGaps=gaps.filter(g=>g>=4&&g<=32);
+      if(okGaps.length<group.length-2){group=[];return;}
+      const gs=[...okGaps].sort((a,b)=>a-b),med=gs[Math.floor(gs.length/2)]||0;
+      if(!med){group=[];return;}
+      let good=0;
+      for(let i=0;i<group.length-1;i++){
+        const gap=(group[i+1].x-group[i].x)/q;
+        if(gap<med*.55||gap>med*1.65)continue;
+        if(hRatio(group[i].x,group[i+1].x,row.base)>=.34)good++;
+      }
+      if(good<Math.max(2,group.length-2)){group=[];return;}
+      const x1=group[0].x/q,x2=group[group.length-1].x/q,base=row.base/q;
+      const top=Math.min(...group.map(v=>v.y0))/q;
+      const c={x:x1,y:Math.max(0,top-2),w:x2-x1,h:Math.max(12,base-top+4),lineY:base,boxes:[]};
+      for(let i=0;i<group.length-1;i++){
+        const a=group[i].x/q,b=group[i+1].x/q,g=b-a;
+        if(g>=med*.55&&g<=med*1.65)c.boxes.push({x:+a.toFixed(2),w:+g.toFixed(2),lineY:+base.toFixed(2)});
+      }
+      // Associe le groupe à la ligne de texte la plus proche. On ne demande plus que
+      // le libellé soit exactement à gauche : dans certains PDF il est découpé en
+      // plusieurs objets ou décalé verticalement de quelques pixels.
+      const cy=top+(base-top)*.55;
+      const near=textBoxes.filter(t=>!t.isGuide&&Math.abs((t.y+t.h*.55)-cy)<=Math.max(15,t.h*1.7));
+      const label=near.some(t=>t.x<c.x+c.w+8 && t.x+t.w>c.x-220);
+      if(label&&c.boxes.length>=2&&c.w>=10&&c.w<pageW*.82)out.push(c);
+      group=[];
+    };
+    for(const v of vs){
+      if(!group.length){group=[v];continue;}
+      const gap=(v.x-group[group.length-1].x)/q;
+      if(gap>38||gap<2){flush();group=[v];}else group.push(v);
+    }
+    flush();
+  }
+  // Déduplique les groupes presque identiques.
+  const ded=[];
+  for(const g of out.sort((a,b)=>a.y-b.y||a.x-b.x)){
+    if(ded.some(o=>Math.abs(o.lineY-g.lineY)<2.5&&Math.abs(o.x-g.x)<4&&Math.abs(o.w-g.w)<8))continue;
+    ded.push(g);
+  }
+  return ded;
+}
+
+function detectPageCheckboxSquares(ctx,W,H,q,textBoxes=[]){
+  // Recherche géométrique de petits rectangles creux. Elle ne dépend pas du fait
+  // que les 4 bords soient reliés pixel à pixel (cas fréquent avec l'antialiasing).
+  const img=ctx.getImageData(0,0,W,H),d=img.data,mask=buildPrintedTextMask(W,H,q,textBoxes,.45),out=[];
+  const darkAt=(x,y)=>{
+    x=Math.round(x);y=Math.round(y);if(x<0||y<0||x>=W||y>=H)return false;
+    const i=y*W+x;const k=i*4;return !mask[i]&&d[k]<238&&d[k+1]<238&&d[k+2]<238;
+  };
+  const hRatio=(x1,x2,y)=>{let n=0,k=0;for(let x=Math.round(x1);x<=Math.round(x2);x++){n++;if(darkAt(x,y)||darkAt(x,y-1)||darkAt(x,y+1))k++;}return n?k/n:0;};
+  const vRatio=(x,y1,y2)=>{let n=0,k=0;for(let y=Math.round(y1);y<=Math.round(y2);y++){n++;if(darkAt(x,y)||darkAt(x-1,y)||darkAt(x+1,y))k++;}return n?k/n:0;};
+  const step=Math.max(1,Math.round(q));
+  const minS=Math.round(5*q),maxS=Math.round(15*q);
+  // Cherche d'abord un bord supérieur court, puis un bord inférieur et vérifie les côtés.
+  for(let y=Math.round(12*q);y<H-Math.round(12*q);y+=step){
+    let x=1;
+    while(x<W-2){
+      while(x<W-2&&!darkAt(x,y))x++;
+      const x0=x;while(x<W-2&&(darkAt(x,y)||darkAt(x,y-1)||darkAt(x,y+1)))x++;
+      const run=x-x0;if(run<minS-2||run>maxS+5)continue;
+      for(let hp=minS;hp<=maxS;hp++){
+        const y2=y+hp;if(y2>=H-2)break;
+        const top=hRatio(x0,x0+run-1,y),bot=hRatio(x0,x0+run-1,y2);
+        if(top<.48||bot<.42)continue;
+        const left=vRatio(x0,y,y2),right=vRatio(x0+run-1,y,y2);
+        if(left<.38||right<.38)continue;
+        const wu=run/q,hu=hp/q,ar=wu/hu;if(ar<.62||ar>1.6)continue;
+        // L'intérieur doit rester majoritairement blanc.
+        let inner=0,n=0;const pad=Math.max(2,Math.round(Math.min(run,hp)*.25));
+        for(let yy=y+pad;yy<=y2-pad;yy+=2)for(let xx=x0+pad;xx<=x0+run-1-pad;xx+=2){n++;if(darkAt(xx,yy))inner++;}
+        if(n&&inner/n>.20)continue;
+        const c={x:x0/q,y:y/q,w:wu,h:hu};
+        if(out.some(o=>Math.abs(o.x-c.x)<2&&Math.abs(o.y-c.y)<2))continue;
+        out.push(c);break;
+      }
+    }
+  }
+  // Les suites régulières de 3+ cases sont des champs code/date/téléphone : elles
+  // seront prises en charge comme zone texte, pas comme cases à cocher individuelles.
+  const keep=[];
+  for(let i=0;i<out.length;i++){
+    const a=out[i],cy=a.y+a.h/2;
+    const row=out.filter((b,j)=>j!==i&&Math.abs((b.y+b.h/2)-cy)<Math.max(3,a.h*.55)&&Math.abs(b.w-a.w)<Math.max(2,a.w*.5)&&Math.abs(b.h-a.h)<Math.max(2,a.h*.5)&&Math.abs((b.x+b.w/2)-(a.x+a.w/2))<a.w*5.5);
+    if(row.length>=2)continue;
+    keep.push(a);
+  }
+  return keep;
+}
+
+function fitDetectedLineSegment(rect,textBoxes,anchorX=null,pad=2){
+  // Découpe UNIQUEMENT la ligne détectée. Les textes des lignes voisines ne doivent
+  // jamais repousser le champ jusqu'au bord droit de la page.
+  const x0=Math.max(0,rect.x),x1=Math.min(pageW,rect.x+rect.w);
+  if(x1-x0<12)return null;
+  const cy=rect.y+rect.h*.55;
+  const blockers=textBoxes.filter(t=>{
+    if(t.isGuide)return false;
+    const tcy=t.y+t.h*.55;
+    const verticalClose=Math.abs(tcy-cy)<=Math.max(4,Math.min(rect.h,t.h)*.58);
+    const overlap=Math.max(0,Math.min(rect.y+rect.h,t.y+t.h)-Math.max(rect.y,t.y));
+    const enoughOverlap=overlap>=Math.min(rect.h,t.h)*.34;
+    return verticalClose&&enoughOverlap&&t.x<x1+pad&&t.x+t.w>x0-pad;
+  }).map(t=>({x1:Math.max(x0,t.x-pad),x2:Math.min(x1,t.x+t.w+pad)})).sort((a,b)=>a.x1-b.x1);
+  const merged=[];
+  for(const b of blockers){const m=merged[merged.length-1];if(m&&b.x1<=m.x2+1)m.x2=Math.max(m.x2,b.x2);else merged.push({...b});}
+  const free=[];let cur=x0;
+  for(const b of merged){if(b.x1>cur)free.push({x:cur,w:b.x1-cur});cur=Math.max(cur,b.x2);}if(cur<x1)free.push({x:cur,w:x1-cur});
+  const usable=free.filter(f=>f.w>=18);if(!usable.length)return null;
+  const ax=Number.isFinite(anchorX)?Math.max(x0,Math.min(x1,anchorX)):(x0+x1)/2;
+  let chosen=usable.find(f=>ax>=f.x&&ax<=f.x+f.w);
+  if(!chosen){
+    // Avec un point d'ancrage explicite, ne jamais sauter vers un autre segment libre.
+    // On tolère seulement un très petit écart pour absorber l'épaisseur/anti-aliasing
+    // de la ligne imprimée. Sinon la détection est abandonnée et le placement reste manuel.
+    if(Number.isFinite(anchorX)){
+      const near=usable.map(f=>({f,d:Math.min(Math.abs(ax-f.x),Math.abs(ax-(f.x+f.w)))})).sort((a,b)=>a.d-b.d)[0];
+      if(!near||near.d>8)return null;
+      chosen=near.f;
+    }else{
+      chosen=usable.slice().sort((a,b)=>Math.min(Math.abs(ax-a.x),Math.abs(ax-(a.x+a.w)))-Math.min(Math.abs(ax-b.x),Math.abs(ax-(b.x+b.w))))[0];
+    }
+  }
+  return {x:+chosen.x.toFixed(2),y:+rect.y.toFixed(2),w:+chosen.w.toFixed(2),h:+rect.h.toFixed(2)};
+}
+
+
+function detectedEditableHeight(lineY,textBoxes,defaultH=18){
+  // Hauteur d'une zone texte = hauteur de la ligne visuelle réellement détectée.
+  // On se base sur les objets texte voisins de la même ligne, sans jamais laisser
+  // la zone empiéter sur les lignes PDF au-dessus ou au-dessous.
+  const near=(textBoxes||[]).filter(t=>!t.isGuide&&Math.abs((t.y+t.h*.72)-lineY)<=Math.max(6,t.h*.9));
+  let h=defaultH;
+  if(near.length){
+    const hs=near.map(t=>t.h).filter(v=>v>=5&&v<=28).sort((a,b)=>a-b);
+    if(hs.length){const med=hs[Math.floor(hs.length/2)];h=Math.max(10,Math.min(22,med*1.28));}
+  }
+  // Vérifie l'espace vertical réellement libre autour de la ligne.
+  const above=(textBoxes||[]).filter(t=>!t.isGuide&&(t.y+t.h)<lineY-1).map(t=>t.y+t.h);
+  const below=(textBoxes||[]).filter(t=>!t.isGuide&&t.y>lineY+1).map(t=>t.y);
+  const topBound=above.length?Math.max(...above):-Infinity;
+  const bottomBound=below.length?Math.min(...below):Infinity;
+  if(Number.isFinite(topBound)&&Number.isFinite(bottomBound)){
+    const free=Math.max(8,bottomBound-topBound-2);
+    h=Math.min(h,free);
+  }
+  return Math.max(9,Math.min(22,h));
+}
+function normalizedEditableHeight(lineY,textBoxes,defaultH=16){
+  // Les zones éditables mono-ligne ont volontairement une hauteur unique.
+  // La détection sert à trouver la ligne et sa largeur, pas à faire varier
+  // visuellement la hauteur selon le gras, l'antialiasing ou les lignes voisines.
+  return 16;
+}
+function normalizedBoxGroupHeight(g,textBoxes){
+  // Même hauteur pour téléphone/date/code afin que toutes les zones texte
+  // d'une page aient une présentation homogène.
+  return 16;
+}
+
+function pointRectDistance(px,py,r){
+  const dx=px<r.x?r.x-px:(px>r.x+r.w?px-(r.x+r.w):0);
+  const dy=py<r.y?r.y-py:(py>r.y+r.h?py-(r.y+r.h):0);
+  return Math.hypot(dx,dy);
+}
+function detectLocalHorizontalAtPoint(ctx,W,H,q,ux,uy,textBoxes=[]){
+  // Recherche volontairement locale et plus permissive que l'analyse globale.
+  // Le clic fournit le contexte : on peut accepter une ligne chargée sans analyser
+  // toute la page comme s'il s'agissait d'un champ potentiel.
+  const img=ctx.getImageData(0,0,W,H),d=img.data;
+  const px=Math.round(ux*q),py=Math.round(uy*q);
+  const rx=Math.round(280*q),ry=Math.round(28*q),x0=Math.max(1,px-rx),x1=Math.min(W-2,px+rx),y0=Math.max(1,py-ry),y1=Math.min(H-2,py+ry);
+  const dark=(x,y)=>{const k=(y*W+x)*4;return d[k]<205&&d[k+1]<205&&d[k+2]<205;};
+  const maxGap=Math.max(4,Math.round(9*q)),minSpan=Math.max(22,Math.round(24*q));
+  let best=null;
+  for(let y=y0;y<=y1;y++){
+    let first=-1,last=-1,hits=0,gap=0;
+    const test=()=>{
+      if(first<0)return;
+      const span=last-first+1,density=hits/Math.max(1,span);
+      if(span>=minSpan&&density>=.045){
+        const ux1=first/q,uw=span/q,uyLine=y/q;
+        const dx=ux<ux1?ux1-ux:(ux>ux1+uw?ux-(ux1+uw):0),dy=Math.abs(uy-uyLine);
+        // Aimantation strictement locale : une ligne ne peut être retenue que si
+        // elle passe réellement sous le pointeur (ou à quelques pixels seulement).
+        // Cela évite qu'un grand trait voisin "capture" tous les placements.
+        const horizontalSnap=12, verticalSnap=14;
+        if(dx<=horizontalSnap&&dy<=verticalSnap){
+          const score=dy*3.2+dx*2.2-Math.min(uw,180)*.018-density*6;
+          if(!best||score<best.score)best={x:ux1,y:uyLine,w:uw,h:1,score};
+        }
+      }
+      first=last=-1;hits=gap=0;
+    };
+    for(let x=x0;x<=x1;x++){
+      const on=dark(x,y)||dark(x,y-1)||dark(x,y+1);
+      if(on){if(first<0)first=x;last=x;hits++;gap=0;}
+      else if(first>=0){gap++;if(gap>maxGap)test();}
+    }
+    test();
+  }
+  if(!best)return null;
+  // Coupe le segment aux objets texte imprimés les plus proches sur la même bande.
+  // On conserve toutefois une marge pour les pointillés accolés au libellé.
+  let sx=best.x,ex=best.x+best.w;
+  const near=textBoxes.filter(t=>!t.isGuide&&Math.abs((t.y+t.h*.65)-best.y)<Math.max(8,t.h*1.1));
+  for(const t of near){
+    if(t.x+t.w<=ux&&t.x+t.w>sx)sx=Math.min(ux,t.x+t.w+2);
+    if(t.x>=ux&&t.x<ex)ex=Math.max(ux,t.x-2);
+  }
+  if(ex-sx>=24){best.x=sx;best.w=ex-sx;}
+  return best;
+}
+async function detectFieldAtClick(ev){
+  if(!pdfProxy||!document.getElementById('clickDetect')?.checked||pendingPlacement)return;
+  if(ev.target.closest?.('.field,.check-zone,.image-zone,.mask-zone,.text-resize,.check-resize,.image-resize,.mask-resize'))return;
+  const surface=document.getElementById('pageSurface');if(!surface)return;
+  const r=surface.getBoundingClientRect(),ux=(ev.clientX-r.left)/scaleNow,uy=(ev.clientY-r.top)/scaleNow;
+  if(ux<0||uy<0||ux>pageW||uy>pageH)return;
+  collectCurrentPage();enterAdjust();setStatus('Local click detection…');
+  const ac=makeAnalysisCanvas();if(!ac)return;
+  const textBoxes=await getPagePrintedTextBoxes(),{ctx,q}=ac,W=ac.canvas.width,H=ac.canvas.height;
+  const existing=existingRects(),candidates=[];
+  if(autoBoxDetectOn){for(const g of detectPageBoxGroups(ctx,W,H,q,textBoxes)){const rr={x:g.x,y:g.y,w:g.w,h:g.h},dist=pointRectDistance(ux,uy,rr);if(dist<=30)candidates.push({type:'boxes',dist,rr,g});}}
+  if(autoCheckDetectOn){for(const c of detectPageCheckboxSquares(ctx,W,H,q,textBoxes)){const rr={x:c.x,y:c.y,w:c.w,h:c.h},dist=pointRectDistance(ux,uy,rr);if(dist<=22)candidates.push({type:'check',dist,rr,c});}}
+  for(const ln of detectPageHorizontalLines(ctx,W,H,q,textBoxes)){const hh=normalizedEditableHeight(ln.y,textBoxes,16),rr={x:ln.x,y:ln.y-hh+2,w:ln.w,h:hh},dist=pointRectDistance(ux,uy,rr);if(dist<=28)candidates.push({type:'line',dist,rr,ln});}
+  const local=detectLocalHorizontalAtPoint(ctx,W,H,q,ux,uy,textBoxes);
+  if(local){const hh=normalizedEditableHeight(local.y,textBoxes,16),rr={x:local.x,y:local.y-hh+2,w:local.w,h:hh},dist=pointRectDistance(ux,uy,rr);candidates.push({type:'line',dist:dist+.5,rr,ln:local,local:true});}
+  const order={boxes:0,check:1,line:2};candidates.sort((a,b)=>(a.dist-b.dist)||(order[a.type]-order[b.type]));
+  const usable=candidates.filter(c=>!existing.some(e=>rectOverlap(c.rr,e,0)));
+  const c=usable[0]||null;
+  // Les cases à cocher restent une action directe : elles n'ont pas de largeur à régler.
+  if(c?.type==='check'){
+    const z=c.c,st=getPageState(currentPage),d={id:uid('check'),x:+z.x.toFixed(2),y:+z.y.toFixed(2),w:+z.w.toFixed(2),h:+z.h.toFixed(2),checked:false,detected:true};
+    st.checks.push(d);createCheckDom(d);const el=document.querySelector(`.check-zone[data-id="${d.id}"]`);collectCurrentPage();if(el)select(el);setStatus('Checkbox detected at click position');return;
+  }
+  // Pour toute zone texte, même détectée automatiquement, on passe désormais par
+  // exactement la même création en 2 clics que + Texte.
+  beginPlacement('text');
+  const pp=pendingPlacement;if(!pp)return;
+  // Ajout au clic direct : le premier point d'ancrage est exactement sous la souris.
+  // Contrairement à + Texte, on n'ajoute aucun décalage horizontal artificiel.
+  let pos={x:Math.min(pageW-18,ux),y:Math.max(0,uy-8),px:ux,py:uy,w:70};
+  if(c?.type==='boxes'){
+    const g=c.g,h=normalizedBoxGroupHeight(g,textBoxes),x=Math.max(ux,g.x),end=Math.min(pageW,g.x+g.w);
+    pos={x:Math.min(pageW-18,x),y:Math.max(0,Math.min(pageH-h,g.y+(g.h-h)/2)),px:ux,py:uy,w:Math.max(18,end-x)};
+    await anchorTextPlacement(pos);
+    if(pendingPlacement===pp){pp.w=pos.w;pp.h=h;pp.detectedWidth=true;pp.autoFitted=true;applyPlacementGhost();setStatus('Start set: width detected — second click required to confirm');}
+    return;
+  }
+  if(c?.type==='line'){
+    const ln=c.ln,h=normalizedEditableHeight(ln.y,textBoxes,16),raw={x:Math.max(ux,ln.x),y:Math.max(0,ln.y-h+2),w:Math.max(18,Math.min(pageW-Math.max(ux,ln.x),ln.x+ln.w-Math.max(ux,ln.x))),h};
+    const fitted=fitDetectedLineSegment(raw,textBoxes,ux,1.5)||raw;
+    pos={x:fitted.x,y:fitted.y,px:ux,py:uy,w:fitted.w};
+    await anchorTextPlacement(pos);
+    if(pendingPlacement===pp){pp.w=fitted.w;pp.h=h;pp.detectedWidth=true;pp.autoFitted=true;applyPlacementGhost();setStatus('Start set: width detected — second click required to confirm');}
+    return;
+  }
+  // Rien de détecté : premier clic = début. Petite largeur provisoire ; la souris
+  // règle la largeur et le second clic est obligatoire.
+  const h=normalizedEditableHeight(uy,textBoxes,16),startX=Math.min(pageW-18,ux);
+  const free=fitDetectedLineSegment({x:startX,y:Math.max(0,uy-h*.55),w:Math.min(70,pageW-startX),h},textBoxes,startX+2,2);
+  // Le détecteur peut réduire la largeur/ajuster la hauteur, mais il ne déplace jamais
+  // le début choisi par l'utilisateur : X reste exactement celui du clic.
+  if(free){pos={x:startX,y:free.y,px:ux,py:uy,w:Math.max(18,Math.min(70,Math.max(18,(free.x+free.w)-startX)))};}
+  await anchorTextPlacement(pos);
+  if(pendingPlacement===pp){pp.h=h;pp.detectedWidth=false;pp.w=Math.max(18,Math.min(70,pageW-pp.x));applyPlacementGhost();setStatus('Start set: move the mouse to adjust the width, then a second click is required');}
+}
+async function detectEditableFieldsOnPage(){
+  if(!pdfProxy)return;
+  collectCurrentPage();enterAdjust();setStatus('Analyzing the page line by line…');await new Promise(r=>setTimeout(r,20));
+  const ac=makeAnalysisCanvas();if(!ac){setStatus('Unable to analyze page');return;}
+  const textBoxes=await getPagePrintedTextBoxes();
+  const {ctx,q}=ac,W=ac.canvas.width,H=ac.canvas.height,st=getPageState(currentPage),existing=existingRects();let addChecks=0,addTexts=0;
+  if(autoCheckDetectOn){
+    const squares=detectPageCheckboxSquares(ctx,W,H,q,textBoxes);
+    for(const c of squares){
+      // Le bandeau supérieur contient très souvent logos et pictogrammes carrés.
+      // Pour la détection globale, on les ignore : les cases de formulaire commencent
+      // normalement dans la zone de contenu. La création manuelle + Case reste disponible.
+      if(c.y<pageH*.115)continue;
+      if(existing.some(r=>rectOverlap(c,r,1)))continue;
+      const d={id:uid('check'),x:+c.x.toFixed(2),y:+c.y.toFixed(2),w:+c.w.toFixed(2),h:+c.h.toFixed(2),checked:false,detected:true};
+      st.checks.push(d);createCheckDom(d);existing.push(c);addChecks++;
+    }
+  }
+  // 1) Les suites de petites cellules sont détectées directement ligne par ligne.
+  // Elles ne dépendent plus du détecteur générique de traits horizontaux.
+  if(autoBoxDetectOn){
+    const groups=detectPageBoxGroups(ctx,W,H,q,textBoxes);
+    for(const g of groups){
+      const r={x:g.x,y:g.y,w:g.w,h:g.h};
+      if(existing.some(e=>rectOverlap(r,e,0)))continue;
+      const nh=normalizedBoxGroupHeight(g,textBoxes),ny=g.y+(g.h-nh)/2;const d={id:uid('text'),x:+g.x.toFixed(2),y:+ny.toFixed(2),w:+g.w.toFixed(2),h:+nh.toFixed(2),value:'',lineY:+g.lineY.toFixed(2),boxes:g.boxes};
+      st.fields.push(d);createTextDom(d);existing.push(r);addTexts++;
+    }
+  }
+  // 2) Puis seulement les lignes de saisie classiques (continues / pointillées).
+  const lines=detectPageHorizontalLines(ctx,W,H,q,textBoxes).sort((a,b)=>a.y-b.y||a.x-b.x),chosen=[];
+  for(const ln of lines){
+    if(chosen.some(o=>Math.abs(o.y-ln.y)<3&&Math.abs(o.x-ln.x)<8&&Math.abs(o.w-ln.w)<12))continue;
+    const h=normalizedEditableHeight(ln.y,textBoxes,16),y=Math.max(0,ln.y-h+2),r={x:Math.max(0,ln.x),y,w:Math.min(pageW-ln.x,ln.w),h};
+    if(r.w<38||existing.some(e=>rectOverlap(r,e,0)))continue;
+    chosen.push(ln);const d={id:uid('text'),x:+r.x.toFixed(2),y:+r.y.toFixed(2),w:+r.w.toFixed(2),h:r.h,value:'',lineY:+ln.y.toFixed(2)};
+    st.fields.push(d);createTextDom(d);const el=document.querySelector(`.field[data-id="${d.id}"]`);if(el)scheduleTextRecognition(el,false);existing.push(r);addTexts++;
+  }
+  applyFont();collectCurrentPage();setStatus(`Page detection: ${addTexts} text area(s), ${addChecks} checkbox(es)`);
+}
+
+function addText(){beginPlacement('text');}
+function createTextDom(d){const o=document.getElementById('overlay');if(!o)return;const e=document.createElement('textarea');e.className='field';e.dataset.id=d.id;e.value=d.value||'';e.spellcheck=false;if(d.boxes&&d.boxes.length)e.dataset.boxes=JSON.stringify(d.boxes);if(Number.isFinite(+d.lineY))e.dataset.lineY=(+d.lineY).toFixed(2);e.dataset.fontFamily=d.fontFamily||fontFamily.value||'Helvetica';e.dataset.fontSize=String(Number.isFinite(+d.fontSize)?+d.fontSize:fs());e.dataset.textColor=d.textColor||textColor.value||'#000000';Object.assign(e.style,{left:d.x+'px',top:d.y+'px',width:d.w+'px',height:d.h+'px',textAlign:(d.textAlign==='center'||d.textAlign==='right')?d.textAlign:'left',fontFamily:cssFont(e.dataset.fontFamily),fontSize:fieldFontSize(e)+'px'});o.appendChild(e);lockEditorTextColor(e,fieldTextColor(e),!!(d.boxes&&d.boxes.length));const h=document.createElement('div');h.className='text-resize';h.dataset.forId=d.id;o.appendChild(h);updateTextHandle(e,h);enableTextDrag(e,h);enableTextResize(e,h);e.addEventListener('pointerdown',ev=>selectFromEvent(ev,e));e.addEventListener('focus',()=>{if(!selectedItems.has(e))select(e);removeFieldTextLayer(e.dataset.id);e.classList.remove('mirrored');scheduleTextRecognition(e,true);});e.addEventListener('blur',()=>updateFieldTextLayer(e));e.addEventListener('input',()=>{updateBoxCharLayer(e);updateLineGuide(e);updateFieldTextLayer(e);});if(d.boxes&&d.boxes.length){e.classList.add('box-detected');updateBoxCharLayer(e);}else if(Number.isFinite(+d.lineY)){e.classList.add('line-detected');updateLineGuide(e);}else scheduleTextRecognition(e,false);updateFieldTextLayer(e);}
+function updateTextHandle(e,h){const x=parseFloat(e.style.left),y=parseFloat(e.style.top),w=parseFloat(e.style.width),hh=parseFloat(e.style.height);h.style.left=(x+w-5)+'px';h.style.top=(y+hh-5)+'px';}
+function enableTextDrag(e,h){let sx,sy,ox,oy,drag=false;e.addEventListener('pointerdown',ev=>{if(!document.body.classList.contains('adjust'))return;drag=true;e.classList.add('dragging');sx=ev.clientX;sy=ev.clientY;ox=parseFloat(e.style.left);oy=parseFloat(e.style.top);e.setPointerCapture(ev.pointerId);ev.preventDefault();});e.addEventListener('pointermove',ev=>{if(!drag)return;const w=parseFloat(e.style.width),hh=parseFloat(e.style.height);e.style.left=Math.max(0,Math.min(pageW-w,ox+(ev.clientX-sx)/scaleNow))+'px';e.style.top=Math.max(0,Math.min(pageH-hh,oy+(ev.clientY-sy)/scaleNow))+'px';updateTextHandle(e,h);syncBoxLayerGeometry(e);});e.addEventListener('pointerup',()=>{drag=false;e.classList.remove('dragging');scheduleTextRecognition(e,true);});e.addEventListener('pointercancel',()=>{drag=false;e.classList.remove('dragging');});}
+function enableTextResize(e,h){let sx,sy,ow,oh,on=false;h.addEventListener('pointerdown',ev=>{if(!document.body.classList.contains('adjust'))return;select(e);on=true;sx=ev.clientX;sy=ev.clientY;ow=parseFloat(e.style.width);oh=parseFloat(e.style.height);h.setPointerCapture(ev.pointerId);ev.preventDefault();ev.stopPropagation();});h.addEventListener('pointermove',ev=>{if(!on)return;const x=parseFloat(e.style.left),y=parseFloat(e.style.top);e.style.width=Math.max(4,Math.min(pageW-x,ow+(ev.clientX-sx)/scaleNow))+'px';e.style.height=Math.max(4,Math.min(pageH-y,oh+(ev.clientY-sy)/scaleNow))+'px';updateTextHandle(e,h);syncBoxLayerGeometry(e);});h.addEventListener('pointerup',()=>{on=false;scheduleTextRecognition(e,true);});}
+
+function addCheck(){beginPlacement('check');}
+function setCheckDetected(b,on){if(on){b.dataset.detected='1';b.classList.add('check-detected');}else{delete b.dataset.detected;b.classList.remove('check-detected');}const c=b.querySelector('input');b.classList.toggle('checked',!!c?.checked);}
+function lineDarkRatio(data,W,H,x1,y1,x2,y2){let dark=0,n=0;if(y1===y2){const y=Math.max(0,Math.min(H-1,Math.round(y1)));for(let x=Math.max(0,Math.round(x1));x<=Math.min(W-1,Math.round(x2));x++){n++;if(darkPixel(data,(y*W+x)*4))dark++;}}else{const x=Math.max(0,Math.min(W-1,Math.round(x1)));for(let y=Math.max(0,Math.round(y1));y<=Math.min(H-1,Math.round(y2));y++){n++;if(darkPixel(data,(y*W+x)*4))dark++;}}return n?dark/n:0;}
+function detectCheckboxUnderZone(b,announce=false){
+  if(!autoCheckDetectOn){setCheckDetected(b,false);return false;}
+  const canvas=document.getElementById('pdfCanvas');
+  if(!canvas||!b||!b.isConnected)return false;
+  const bx=parseFloat(b.style.left),by=parseFloat(b.style.top),bw=parseFloat(b.style.width),bh=parseFloat(b.style.height),cx=bx+bw/2,cy=by+bh/2;
+  const sx=canvas.width/pageW,sy=canvas.height/pageH;
+  // Zone de recherche volontairement plus grande que la case créée : on peut déposer
+  // approximativement la zone et elle s'aimante ensuite sur le carré imprimé.
+  const search=Math.max(18,Math.min(34,Math.max(bw,bh)*1.55));
+  const ux0=Math.max(0,cx-search),uy0=Math.max(0,cy-search),ux1=Math.min(pageW,cx+search),uy1=Math.min(pageH,cy+search);
+  const px0=Math.floor(ux0*sx),py0=Math.floor(uy0*sy),px1=Math.ceil(ux1*sx),py1=Math.ceil(uy1*sy);
+  if(px1-px0<8||py1-py0<8){setCheckDetected(b,false);return false;}
+  const ctx=canvas.getContext('2d',{willReadFrequently:true}),img=ctx.getImageData(px0,py0,px1-px0+1,py1-py0+1),d=img.data,W=img.width,H=img.height;
+  const dark=new Uint8Array(W*H);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++)dark[y*W+x]=darkPixel(d,(y*W+x)*4)?1:0;
+
+  // Cherche des composantes sombres quasi carrées. Contrairement à l'ancienne
+  // méthode, la détection ne dépend plus de la taille de la zone utilisateur.
+  const seen=new Uint8Array(W*H),stackX=new Int32Array(W*H),stackY=new Int32Array(W*H);
+  let best=null,bestScore=1e9;
+  for(let sy0=1;sy0<H-1;sy0++)for(let sx0=1;sx0<W-1;sx0++){
+    const seed=sy0*W+sx0;if(!dark[seed]||seen[seed])continue;
+    let sp=0;stackX[sp]=sx0;stackY[sp]=sy0;sp++;seen[seed]=1;
+    let minx=sx0,maxx=sx0,miny=sy0,maxy=sy0,count=0;
+    while(sp){sp--;const x=stackX[sp],y=stackY[sp];count++;if(x<minx)minx=x;if(x>maxx)maxx=x;if(y<miny)miny=y;if(y>maxy)maxy=y;
+      for(let yy=y-1;yy<=y+1;yy++)for(let xx=x-1;xx<=x+1;xx++){if(xx<0||yy<0||xx>=W||yy>=H)continue;const q=yy*W+xx;if(dark[q]&&!seen[q]){seen[q]=1;stackX[sp]=xx;stackY[sp]=yy;sp++;}}
+    }
+    const wp=maxx-minx+1,hp=maxy-miny+1,wu=wp/sx,hu=hp/sy;
+    if(wu<4.5||hu<4.5||wu>28||hu>28)continue;
+    const ratio=wu/hu;if(ratio<.68||ratio>1.47)continue;
+    // Un contour de case doit avoir assez de pixels mais ne pas être un bloc plein.
+    const area=wp*hp,fill=count/area,perim=2*(wp+hp);
+    if(count<perim*.32||fill>.58)continue;
+    // Vérifie que les quatre bords du rectangle sont réellement présents.
+    const top=lineDarkRatio(d,W,H,minx,miny,maxx,miny),bottom=lineDarkRatio(d,W,H,minx,maxy,maxx,maxy),left=lineDarkRatio(d,W,H,minx,miny,minx,maxy),right=lineDarkRatio(d,W,H,maxx,miny,maxx,maxy);
+    const edge=Math.min(top,bottom,left,right);if(edge<.34)continue;
+    const x=ux0+minx/sx,y=uy0+miny/sy,ccx=x+wu/2,ccy=y+hu/2,dist=Math.hypot(ccx-cx,ccy-cy);
+    // Favorise fortement le carré le plus proche du centre de la zone déposée.
+    const score=dist*1.45+Math.abs(wu-hu)*1.2+(1-edge)*3;
+    if(score<bestScore){bestScore=score;best={x,y,w:wu,h:hu};}
+  }
+  if(!best){setCheckDetected(b,false);return false;}
+  Object.assign(b.style,{left:best.x.toFixed(2)+'px',top:best.y.toFixed(2)+'px',width:best.w.toFixed(2)+'px',height:best.h.toFixed(2)+'px'});
+  setCheckDetected(b,true);
+  if(announce)setStatus('Checkbox detected and adjusted');
+  return true;
+}
+function scheduleCheckDetection(b,announce=false){clearTimeout(b._checkDetectTimer);b._checkDetectTimer=setTimeout(()=>detectCheckboxUnderZone(b,announce),80);}
+function createCheckDom(d){const o=document.getElementById('overlay');if(!o)return;const b=document.createElement('div');b.className='check-zone';b.dataset.id=d.id;Object.assign(b.style,{left:d.x+'px',top:d.y+'px',width:(d.w||12)+'px',height:(d.h||d.w||12)+'px'});const c=document.createElement('input');c.type='checkbox';c.checked=!!d.checked;b.appendChild(c);const mark=document.createElement('span');mark.className='check-mark';b.appendChild(mark);const h=document.createElement('div');h.className='check-resize';b.appendChild(h);o.appendChild(b);if(d.detected)setCheckDetected(b,true);enableCheckDrag(b,h,c);enableCheckResize(b,h);b.addEventListener('pointerdown',ev=>selectFromEvent(ev,b));c.addEventListener('focus',()=>{if(!selectedItems.has(b))select(b);});c.addEventListener('change',()=>b.classList.toggle('checked',c.checked));if(!d.detected)scheduleCheckDetection(b,false);}
+function enableCheckDrag(b,h,c){let sx,sy,ox,oy,on=false;b.addEventListener('pointerdown',ev=>{if(!document.body.classList.contains('adjust')||ev.target===h)return;on=true;sx=ev.clientX;sy=ev.clientY;ox=parseFloat(b.style.left);oy=parseFloat(b.style.top);b.setPointerCapture(ev.pointerId);ev.preventDefault();});b.addEventListener('pointermove',ev=>{if(!on)return;const w=parseFloat(b.style.width),hh=parseFloat(b.style.height);b.style.left=Math.max(0,Math.min(pageW-w,ox+(ev.clientX-sx)/scaleNow))+'px';b.style.top=Math.max(0,Math.min(pageH-hh,oy+(ev.clientY-sy)/scaleNow))+'px';});b.addEventListener('pointerup',()=>{on=false;scheduleCheckDetection(b,true);});}
+function enableCheckResize(b,h){let sx,sy,ow,on=false;h.addEventListener('pointerdown',ev=>{if(!document.body.classList.contains('adjust'))return;select(b);on=true;sx=ev.clientX;sy=ev.clientY;ow=parseFloat(b.style.width);h.setPointerCapture(ev.pointerId);ev.preventDefault();ev.stopPropagation();});h.addEventListener('pointermove',ev=>{if(!on)return;const x=parseFloat(b.style.left),y=parseFloat(b.style.top),d=Math.max((ev.clientX-sx)/scaleNow,(ev.clientY-sy)/scaleNow);let nw=Math.max(6,Math.min(pageW-x,pageH-y,ow+d));b.style.width=nw+'px';b.style.height=nw+'px';});h.addEventListener('pointerup',()=>{on=false;scheduleCheckDetection(b,true);});}
+
+function addImageFile(file){if(!pdfProxy||!file)return;const r=new FileReader();r.onload=()=>{const probe=new Image();probe.onload=()=>{const ratio=probe.naturalWidth/probe.naturalHeight||1,w=Math.min(190,pageW*.35),h=w/ratio;beginPlacement('image',{w,h,aspect:ratio,src:r.result});};probe.src=r.result;};r.readAsDataURL(file);}
+function createImageDom(d){const o=document.getElementById('overlay');if(!o)return;const b=document.createElement('div');b.className='image-zone';b.dataset.id=d.id;b.dataset.aspect=d.aspect||1;Object.assign(b.style,{left:d.x+'px',top:d.y+'px',width:d.w+'px',height:d.h+'px'});const im=document.createElement('img');im.src=d.src;b.appendChild(im);const h=document.createElement('div');h.className='image-resize';b.appendChild(h);o.appendChild(b);enableBoxDrag(b,h);enableImageResize(b,h);b.addEventListener('pointerdown',ev=>selectFromEvent(ev,b));}
+function enableImageResize(b,h){let sx,sy,ow,oh,on=false;h.addEventListener('pointerdown',ev=>{if(!document.body.classList.contains('adjust'))return;select(b);on=true;sx=ev.clientX;sy=ev.clientY;ow=parseFloat(b.style.width);oh=parseFloat(b.style.height);h.setPointerCapture(ev.pointerId);ev.preventDefault();ev.stopPropagation();});h.addEventListener('pointermove',ev=>{if(!on)return;const ratio=parseFloat(b.dataset.aspect)||ow/oh||1,dx=(ev.clientX-sx)/scaleNow,dy=(ev.clientY-sy)/scaleNow,x=parseFloat(b.style.left),y=parseFloat(b.style.top);let nw=Math.abs(dx)>=Math.abs(dy)?ow+dx:(oh+dy)*ratio;nw=Math.max(20,Math.min(pageW-x,nw));let nh=nw/ratio;if(nh>pageH-y){nh=pageH-y;nw=nh*ratio;}b.style.width=nw+'px';b.style.height=nh+'px';});h.addEventListener('pointerup',()=>on=false);}
+
+function addMask(){beginPlacement('mask');}
+function createMaskDom(d){const o=document.getElementById('overlay');if(!o)return;const b=document.createElement('div');b.className='mask-zone';b.dataset.id=d.id;Object.assign(b.style,{left:d.x+'px',top:d.y+'px',width:d.w+'px',height:d.h+'px'});const h=document.createElement('div');h.className='mask-resize';b.appendChild(h);o.appendChild(b);enableBoxDrag(b,h);enableBoxResize(b,h);b.addEventListener('pointerdown',ev=>selectFromEvent(ev,b));}
+function enableBoxDrag(b,h){let sx,sy,ox,oy,on=false;b.addEventListener('pointerdown',ev=>{if(!document.body.classList.contains('adjust')||ev.target===h)return;on=true;sx=ev.clientX;sy=ev.clientY;ox=parseFloat(b.style.left);oy=parseFloat(b.style.top);b.setPointerCapture(ev.pointerId);ev.preventDefault();});b.addEventListener('pointermove',ev=>{if(!on)return;const w=parseFloat(b.style.width),hh=parseFloat(b.style.height);b.style.left=Math.max(0,Math.min(pageW-w,ox+(ev.clientX-sx)/scaleNow))+'px';b.style.top=Math.max(0,Math.min(pageH-hh,oy+(ev.clientY-sy)/scaleNow))+'px';});b.addEventListener('pointerup',()=>on=false);}
+function enableBoxResize(b,h){let sx,sy,ow,oh,on=false;h.addEventListener('pointerdown',ev=>{if(!document.body.classList.contains('adjust'))return;select(b);on=true;sx=ev.clientX;sy=ev.clientY;ow=parseFloat(b.style.width);oh=parseFloat(b.style.height);h.setPointerCapture(ev.pointerId);ev.preventDefault();ev.stopPropagation();});h.addEventListener('pointermove',ev=>{if(!on)return;const x=parseFloat(b.style.left),y=parseFloat(b.style.top);b.style.width=Math.max(10,Math.min(pageW-x,ow+(ev.clientX-sx)/scaleNow))+'px';b.style.height=Math.max(10,Math.min(pageH-y,oh+(ev.clientY-sy)/scaleNow))+'px';});h.addEventListener('pointerup',()=>on=false);}
+
+function collectCurrentPage(){const o=document.getElementById('overlay');if(!o||!pdfProxy)return;const st=getPageState(currentPage);st.fields=[...o.querySelectorAll('.field')].map(e=>({id:e.dataset.id,x:+parseFloat(e.style.left).toFixed(2),y:+parseFloat(e.style.top).toFixed(2),w:+parseFloat(e.style.width).toFixed(2),h:+parseFloat(e.style.height).toFixed(2),value:e.value,fontFamily:fieldFontFamily(e),fontSize:fieldFontSize(e),textColor:fieldTextColor(e),textAlign:(e.style.textAlign==='center'||e.style.textAlign==='right')?e.style.textAlign:'left',boxes:fieldBoxData(e),lineY:fieldLineData(e)}));st.checks=[...o.querySelectorAll('.check-zone')].map(e=>({id:e.dataset.id,x:+parseFloat(e.style.left).toFixed(2),y:+parseFloat(e.style.top).toFixed(2),w:+parseFloat(e.style.width).toFixed(2),h:+parseFloat(e.style.height).toFixed(2),checked:e.querySelector('input').checked,detected:e.dataset.detected==='1'}));st.images=[...o.querySelectorAll('.image-zone')].map(e=>({id:e.dataset.id,x:+parseFloat(e.style.left).toFixed(2),y:+parseFloat(e.style.top).toFixed(2),w:+parseFloat(e.style.width).toFixed(2),h:+parseFloat(e.style.height).toFixed(2),aspect:parseFloat(e.dataset.aspect)||1,src:e.querySelector('img').src}));st.masks=[...o.querySelectorAll('.mask-zone')].map(e=>({id:e.dataset.id,x:+parseFloat(e.style.left).toFixed(2),y:+parseFloat(e.style.top).toFixed(2),w:+parseFloat(e.style.width).toFixed(2),h:+parseFloat(e.style.height).toFixed(2)}));}
+function deleteSelected(){const items=[...selectedItems];if(!items.length){setStatus('Select an area');return;}for(const el of items){if(el.classList.contains('field')){const h=document.querySelector(`.text-resize[data-for-id="${el.dataset.id}"]`);if(h)h.remove();removeBoxCharLayer(el.dataset.id);removeLineGuide(el.dataset.id);}el.remove();}selectedItems.clear();selected=null;collectCurrentPage();setStatus(items.length>1?items.length+' areas deleted':'Area deleted');}
+function selectedData(){if(!selected)return null;const base={x:parseFloat(selected.style.left)||0,y:parseFloat(selected.style.top)||0,w:parseFloat(selected.style.width)||18,h:parseFloat(selected.style.height)||18};if(selected.classList.contains('field'))return {...base,type:'field',value:selected.value||'',fontFamily:fieldFontFamily(selected),fontSize:fieldFontSize(selected),textColor:fieldTextColor(selected),textAlign:(selected.style.textAlign==='center'||selected.style.textAlign==='right')?selected.style.textAlign:'left',boxes:fieldBoxData(selected),lineY:fieldLineData(selected)};if(selected.classList.contains('check-zone'))return {...base,type:'check',checked:!!selected.querySelector('input')?.checked,detected:selected.dataset.detected==='1'};if(selected.classList.contains('image-zone'))return {...base,type:'image',aspect:parseFloat(selected.dataset.aspect)||1,src:selected.querySelector('img')?.src||''};if(selected.classList.contains('mask-zone'))return {...base,type:'mask'};return null;}
+function copySelected(){const d=selectedData();if(!d){setStatus('Select an area');return;}clipboardItem=JSON.parse(JSON.stringify(d));setStatus('Area copied');}
+function pasteSelected(){if(!pdfProxy||!clipboardItem){setStatus('Nothing to paste');return;}collectCurrentPage();const d=JSON.parse(JSON.stringify(clipboardItem)),off=12,oldX=d.x||0;d.x=Math.max(0,Math.min(pageW-d.w,oldX+off));d.y=Math.max(0,Math.min(pageH-d.h,(d.y||0)+off));if(d.type==='field'){const dx=d.x-oldX,dy=d.y-(clipboardItem.y||0);if(d.boxes?.length)d.boxes=d.boxes.map(b=>({...b,x:+(b.x+dx).toFixed(2)}));if(Number.isFinite(+d.lineY))d.lineY=+(+d.lineY+dy).toFixed(2);}let el=null;if(d.type==='field'){d.id=uid('text');getPageState(currentPage).fields.push(d);createTextDom(d);applyFont();el=document.querySelector(`.field[data-id="${d.id}"]`);}else if(d.type==='check'){d.id=uid('check');d.detected=false;getPageState(currentPage).checks.push(d);createCheckDom(d);el=document.querySelector(`.check-zone[data-id="${d.id}"]`);if(el)scheduleCheckDetection(el,false);}else if(d.type==='image'){d.id=uid('img');getPageState(currentPage).images.push(d);createImageDom(d);el=document.querySelector(`.image-zone[data-id="${d.id}"]`);}else if(d.type==='mask'){d.id=uid('mask');getPageState(currentPage).masks.push(d);createMaskDom(d);el=document.querySelector(`.mask-zone[data-id="${d.id}"]`);}if(el){select(el);clipboardItem={...clipboardItem,x:d.x,y:d.y};enterAdjust();collectCurrentPage();setStatus('Area pasted');}}
+
+function selectedBoxes(){return [...selectedItems].filter(el=>el&&el.isConnected&&['field','check-zone','image-zone','mask-zone'].some(c=>el.classList.contains(c)));}
+function setTextAlignment(mode){
+  const align=(mode==='center'||mode==='right')?mode:'left';
+  const all=document.getElementById('textAlignAllDocument')?.checked===true;
+  collectCurrentPage();
+  if(all){
+    let count=0;
+    for(const st of Object.values(pageStates))for(const f of st.fields||[]){f.textAlign=align;count++;}
+    document.querySelectorAll('.field').forEach(e=>e.style.textAlign=align);
+    setStatus(`Alignment ${align==='left'?'left':align==='center'?'centered':'right'} applied to ${count} text area(s) in the document`);
+    return;
+  }
+  if(!selected||!selected.classList.contains('field')){setStatus('Select an active text area');return;}
+  selected.style.textAlign=align;
+  collectCurrentPage();
+  setStatus(`Text ${align==='left'?'aligned left':align==='center'?'centered':'aligned right'} in the active area`);
+}
+function alignSelected(axis){const items=selectedBoxes();if(items.length<2){setStatus('Select at least 2 items with Ctrl+click');return;}const centers=items.map(el=>axis==='vertical'?parseFloat(el.style.left)+parseFloat(el.style.width)/2:parseFloat(el.style.top)+parseFloat(el.style.height)/2);const target=centers.reduce((a,b)=>a+b,0)/centers.length;for(const el of items){if(axis==='vertical'){const w=parseFloat(el.style.width);el.style.left=Math.max(0,Math.min(pageW-w,target-w/2))+'px';}else{const h=parseFloat(el.style.height);el.style.top=Math.max(0,Math.min(pageH-h,target-h/2))+'px';}if(el.classList.contains('field')){const h=document.querySelector(`.text-resize[data-for-id="${el.dataset.id}"]`);if(h)updateTextHandle(el,h);syncBoxLayerGeometry(el);scheduleTextRecognition(el,false);}}collectCurrentPage();setStatus(axis==='vertical'?'Items aligned vertically':'Items aligned horizontally');}
+function applyMenuScale(){menuScale=Math.max(.65,Math.min(1.5,menuScale||1));document.documentElement.style.setProperty('--menu-scale',menuScale);const e=document.getElementById('menuPercent');if(e)e.textContent=Math.round(menuScale*100)+'%';}
+function setMenuScale(v){menuScale=v;applyMenuScale();}
+
+
+function layoutSnapshot(){collectCurrentPage();const clean={};for(const [page,st] of Object.entries(pageStates)){clean[page]={fields:(st.fields||[]).map(f=>({id:f.id,x:f.x,y:f.y,w:f.w,h:f.h,value:'',fontFamily:f.fontFamily||'Helvetica',fontSize:Number.isFinite(+f.fontSize)?+f.fontSize:8,textColor:f.textColor||'#000000',textAlign:(f.textAlign==='center'||f.textAlign==='right')?f.textAlign:'left',boxes:f.boxes||[],lineY:Number.isFinite(+f.lineY)?+f.lineY:null})),checks:(st.checks||[]).map(c=>({id:c.id,x:c.x,y:c.y,w:c.w,h:c.h,checked:false,detected:!!c.detected})),images:(st.images||[]).map(i=>({...i})),masks:(st.masks||[]).map(m=>({...m}))};}return {format:'generic-pdf-mask-layout',version:1,fontFamily:fontFamily.value,fontSize:fs(),textColor:textColor.value,autoYOffset,autoLineOn,autoCheckDetectOn,autoBoxDetectOn,autoTextSizeOn,clickDetectOn:document.getElementById('clickDetect')?.checked!==false,pageStates:clean};}
+
+function flashSaveSuccess(buttonId,label){
+  const b=document.getElementById(buttonId);if(!b)return;
+  const old=b.dataset.normalLabel||b.textContent;b.dataset.normalLabel=old;b.textContent='✓ '+label;b.classList.add('save-ok');
+  clearTimeout(b._saveTimer);b._saveTimer=setTimeout(()=>{b.textContent=b.dataset.normalLabel||old;b.classList.remove('save-ok');},1800);
+}
+function exportLayout(){if(!pdfProxy)return;try{const blob=new Blob([JSON.stringify(layoutSnapshot(),null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='overlay.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);setStatus('Overlay saved');flashSaveSuccess('exportLayout','Overlay saved');}catch(err){console.error(err);setStatus('Overlay error: '+err.message);}}
+function applyLayout(layout){if(!layout||layout.format!=='generic-pdf-mask-layout')throw new Error('Unrecognized overlay file');collectCurrentPage();fontFamily.value=layout.fontFamily||'Helvetica';fontSize.value=layout.fontSize||8;textColor.value=layout.textColor||'#000000';autoYOffset=Number.isFinite(+layout.autoYOffset)?+layout.autoYOffset:0;autoLineOn=layout.autoLineOn!==false;autoCheckDetectOn=layout.autoCheckDetectOn!==false;autoBoxDetectOn=layout.autoBoxDetectOn!==false;autoTextSizeOn=layout.autoTextSizeOn!==false;if(autoLineEnabled)autoLineEnabled.checked=autoLineOn;if(autoCheckDetect)autoCheckDetect.checked=autoCheckDetectOn;if(autoBoxDetect)autoBoxDetect.checked=autoBoxDetectOn;if(autoTextSize)autoTextSize.checked=autoTextSizeOn;if(autoYValue)autoYValue.textContent=autoYOffset.toFixed(1)+' px';const vals={};for(const [p,st] of Object.entries(pageStates)){vals[p]={};for(const f of st.fields||[])vals[p][f.id]=f.value||'';}pageStates={};for(const [p,st] of Object.entries(layout.pageStates||{})){pageStates[p]={fields:(st.fields||[]).map(f=>({...f,value:(vals[p]&&vals[p][f.id])||''})),checks:(st.checks||[]).map(c=>({...c,checked:false})),images:(st.images||[]).map(i=>({...i})),masks:(st.masks||[]).map(m=>({...m}))};}renderPage(currentPage);setStatus('Overlay loaded');}
+function importLayoutFile(file){if(!file)return;const r=new FileReader();r.onload=()=>{try{applyLayout(JSON.parse(r.result));}catch(err){console.error(err);setStatus('Overlay error: '+err.message);}};r.readAsText(file);}
+
+async function saveProject(){if(!pdfProxy)return;collectCurrentPage();try{const state={fontFamily:fontFamily.value,fontSize:fs(),textColor:textColor.value,autoYOffset,autoLineOn,autoCheckDetectOn,autoBoxDetectOn,autoTextSizeOn,clickDetectOn:document.getElementById('clickDetect')?.checked!==false,currentPage,userZoom,menuScale,pageStates};await dbPut({key:docKey,name:docName,pdfData:new Uint8Array(pdfBytes),state,updated:Date.now()});localStorage.setItem(LAST_KEY,docKey);setStatus('State saved');flashSaveSuccess('save','Saved');}catch(err){console.error(err);setStatus('Unable to save');}}
+async function restoreLast(){const key=localStorage.getItem(LAST_KEY);if(!key)return;try{const rec=await dbGet(key);if(rec)await loadPdf(rec.pdfData,rec.name,rec.state);}catch(err){console.warn(err);}}
+function clearValues(){collectCurrentPage();Object.values(pageStates).forEach(st=>{st.fields.forEach(f=>f.value='');(st.checks||[]).forEach(c=>c.checked=false);});document.querySelectorAll('.field').forEach(e=>e.value='');document.querySelectorAll('.check-zone input').forEach(e=>e.checked=false);setStatus('Values cleared (not saved)');}
+
+async function exportDocument(){
+  if(!pdfProxy||!window.PDFLib){setStatus('Unable to generate PDF: document or PDF library unavailable');return;}
+  const suggestedName=(docName.replace(/\.pdf$/i,'')||'document')+'_edited.pdf';
+  let saveHandle=null;
+  let saveDirectory=null;
+
+  // v91 : le sélecteur doit être appelé directement depuis le clic utilisateur,
+  // avant la moindre génération asynchrone. showSaveFilePicker ouvre la vraie
+  // fenêtre Enregistrer sous de Chromium/Windows.
+  if(typeof window.showSaveFilePicker==='function'){
+    try{
+      saveHandle=await window.showSaveFilePicker({
+        suggestedName,
+        types:[{description:'Document PDF',accept:{'application/pdf':['.pdf']}}]
+      });
+    }catch(saveErr){
+      if(saveErr&&saveErr.name==='AbortError'){setStatus('Save cancelled');return;}
+      console.error('showSaveFilePicker:',saveErr);
+      setStatus('Save As dialog refused: '+(saveErr.message||saveErr.name||'error'));
+      return;
+    }
+  }else if(typeof window.showDirectoryPicker==='function'){
+    // Secours : certains contextes PWA exposent le choix de dossier mais pas
+    // showSaveFilePicker. On ouvre alors l'Explorateur pour choisir le dossier.
+    try{
+      saveDirectory=await window.showDirectoryPicker({mode:'readwrite'});
+    }catch(saveErr){
+      if(saveErr&&saveErr.name==='AbortError'){setStatus('Save cancelled');return;}
+      console.error('showDirectoryPicker:',saveErr);
+      setStatus('Folder selection refused: '+(saveErr.message||saveErr.name||'error'));
+      return;
+    }
+  }else{
+    const msg='This browser window does not provide the Save As API. The PDF will be downloaded. To get a file dialog each time, enable “Ask where to save each file before downloading” in Edge/Chrome download settings.';
+    setStatus(msg);
+    alert(msg);
+  }
+  collectCurrentPage();
+  setStatus('Creating…');
+  try{const doc=await PDFLib.PDFDocument.load(new Uint8Array(pdfBytes));const pages=doc.getPages();const fonts={Helvetica:await doc.embedFont(PDFLib.StandardFonts.Helvetica),TimesRoman:await doc.embedFont(PDFLib.StandardFonts.TimesRoman),Courier:await doc.embedFont(PDFLib.StandardFonts.Courier)};for(let i=0;i<pages.length;i++){const st=pageStates[i+1];if(!st)continue;const p=pages[i],W=p.getWidth(),H=p.getHeight();for(const m of st.masks||[])p.drawRectangle({x:m.x,y:H-m.y-m.h,width:m.w,height:m.h,color:PDFLib.rgb(1,1,1)});for(const f of st.fields||[]){const ff=f.fontFamily||'Helvetica',font=fonts[ff]||fonts.Helvetica,size=Number.isFinite(+f.fontSize)?Math.max(5,Math.min(48,+f.fontSize)):8,tc=hexToRgb01(f.textColor||'#000000');const raw=(f.value||'');const boxes=f.boxes||[];const t=boxes.length>=2?raw:raw.trim();if(!t&&!boxes.length)continue;if(boxes.length>=2){const chars=Array.from(raw.replace(/\r?\n/g,''));const y=(autoLineOn&&Number.isFinite(+f.lineY))?H-(+f.lineY)-autoYOffset+size*.08:H-f.y-f.h/2-size*.36;for(let bi=0;bi<Math.min(chars.length,boxes.length);bi++){const ch=chars[bi];if(/\s/.test(ch))continue;const bw=boxes[bi].w||10,cx=boxes[bi].x+bw/2,tw=font.widthOfTextAtSize(ch,size);p.drawText(ch,{x:cx-tw/2,y,size,font,color:PDFLib.rgb(tc.r,tc.g,tc.b)});}}else{const maxW=Math.max(1,f.w-4),lineH=size*1.2,maxLines=Math.max(1,Math.floor((f.h-2)/lineH));const lines=[];for(const para of t.split(/\r?\n/)){let line='';for(const word of para.split(/\s+/)){const test=line?line+' '+word:word;if(font.widthOfTextAtSize(test,size)<=maxW)line=test;else{if(line)lines.push(line);line=word;}}lines.push(line);}let y=((autoLineOn&&Number.isFinite(+f.lineY))?H-(+f.lineY)-autoYOffset+size*.08:H-f.y-size-1-autoYOffset);for(const line of lines.slice(0,maxLines)){if(line){const tw=font.widthOfTextAtSize(line,size),ta=(f.textAlign==='center'||f.textAlign==='right')?f.textAlign:'left';let tx=f.x+2;if(ta==='center')tx=f.x+Math.max(2,(f.w-tw)/2);else if(ta==='right')tx=f.x+Math.max(2,f.w-tw-2);p.drawText(line,{x:tx,y,size,font,color:PDFLib.rgb(tc.r,tc.g,tc.b)});}y-=lineH;}}}for(const c of st.checks||[]){const sz=Math.min(c.w||12,c.h||12);if(!c.detected)p.drawRectangle({x:c.x,y:H-c.y-sz,width:sz,height:sz,borderColor:PDFLib.rgb(0,0,0),borderWidth:0.8});if(c.checked){const pad=Math.max(1,sz*0.18);p.drawLine({start:{x:c.x+pad,y:H-c.y-sz+pad},end:{x:c.x+sz-pad,y:H-c.y-pad},thickness:1.1,color:PDFLib.rgb(0,0,0)});p.drawLine({start:{x:c.x+pad,y:H-c.y-pad},end:{x:c.x+sz-pad,y:H-c.y-sz+pad},thickness:1.1,color:PDFLib.rgb(0,0,0)});}}for(const im of st.images||[]){const src=im.src||'';if(!src)continue;let emb;const raw=Uint8Array.from(atob((src.split(',')[1]||'')),c=>c.charCodeAt(0));if(src.startsWith('data:image/png'))emb=await doc.embedPng(raw);else if(src.startsWith('data:image/jpeg')||src.startsWith('data:image/jpg'))emb=await doc.embedJpg(raw);else{const ci=new Image();ci.src=src;await ci.decode();const c=document.createElement('canvas');c.width=ci.naturalWidth;c.height=ci.naturalHeight;c.getContext('2d').drawImage(ci,0,0);const png=c.toDataURL('image/png');const rb=Uint8Array.from(atob(png.split(',')[1]),x=>x.charCodeAt(0));emb=await doc.embedPng(rb);}p.drawImage(emb,{x:im.x,y:H-im.y-im.h,width:im.w,height:im.h});}}
+const out=await doc.save(),blob=new Blob([out],{type:'application/pdf'});
+if(saveHandle){
+  const writable=await saveHandle.createWritable();
+  await writable.write(blob);
+  await writable.close();
+  setStatus('PDF created: '+(saveHandle.name||suggestedName));
+}else if(saveDirectory){
+  const fileHandle=await saveDirectory.getFileHandle(suggestedName,{create:true});
+  const writable=await fileHandle.createWritable();
+  await writable.write(blob);
+  await writable.close();
+  setStatus('PDF created: '+suggestedName);
+}else{
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=suggestedName;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);setStatus('PDF created (browser download)');
+}
+}catch(err){console.error(err);setStatus('Error: '+err.message);}}
+
+async function openPicked(file){if(!file)return;const buf=await file.arrayBuffer();await loadPdf(new Uint8Array(buf),file.name);}
+document.getElementById('openPdf').addEventListener('click',()=>document.getElementById('pdfPicker').click());document.getElementById('pdfPicker').addEventListener('change',e=>{openPicked(e.target.files[0]);e.target.value='';});
+document.getElementById('closePdf').addEventListener('click',closeDocument);document.getElementById('resetDocument').addEventListener('click',resetDocument);document.getElementById('zoomOut').addEventListener('click',()=>setZoom(userZoom/1.2));document.getElementById('zoomIn').addEventListener('click',()=>setZoom(userZoom*1.2));
+document.getElementById('toggleClean').addEventListener('click',e=>{const on=document.body.classList.toggle('clean');e.currentTarget.textContent=on?t('showFrames'):t('hideFrames');});
+
+// Toujours démarrer avec la zone de debug repliée, même si le navigateur restaure l'état précédent.
+window.addEventListener('pageshow',()=>{document.querySelectorAll('.messages-panel').forEach(d=>d.removeAttribute('open'));});
+
+// Ancien bouton de détection globale conservé pour réactivation :
+// document.getElementById('detectPageFields').addEventListener('click',detectEditableFieldsOnPage);
+document.getElementById('alignVertical').addEventListener('click',()=>alignSelected('vertical'));document.getElementById('alignHorizontal').addEventListener('click',()=>alignSelected('horizontal'));document.getElementById('autoYUp').addEventListener('click',()=>setAutoYOffset(autoYOffset-0.5));document.getElementById('autoYDown').addEventListener('click',()=>setAutoYOffset(autoYOffset+0.5));autoLineEnabled.addEventListener('change',()=>setAutoLineEnabled(autoLineEnabled.checked));autoCheckDetect.addEventListener('change',()=>setAutoCheckDetect(autoCheckDetect.checked));autoBoxDetect.addEventListener('change',()=>setAutoBoxDetect(autoBoxDetect.checked));autoTextSize.addEventListener('change',()=>setAutoTextSize(autoTextSize.checked));document.getElementById('menuSmaller').addEventListener('click',()=>setMenuScale(menuScale/1.1));document.getElementById('menuLarger').addEventListener('click',()=>setMenuScale(menuScale*1.1));document.getElementById('addField').addEventListener('click',addText);document.getElementById('addCheck').addEventListener('click',addCheck);document.getElementById('addImage').addEventListener('click',()=>document.getElementById('imagePicker').click());document.getElementById('imagePicker').addEventListener('change',e=>{addImageFile(e.target.files[0]);e.target.value='';});document.getElementById('addMask').addEventListener('click',addMask);document.getElementById('deleteItem').addEventListener('click',deleteSelected);
+document.getElementById('textAlignLeft').addEventListener('click',()=>setTextAlignment('left'));document.getElementById('textAlignCenter').addEventListener('click',()=>setTextAlignment('center'));document.getElementById('textAlignRight').addEventListener('click',()=>setTextAlignment('right'));fontFamily.addEventListener('change',applyFontFamily);fontSize.addEventListener('change',applyFontSize);textColor.addEventListener('input',applyTextColor);document.getElementById('save').addEventListener('click',saveProject);document.getElementById('exportLayout').addEventListener('click',exportLayout);document.getElementById('importLayout').addEventListener('click',()=>document.getElementById('layoutPicker').click());document.getElementById('layoutPicker').addEventListener('change',e=>{importLayoutFile(e.target.files[0]);e.target.value='';});document.getElementById('clear').addEventListener('click',clearValues);document.getElementById('exportPdf').addEventListener('click',exportDocument);document.addEventListener('keydown',e=>{if(e.key==='Escape'&&pendingPlacement){e.preventDefault();cancelPlacement(true);return;}const typing=document.activeElement&&document.activeElement.classList&&document.activeElement.classList.contains('field');const mod=e.ctrlKey||e.metaKey;if(mod&&e.key.toLowerCase()==='c'&&selected&&(!typing||document.body.classList.contains('adjust'))){e.preventDefault();copySelected();return;}if(mod&&e.key.toLowerCase()==='v'&&clipboardItem&&(!typing||document.body.classList.contains('adjust'))){e.preventDefault();pasteSelected();return;}if((e.key==='Delete'||e.key==='Backspace')&&selected){if(typing&&!document.body.classList.contains('adjust'))return;e.preventDefault();deleteSelected();}});
+document.getElementById('prevPage').addEventListener('click',()=>renderPage(currentPage-1));document.getElementById('nextPage').addEventListener('click',()=>renderPage(currentPage+1));document.getElementById('pageNumber').addEventListener('change',e=>renderPage(parseInt(e.target.value)||1));
+document.getElementById('languageSelect').addEventListener('change',e=>applyLanguage(e.target.value));
+window.addEventListener('resize',resizeView);setNavigationEnabled(false);updateZoomLabel();applyMenuScale();applyLanguage(uiLanguage);restoreLast();
+
+
+// --- PWA / ouverture de PDF depuis Windows (File Handling API) ---
+
+// Dark Reader peut réécrire les styles après création du champ. On réaffirme
+// uniquement la couleur du texte du PDF, sans toucher au thème de l'interface.
+let darkReaderColorRefreshQueued=false;
+new MutationObserver(()=>{
+  if(darkReaderColorRefreshQueued)return;
+  darkReaderColorRefreshQueued=true;
+  requestAnimationFrame(()=>{darkReaderColorRefreshQueued=false;refreshEditorTextColors();});
+}).observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['data-darkreader-scheme']});
+
+// Robust PWA update handling: HTML and the service worker should not stay stuck
+// on an old version after files are replaced on the local server.
+if ('serviceWorker' in navigator) {
+  let swRegistration = null;
+  let reloadingForUpdate = false;
+  const checkForPwaUpdate = async () => {
+    try {
+      if (swRegistration) await swRegistration.update();
+      // Request version.json without cache so we can verify that the local server
+      // is serving the current files.
+      const r = await fetch('./version.json?t=' + Date.now(), {cache:'no-store'});
+      if (r.ok) {
+        const info = await r.json();
+        if (info.version && String(info.version) !== APP_VERSION) {
+          console.warn('Different server version:', info.version);
+        }
+      }
+    } catch (err) { console.warn('PWA update', err); }
+  };
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (reloadingForUpdate) return;
+    reloadingForUpdate = true;
+    location.reload();
+  });
+  window.addEventListener('load', async () => {
+    try {
+      // The version parameter forces Chromium to notice the new script immediately,
+      // even if an older PWA version is still installed.
+      swRegistration = await navigator.serviceWorker.register('./service-worker.js?v='+APP_VERSION, {scope:'./', updateViaCache:'none'});
+      await checkForPwaUpdate();
+      setInterval(checkForPwaUpdate, 60000);
+    } catch (err) { console.warn('Service Worker', err); }
+  });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) checkForPwaUpdate(); });
+  window.addEventListener('focus', checkForPwaUpdate);
+  window.addEventListener('online', checkForPwaUpdate);
+}
+
+// Lorsqu'une PWA installée est choisie via « Ouvrir avec », Chromium transmet
+// le PDF ici. On réutilise exactement le même chargeur que le bouton Ouvrir.
+if ('launchQueue' in window && 'files' in LaunchParams.prototype) {
+  launchQueue.setConsumer(async launchParams => {
+    try {
+      const handles = launchParams.files || [];
+      if (!handles.length) return;
+      const file = await handles[0].getFile();
+      await openPicked(file);
+    } catch (err) {
+      console.error(err);
+      setStatus('PWA open error: ' + (err?.message || err));
+    }
+  });
+}
+</script>
+</body>
+</html>
