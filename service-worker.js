@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pdf-field-helper-v1.1';
+const CACHE_NAME = 'pdf-field-helper-v1.2';
 const APP_SHELL = [
   './',
   './index.html',
@@ -16,7 +16,6 @@ const RUNTIME_LIBS = [
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
-    // Do not fail installation if a file is temporarily unavailable.
     await Promise.all(APP_SHELL.map(async url => {
       try {
         const r = await fetch(url, {cache:'no-store'});
@@ -50,9 +49,6 @@ self.addEventListener('fetch', event => {
 
   event.respondWith((async () => {
     const cache = await caches.open(CACHE_NAME);
-
-    // Main page and version files: network first.
-    // Replacing files on localhost is enough; stale HTML will not be served indefinitely from the PWA cache.
     if (isNavigation || isCoreFile) {
       try {
         const response = await fetch(event.request, {cache:'no-store'});
@@ -63,7 +59,6 @@ self.addEventListener('fetch', event => {
       }
     }
 
-    // Static resources: cache first, network as fallback.
     const cached = await cache.match(event.request);
     if (cached) return cached;
     try {

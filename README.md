@@ -14,6 +14,7 @@ A lightweight browser-based tool for creating overlays on top of existing PDF do
 - Automatic width and height suggestions
 - Move, resize and align overlay elements manually
 - Per-field or document-wide font settings
+- Per-field vertical text adjustment with document-wide application/reset
 - Save and reload overlay layouts
 - Generate a new PDF with the overlay applied
 - English / French interface
@@ -35,4 +36,4 @@ HTML, CSS and JavaScript using PDF.js and pdf-lib.
 
 ## Status
 
-**v1.1**
+**v1.2**
