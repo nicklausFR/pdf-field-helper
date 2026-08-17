@@ -381,9 +381,8 @@ function placementCoords(ev){
   const px=(ev.clientX-r.left)/Math.max(.01,scaleNow),py=(ev.clientY-r.top)/Math.max(.01,scaleNow);
   if(px<0||py<0||px>pageW||py>pageH)return null;
   const {w,h}=pendingPlacement;
-  // Placement manuel : la zone commence à droite du pointeur, et non plus centrée dessus.
-  const gap=7;
-  const x=px+gap;
+  // Placement manuel : le bord gauche du field commence exactement sous le pointeur.
+  const x=px;
   const avail=Math.max(0,pageW-x);
   const ww=Math.min(w,avail);
   if(ww<4)return null;
@@ -410,7 +409,7 @@ function schedulePlacementTextAutoSize(px,py){
         const hh=normalizedEditableHeight(local.y,textBoxes,16);
         const raw={x:local.x,y:Math.max(0,local.y-hh+2),w:local.w,h:hh};
         const fitted=fitDetectedLineSegment(raw,textBoxes,px,2)||raw;
-        const minX=Math.min(pageW-4,px+7);
+        const minX=Math.min(pageW-4,px);
         const endX=Math.min(pageW,fitted.x+fitted.w);
         const fx=Math.max(minX,fitted.x);
         const fw=endX-fx;
@@ -426,7 +425,7 @@ function schedulePlacementTextAutoSize(px,py){
       }
       // Aucune ligne nette : hauteur adaptée à la ligne courante et largeur libre à droite du pointeur.
       const hh=normalizedEditableHeight(py,textBoxes,16);
-      const gap=7,startX=Math.min(pageW-18,px+gap);
+      const startX=Math.min(pageW-18,px);
       const raw={x:startX,y:Math.max(0,Math.min(pageH-hh,py-hh/2)),w:Math.min(pendingPlacement.baseW||210,pageW-startX),h:hh};
       const fitted=fitDetectedLineSegment(raw,textBoxes,startX+2,2);
       if(fitted){
@@ -1006,10 +1005,17 @@ function scheduleBoxDetection(e,announce=false){clearTimeout(e._boxDetectTimer);
 
 function rectOverlap(a,b,pad=2){return !(a.x+a.w+pad<b.x||b.x+b.w+pad<a.x||a.y+a.h+pad<b.y||b.y+b.h+pad<a.y);}
 function existingRects(){const o=document.getElementById('overlay');if(!o)return[];return [...o.querySelectorAll('.field,.check-zone')].map(e=>({x:parseFloat(e.style.left)||0,y:parseFloat(e.style.top)||0,w:parseFloat(e.style.width)||0,h:parseFloat(e.style.height)||0}));}
-function placementSnapConflictsExisting(rect,pad=5){
-  // A PDF snap must never pull a NEW text area onto an overlay area that already exists.
-  // This is intentionally only a guard for automatic snapping: manual placement remains free.
-  return existingRects().some(r=>rectOverlap(rect,r,pad));
+function significantFieldOverlap(a,b,tolerance=5){
+  // Les fields voisins ont le droit de se toucher et même de se chevaucher légèrement.
+  // On ne bloque l'aimantation que si le recouvrement est réellement significatif.
+  const ox=Math.max(0,Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x));
+  const oy=Math.max(0,Math.min(a.y+a.h,b.y+b.h)-Math.max(a.y,b.y));
+  return ox>tolerance&&oy>tolerance;
+}
+function placementSnapConflictsExisting(rect,tolerance=5){
+  // Tolère jusqu'à quelques pixels de chevauchement avec un field voisin. Cela permet
+  // de poser le field suivant exactement au bord du précédent sans qu'il soit repoussé.
+  return existingRects().some(r=>significantFieldOverlap(rect,r,tolerance));
 }
 function makeAnalysisCanvas(){const src=document.getElementById('pdfCanvas');if(!src)return null;const q=1.6,c=document.createElement('canvas');c.width=Math.max(1,Math.round(pageW*q));c.height=Math.max(1,Math.round(pageH*q));const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(src,0,0,c.width,c.height);return {canvas:c,ctx:x,q};}
 async function getPagePrintedTextBoxes(){
@@ -1504,7 +1510,7 @@ async function detectFieldAtClick(ev){
   const local=detectLocalHorizontalAtPoint(ctx,W,H,q,ux,uy,textBoxes);
   if(local){const hh=normalizedEditableHeight(local.y,textBoxes,16),rr={x:local.x,y:local.y-hh+2,w:local.w,h:hh},dist=pointRectDistance(ux,uy,rr);candidates.push({type:'line',dist:dist+.5,rr,ln:local,local:true});}
   const order={boxes:0,check:1,line:2};candidates.sort((a,b)=>(a.dist-b.dist)||(order[a.type]-order[b.type]));
-  const usable=candidates.filter(c=>!existing.some(e=>rectOverlap(c.rr,e,0)));
+  const usable=candidates.filter(c=>!existing.some(e=>significantFieldOverlap(c.rr,e,5)));
   const c=usable[0]||null;
   // Les cases à cocher restent une action directe : elles n'ont pas de largeur à régler.
   if(c?.type==='check'){
