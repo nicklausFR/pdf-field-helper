@@ -16,7 +16,7 @@ body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#eceff3;color:#2
 .group-title{position:absolute;left:8px;top:4px;font-size:.78em;font-weight:700;color:#65707c;text-transform:uppercase;letter-spacing:.04em}
 button,select,input[type=number]{font-family:inherit;font-size:calc(14px * var(--menu-scale));padding:calc(7px * var(--menu-scale)) calc(9px * var(--menu-scale));border:1px solid #aeb6bf;border-radius:calc(6px * var(--menu-scale));background:#fff}
 button{cursor:pointer}button.save-ok{font-weight:700;box-shadow:0 0 0 2px rgba(46,125,50,.18) inset}button.primary{background:var(--blue);color:#fff;border-color:var(--blue)}button.danger{color:#9d1c1c}
-button.bigctl{box-sizing:border-box;-webkit-appearance:none;appearance:none;font:inherit;line-height:normal;min-width:calc(38px * var(--menu-scale));height:auto;min-height:0;padding:calc(7px * var(--menu-scale)) calc(9px * var(--menu-scale));margin:0;font-weight:600;display:inline-flex;flex:0 0 auto;align-items:center;justify-content:center;vertical-align:middle}button.bigctl:focus{outline:auto}
+button.bigctl{box-sizing:border-box;-webkit-appearance:none;appearance:none;font:inherit;line-height:normal;width:calc(38px * var(--menu-scale));min-width:calc(38px * var(--menu-scale));max-width:calc(38px * var(--menu-scale));height:auto;min-height:0;max-height:none;padding:calc(7px * var(--menu-scale)) 0;margin:0;font-weight:600;display:inline-flex;flex:0 0 calc(38px * var(--menu-scale));align-items:center;justify-content:center;vertical-align:middle}button.bigctl:focus{outline:auto}
 label.inline{display:flex;align-items:center;gap:calc(5px * var(--menu-scale));font-size:calc(13px * var(--menu-scale))}.status{font-size:calc(12px * var(--menu-scale));white-space:pre-wrap;word-break:break-word}.messages-panel{width:100%;background:#fff;border:1px solid #cfd4da;border-radius:7px;overflow:hidden}.messages-title{cursor:pointer;display:block;padding:calc(6px * var(--menu-scale)) calc(8px * var(--menu-scale));font-size:calc(11px * var(--menu-scale));font-weight:700;color:#65707c;text-transform:uppercase;letter-spacing:.04em;user-select:none}.messages-panel[open] .messages-title{border-bottom:1px solid #e2e5e8}.messages-panel .status{max-height:calc(110px * var(--menu-scale));overflow:auto;padding:calc(7px * var(--menu-scale)) calc(8px * var(--menu-scale))}.debug-footer{padding:0 18px 18px;width:100%}
 .navbar{display:flex;align-items:center;gap:calc(5px * var(--menu-scale))}.pair{display:inline-flex;flex-wrap:nowrap;align-items:center}.navbar.nav-disabled{opacity:.55}.navbar.nav-disabled button,.navbar.nav-disabled input{pointer-events:none}.pair{display:flex;gap:calc(3px * var(--menu-scale));align-items:center}.sep{width:1px;align-self:stretch;min-height:calc(28px * var(--menu-scale));background:#cfd4da;margin:0 calc(5px * var(--menu-scale));flex:0 0 1px}.menuval{font-size:calc(12px * var(--menu-scale));min-width:calc(40px * var(--menu-scale));text-align:center}
 #pageNumber{width:calc(54px * var(--menu-scale));text-align:center}.zoomval{font-size:calc(12px * var(--menu-scale));min-width:calc(42px * var(--menu-scale));text-align:center}.stage{padding:18px;display:block;width:100%;max-width:100vw;overflow-x:auto;overflow-y:visible;scrollbar-width:none}.stage::-webkit-scrollbar{height:0}.horizontal-scrollbar{position:fixed;left:0;right:0;bottom:0;height:17px;overflow-x:auto;overflow-y:hidden;z-index:90;background:#eef1f4;border-top:1px solid #cfd4da;display:none}.horizontal-scrollbar-inner{height:1px}.horizontal-scrollbar.visible{display:block}body.has-horizontal-scrollbar{padding-bottom:17px}.viewport{position:relative;margin-left:auto;margin-right:auto}.pageSurface{position:absolute;left:0;top:0;transform-origin:top left;background:#fff;box-shadow:0 2px 14px rgba(0,0,0,.22);overflow:hidden;isolation:isolate;contain:paint;backface-visibility:hidden}
@@ -37,11 +37,14 @@ body.adjust .field{cursor:move;outline:0;box-shadow:none;background:rgba(35,135,
 .toolbar-top{display:flex;justify-content:space-between;align-items:center;min-height:calc(28px * var(--menu-scale));padding:0 calc(2px * var(--menu-scale));gap:calc(8px * var(--menu-scale))}
 .app-heading{display:flex;align-items:baseline;gap:calc(8px * var(--menu-scale));min-width:0;color:#65707c}
 .app-name{font-size:calc(16px * var(--menu-scale));font-weight:700;line-height:1;white-space:nowrap}
+.app-name-link{color:inherit;text-decoration:none}.app-name-link:hover{text-decoration:underline}.app-name-link:focus-visible{outline:2px solid var(--blue);outline-offset:3px;border-radius:2px}
 .app-version{font-size:calc(12px * var(--menu-scale));font-weight:700;opacity:.75;line-height:1;white-space:nowrap}
+.toolbar-top-actions{display:flex;align-items:center;gap:calc(12px * var(--menu-scale));margin-left:auto}
+.menu-scale-control{display:flex;align-items:center;gap:calc(5px * var(--menu-scale));font-size:calc(12px * var(--menu-scale));font-weight:700;color:#65707c;white-space:nowrap}
 .language-switch{display:flex;align-items:center;gap:calc(6px * var(--menu-scale));font-size:calc(12px * var(--menu-scale));font-weight:700;color:#65707c;line-height:1}
 .language-switch span{display:inline-flex;align-items:center;line-height:1;padding-top:1px}
 .language-switch select{height:calc(30px * var(--menu-scale));padding:calc(3px * var(--menu-scale)) calc(6px * var(--menu-scale));font-size:calc(12px * var(--menu-scale));margin:0}
-@media(max-width:700px){.toolbar-top{justify-content:space-between;flex-wrap:wrap}.app-heading{order:1}.language-switch{order:2;margin-left:auto}.toolgroup{width:100%}}
+@media(max-width:700px){.toolbar-top{justify-content:space-between;flex-wrap:wrap}.app-heading{order:1}.toolbar-top-actions{order:2;margin-left:auto;flex-wrap:wrap;justify-content:flex-end}.toolgroup{width:100%}}
 
 /* v73: hors mode réglage, conserver exactement le bleutage des zones éditables.
    Le mode clean (Masquer cadres) reste le seul mode qui retire le bleutage. */
@@ -139,6 +142,10 @@ html[data-darkreader-scheme="dark"] .field.box-detected {
 .align-icon i:nth-child(1){width:100%}.align-icon i:nth-child(2){width:72%}.align-icon i:nth-child(3){width:88%}
 .align-icon.align-left{align-items:flex-start}.align-icon.align-center{align-items:center}.align-icon.align-right{align-items:flex-end}
 .subsection-label{font-size:calc(12px * var(--menu-scale));font-weight:700;color:#65707c;margin-left:calc(3px * var(--menu-scale));white-space:nowrap}
+.font-size-setting{display:flex;align-items:center;gap:calc(5px * var(--menu-scale));font-size:calc(13px * var(--menu-scale))}
+.font-size-control{display:flex;align-items:center;gap:calc(3px * var(--menu-scale))}
+#fontSize{width:68px;text-align:center;-moz-appearance:textfield;appearance:textfield}
+#fontSize::-webkit-inner-spin-button,#fontSize::-webkit-outer-spin-button{-webkit-appearance:none;appearance:none;margin:0}
 
 /* v93 : verrou uniquement sur le texte du PDF ; l'interface reste gérée par Dark Reader. */
 .field[data-darkreader-lock], .field-text-layer[data-darkreader-lock], .box-char-layer[data-darkreader-lock], .box-char[data-darkreader-lock], .box-caret[data-darkreader-lock]{forced-color-adjust:none}
@@ -167,8 +174,15 @@ html[data-darkreader-scheme="dark"] .field.box-detected {
 <body>
 <div class="toolbar">
   <div class="toolbar-top">
-    <div class="app-heading"><span class="app-name">PDF Field Helper</span><span class="app-version">v1.2</span></div>
-    <div class="language-switch"><span id="languageLabel">Language</span><select id="languageSelect" aria-label="Language"><option value="en">ENG</option><option value="fr">FR</option></select></div>
+    <div class="app-heading"><a class="app-name app-name-link" href="https://github.com/nicklausFR/pdf-field-helper" target="_blank" rel="noopener noreferrer" title="GitHub — PDF Field Helper">PDF Field Helper</a><span class="app-version">v1.2</span></div>
+    <div class="toolbar-top-actions">
+      <div class="menu-scale-control">
+        <span id="menuLabel">Menu</span>
+        <div class="pair"><button id="menuSmaller" class="bigctl" title="Reduce menu size">−</button><button id="menuLarger" class="bigctl" title="Increase menu size">+</button></div>
+        <span id="menuPercent" class="menuval">100%</span>
+      </div>
+      <div class="language-switch"><span id="languageLabel">Language</span><select id="languageSelect" aria-label="Language"><option value="en">ENG</option><option value="fr">FR</option></select></div>
+    </div>
   </div>
   <div class="toolgroup">
     <span class="group-title"><span id="documentTitleLabel">Document</span></span>
@@ -197,10 +211,6 @@ html[data-darkreader-scheme="dark"] .field.box-detected {
       <div class="pair"><button id="prevPage" class="bigctl" title="Previous page">&lt;&lt;</button><button id="nextPage" class="bigctl" title="Next page">&gt;&gt;</button></div>
       <span id="pageLabel">Page</span><input id="pageNumber" type="number" min="1" value="1"><span>/ <b id="pageCount">0</b></span>
     </div>
-    <span class="sep"></span>
-    <span id="menuLabel">Menu</span>
-    <div class="pair"><button id="menuSmaller" class="bigctl" title="Reduce menu size">−</button><button id="menuLarger" class="bigctl" title="Increase menu size">+</button></div>
-    <span id="menuPercent" class="menuval">100%</span>
   </div>
 
   <div class="edit-section">
@@ -217,8 +227,10 @@ html[data-darkreader-scheme="dark"] .field.box-detected {
       <button id="addMask">+ Mask</button>
       <button id="deleteItem" class="danger">Delete</button>
       <span class="sep"></span>
-      <button id="alignVertical" title="Same vertical axis">Align vertically</button>
-      <button id="alignHorizontal" title="Same horizontal axis">Align horizontally</button>
+      <span class="subsection-label" id="alignFieldsLabel">Align fields:</span>
+      <button id="alignVertical" title="Align field centers on the same vertical axis">Vertical axis</button>
+      <button id="alignLeft" title="Align fields to the leftmost selected edge">Left edges</button>
+      <button id="alignRight" title="Align fields to the rightmost selected edge">Right edges</button>
       <span class="sep"></span>
       <span class="subsection-label" id="automaticDetectionLabel">Automatic detection</span>
       <!-- Features kept for possible reactivation:
@@ -233,7 +245,7 @@ html[data-darkreader-scheme="dark"] .field.box-detected {
 
     <div id="tabEdit" class="edit-tab-panel" role="tabpanel" aria-labelledby="tabEditButton" hidden>
       <label class="inline" ><span id="fontLabel">Font</span> <select id="fontFamily"><option value="Helvetica">Helvetica / Arial</option><option value="TimesRoman">Times</option><option value="Courier">Courier</option></select></label>
-      <label class="inline" ><span id="sizeLabel">Size</span> <input id="fontSize" type="number" min="5" max="48" step="0.5" value="8" style="width:58px"></label>
+      <div class="font-size-setting"><span id="sizeLabel">Size</span><div class="font-size-control"><input id="fontSize" type="number" min="5" max="48" step="0.5" value="8" aria-labelledby="sizeLabel"><button id="fontSizeSmaller" class="bigctl" type="button" title="Reduce font size" aria-label="Reduce font size">−</button><button id="fontSizeLarger" class="bigctl" type="button" title="Increase font size" aria-label="Increase font size">+</button></div></div>
       <label class="inline" ><span id="colorLabel">Color</span> <input id="textColor" type="color" value="#000000" title="Text color"></label>
       <label class="inline" title="Apply font, size and color to all text areas in the document"><input id="fontAllDocument" type="checkbox"> <span class="entireDocumentLabel">Entire document</span></label>
       <span class="sep"></span>
@@ -243,11 +255,11 @@ html[data-darkreader-scheme="dark"] .field.box-detected {
       <button id="textAlignRight" class="align-icon-button" title="Align text right" aria-label="Align text right"><span class="align-icon align-right" aria-hidden="true"><i></i><i></i><i></i></span></button>
       <label class="inline" title="Apply content settings to all text areas in the document"><input id="textAlignAllDocument" type="checkbox"> <span class="entireDocumentLabel">Entire document</span></label>
       <span class="sep"></span>
-      <span class="subsection-label" id="heightLabel">Height:</span>
-      <div class="pair"><button id="autoYUp" class="bigctl" title="Move text slightly upward">↑</button><button id="autoYDown" class="bigctl" title="Move text slightly downward">↓</button></div>
+      <span class="subsection-label" id="heightLabel">Text baseline:</span>
+      <div class="pair"><button id="autoYUp" class="bigctl" title="Move the text baseline upward">↑</button><button id="autoYDown" class="bigctl" title="Move the text baseline downward">↓</button></div>
       <span id="autoYValue" class="menuval">0.0 px</span>
-      <label class="inline" title="Apply this vertical adjustment to every text area in the document"><input id="autoYAllDocument" type="checkbox"> <span class="entireDocumentLabel">Entire document</span></label>
-      <button id="autoYReset" title="Reset the vertical adjustment of every text area in the document">Reset</button>
+      <label class="inline" title="Apply this text baseline adjustment to every text area in the document"><input id="autoYAllDocument" type="checkbox"> <span class="entireDocumentLabel">Entire document</span></label>
+      <button id="autoYReset" title="Reset the text baseline adjustment of every text area in the document">Reset</button>
     </div>
   </div>
 </div>
@@ -285,8 +297,8 @@ const SNAP_GUARD_BUILD='2026-08-16c'; // internal build marker; public version r
 console.log('PDF Field Helper snap-guard build',SNAP_GUARD_BUILD);
 let uiLanguage=localStorage.getItem('pdfFieldHelperLanguage')||'en';
 const UI_TEXT={
-  en:{language:'Language',document:'Document',open:'Open',close:'Close',reset:'Reset',save:'Save',saveOverlay:'Save overlay',loadOverlay:'Load overlay',clear:'Clear values',generate:'Generate PDF',view:'View',hideFrames:'Hide frames',showFrames:'Show frames',zoom:'Zoom',pages:'Pages',page:'Page',menu:'Menu',layerMode:'Overlay creation mode',editMode:'Edit mode',addText:'+ Text',addCheck:'+ Checkbox',addImage:'+ Image',addMask:'+ Mask',delete:'Delete',alignV:'Align vertically',alignH:'Align horizontally',autoDetection:'Automatic detection',autoSize:'Automatic width / height',checkbox:'Checkbox',delimited:'Delimited text area',verticalAlign:'Vertical alignment',font:'Font',size:'Size',color:'Color',entire:'Entire document',alignment:'Alignment:',height:'Height:',messages:'Messages / Debug',ready:'Ready.',empty:'Open a PDF document to begin.'},
-  fr:{language:'Langue',document:'Document',open:'Ouvrir',close:'Fermer',reset:'Réinitialiser',save:'Enregistrer',saveOverlay:'Enregistrer calque',loadOverlay:'Charger calque',clear:'Effacer valeurs',generate:'Générer PDF',view:'Affichage',hideFrames:'Masquer cadres',showFrames:'Afficher cadres',zoom:'Zoom',pages:'Pages',page:'Page',menu:'Menu',layerMode:'Mode création calque',editMode:'Mode édition',addText:'+ Texte',addCheck:'+ Case',addImage:'+ Image',addMask:'+ Masque',delete:'Supprimer',alignV:'Aligner verticalement',alignH:'Aligner horizontalement',autoDetection:'Détection automatique',autoSize:'Largeur / hauteur automatique',checkbox:'Case à cocher',delimited:'Zone texte avec délimitation',verticalAlign:'Alignement vertical',font:'Police',size:'Taille',color:'Couleur',entire:'Tout le document',alignment:'Alignement :',height:'Hauteur :',messages:'Messages / Debug',ready:'Prêt.',empty:'Ouvrir un document PDF pour commencer.'}
+  en:{language:'Language',document:'Document',open:'Open',close:'Close',reset:'Reset',save:'Save',saveOverlay:'Save overlay',loadOverlay:'Load overlay',clear:'Clear values',generate:'Generate PDF',view:'View',hideFrames:'Hide frames',showFrames:'Show frames',zoom:'Zoom',pages:'Pages',page:'Page',menu:'Menu',layerMode:'Overlay creation mode',editMode:'Edit mode',addText:'+ Text',addCheck:'+ Checkbox',addImage:'+ Image',addMask:'+ Mask',delete:'Delete',alignFields:'Align fields:',alignV:'Vertical axis',alignLeft:'Left edges',alignRight:'Right edges',autoDetection:'Automatic detection',autoSize:'Automatic width / height',checkbox:'Checkbox',delimited:'Delimited text area',verticalAlign:'Vertical alignment',font:'Font',size:'Size',color:'Color',entire:'Entire document',alignment:'Alignment:',height:'Text baseline:',messages:'Messages / Debug',ready:'Ready.',empty:'Open a PDF document to begin.'},
+  fr:{language:'Langue',document:'Document',open:'Ouvrir',close:'Fermer',reset:'Réinitialiser',save:'Enregistrer',saveOverlay:'Enregistrer calque',loadOverlay:'Charger calque',clear:'Effacer valeurs',generate:'Générer PDF',view:'Affichage',hideFrames:'Masquer cadres',showFrames:'Afficher cadres',zoom:'Zoom',pages:'Pages',page:'Page',menu:'Menu',layerMode:'Mode création calque',editMode:'Mode édition',addText:'+ Texte',addCheck:'+ Case',addImage:'+ Image',addMask:'+ Masque',delete:'Supprimer',alignFields:'Aligner les champs :',alignV:'Axe vertical',alignLeft:'Bords gauches',alignRight:'Bords droits',autoDetection:'Détection automatique',autoSize:'Largeur / hauteur automatique',checkbox:'Case à cocher',delimited:'Zone texte avec délimitation',verticalAlign:'Alignement vertical',font:'Police',size:'Taille',color:'Couleur',entire:'Tout le document',alignment:'Alignement :',height:'Ligne de base du texte :',messages:'Messages / Debug',ready:'Prêt.',empty:'Ouvrir un document PDF pour commencer.'}
 };
 function t(k){return (UI_TEXT[uiLanguage]&&UI_TEXT[uiLanguage][k])||UI_TEXT.en[k]||k;}
 function updateWindowTitle(){document.title='PDF Field Helper'+(docName?' — '+docName:'');}
@@ -300,7 +312,7 @@ function applyLanguage(lang){
   if(q('documentTitleLabel'))q('documentTitleLabel').textContent=t('document');
   if(q('viewTitleLabel'))q('viewTitleLabel').textContent=t('view');
   if(q('zoomLabel'))q('zoomLabel').textContent=t('zoom'); if(q('pagesLabel'))q('pagesLabel').textContent=t('pages'); if(q('pageLabel'))q('pageLabel').textContent=t('page'); if(q('menuLabel'))q('menuLabel').textContent=t('menu');
-  const map={openPdf:'open',closePdf:'close',resetDocument:'reset',save:'save',exportLayout:'saveOverlay',importLayout:'loadOverlay',clear:'clear',exportPdf:'generate',tabLayerButton:'layerMode',tabEditButton:'editMode',addField:'addText',addCheck:'addCheck',addImage:'addImage',addMask:'addMask',deleteItem:'delete',alignVertical:'alignV',alignHorizontal:'alignH',autoYReset:'reset'};
+  const map={openPdf:'open',closePdf:'close',resetDocument:'reset',save:'save',exportLayout:'saveOverlay',importLayout:'loadOverlay',clear:'clear',exportPdf:'generate',tabLayerButton:'layerMode',tabEditButton:'editMode',addField:'addText',addCheck:'addCheck',addImage:'addImage',addMask:'addMask',deleteItem:'delete',alignFieldsLabel:'alignFields',alignVertical:'alignV',alignLeft:'alignLeft',alignRight:'alignRight',autoYReset:'reset'};
   for(const [id,key] of Object.entries(map)){const e=q(id);if(e)e.textContent=t(key);}
   if(q('toggleClean'))q('toggleClean').textContent=document.body.classList.contains('clean')?t('showFrames'):t('hideFrames');
   if(q('automaticDetectionLabel'))q('automaticDetectionLabel').textContent=t('autoDetection');
@@ -428,7 +440,7 @@ function beginPlacement(type,opts={}){
   if(!pdfProxy)return;
   cancelPlacement(false);
   enterAdjust();
-  let w=210,h=16;
+  let w=210,h=type==='text'?typographyFieldHeight(fontFamily.value,fs()):16;
   if(type==='check'){w=h=12;}
   else if(type==='mask'){w=Math.min(220,pageW*.4);h=30;}
   else if(type==='image'){w=opts.w||Math.min(190,pageW*.35);h=opts.h||120;}
@@ -575,11 +587,11 @@ async function anchorTextPlacement(pos){
         const textBoxes=await getPagePrintedTextBoxes();
         if(!pendingPlacement||pendingPlacement!==pp||pp.stage!=='anchored')return;
         const {ctx,q}=ac,W=ac.canvas.width,H=ac.canvas.height;
-        const local=detectLocalHorizontalAtPoint(ctx,W,H,q,pos.px,pos.py,textBoxes);
+        const local=detectBestHorizontalAtPoint(ctx,W,H,q,pos.px,pos.py,textBoxes);
         if(local){
           const hh=normalizedEditableHeight(local.y,textBoxes,16);
           const raw={x:Math.max(pp.anchorX,local.x),y:Math.max(0,local.y-hh+2),w:Math.max(0,local.x+local.w-Math.max(pp.anchorX,local.x)),h:hh};
-          const fitted=fitDetectedLineSegment(raw,textBoxes,pp.anchorX+2,2)||raw;
+          const fitted=local.boxedGroup?raw:(fitDetectedLineSegment(raw,textBoxes,pp.anchorX+2,2)||raw);
           const fx=Math.max(pp.anchorX,fitted.x),endX=Math.min(pageW,fitted.x+fitted.w),fw=endX-fx;
           if(fw>=18){
             const candidate={x:fx,y:fitted.y,w:fw,h:Math.max(9,fitted.h)};
@@ -793,6 +805,34 @@ function lockEditorTextColor(el,color,transparent=false){
 function fieldFontFamily(e){return e?.dataset?.fontFamily||'Helvetica';}
 function fieldFontSize(e){const n=parseFloat(e?.dataset?.fontSize);return Number.isFinite(n)?Math.max(5,Math.min(48,n)):8;}
 function fieldTextColor(e){return e?.dataset?.textColor||'#000000';}
+function typographyFieldHeight(fontFamilyName,size){
+  const px=Math.max(5,Math.min(48,Number(size)||8));
+  const fm=browserBoxTextMetrics(fontFamilyName||'Helvetica',px);
+  // L'espace supplémentaire conserve une marge confortable autour des glyphes,
+  // tout en faisant réellement grandir la zone avec la taille de police.
+  return Math.max(16,Math.ceil(fm.lineHeight+Math.max(6,px*.25)));
+}
+function resizeFieldStateToTypography(f){
+  if(!f)return;
+  const oldH=Math.max(1,Number(f.h)||16),newH=typographyFieldHeight(f.fontFamily,f.fontSize);
+  if(Math.abs(oldH-newH)<.01)return;
+  const oldY=Number(f.y)||0,lineY=parseFloat(f.lineY);
+  // Une ligne détectée reste immobile : la zone grandit vers le haut. Sans ligne,
+  // elle grandit autour de son centre afin de ne pas donner l'impression de sauter.
+  const nextY=Number.isFinite(lineY)?lineY+(oldY+oldH-lineY)-newH:oldY+(oldH-newH)/2;
+  f.y=+Math.max(0,nextY).toFixed(2);f.h=+newH.toFixed(2);
+}
+function resizeFieldDomToTypography(e){
+  if(!e)return;
+  const oldH=Math.max(1,parseFloat(e.style.height)||16),oldY=parseFloat(e.style.top)||0;
+  const newH=typographyFieldHeight(fieldFontFamily(e),fieldFontSize(e));
+  if(Math.abs(oldH-newH)<.01)return;
+  const lineY=fieldLineData(e),nextY=lineY!=null?lineY+(oldY+oldH-lineY)-newH:oldY+(oldH-newH)/2;
+  const boundedH=Math.min(pageH||newH,newH),boundedY=Math.max(0,Math.min(Math.max(0,(pageH||Infinity)-boundedH),nextY));
+  e.style.top=boundedY+'px';e.style.height=boundedH+'px';
+  const handle=document.querySelector(`.text-resize[data-for-id="${e.dataset.id}"]`);
+  if(handle)updateTextHandle(e,handle);
+}
 function applyFieldTypography(e,prop,value){
   if(!e)return;
   if(prop==='fontFamily')e.dataset.fontFamily=value||'Helvetica';
@@ -800,6 +840,7 @@ function applyFieldTypography(e,prop,value){
   else if(prop==='textColor')e.dataset.textColor=value||'#000000';
   e.style.fontFamily=cssFont(fieldFontFamily(e));
   e.style.fontSize=fieldFontSize(e)+'px';
+  if(prop==='fontFamily'||prop==='fontSize')resizeFieldDomToTypography(e);
   // Tant qu'un calque miroir affiche le texte, le textarea natif doit rester invisible.
   // Sinon Dark Reader / le changement de taille peut faire apparaître les deux rendus
   // avec quelques pixels d'écart, ce qui donne l'impression que le texte saute puis se dédouble.
@@ -827,7 +868,7 @@ function applyTypographyChange(prop,value,label){
     let count=0;
     // Mise à jour de toutes les pages déjà connues du calque.
     for(const st of Object.values(pageStates)){
-      for(const f of st.fields||[]){f[prop]=value;count++;}
+      for(const f of st.fields||[]){f[prop]=value;if(prop==='fontFamily'||prop==='fontSize')resizeFieldStateToTypography(f);count++;}
     }
     // Mise à jour immédiate de toutes les zones de la page affichée.
     document.querySelectorAll('.field').forEach(e=>applyFieldTypography(e,prop,value));
@@ -843,6 +884,11 @@ function applyTypographyChange(prop,value,label){
 }
 function applyFontFamily(){applyTypographyChange('fontFamily',fontFamily.value||'Helvetica','Font');}
 function applyFontSize(){applyTypographyChange('fontSize',fs(),'Size');}
+function stepFontSize(delta){
+  const next=Math.max(5,Math.min(48,Math.round((fs()+(Number(delta)||0))*2)/2));
+  if(next===fs())return;
+  fontSize.value=String(next);applyFontSize();
+}
 function applyTextColor(){applyTypographyChange('textColor',textColor.value||'#000000','Color');}
 
 function fieldBoxData(e){try{return e.dataset.boxes?JSON.parse(e.dataset.boxes):[];}catch(_){return [];}}
@@ -1527,15 +1573,10 @@ function detectedEditableHeight(lineY,textBoxes,defaultH=18){
   return Math.max(9,Math.min(22,h));
 }
 function normalizedEditableHeight(lineY,textBoxes,defaultH=16){
-  // Les zones éditables mono-ligne ont volontairement une hauteur unique.
-  // La détection sert à trouver la ligne et sa largeur, pas à faire varier
-  // visuellement la hauteur selon le gras, l'antialiasing ou les lignes voisines.
-  return 16;
+  return typographyFieldHeight(fontFamily.value,fs());
 }
 function normalizedBoxGroupHeight(g,textBoxes){
-  // Même hauteur pour téléphone/date/code afin que toutes les zones texte
-  // d'une page aient une présentation homogène.
-  return 16;
+  return typographyFieldHeight(fontFamily.value,fs());
 }
 
 function pointRectDistance(px,py,r){
@@ -1547,10 +1588,12 @@ function detectLocalHorizontalAtPoint(ctx,W,H,q,ux,uy,textBoxes=[]){
   // Recherche volontairement locale et plus permissive que l'analyse globale.
   // Le clic fournit le contexte : on peut accepter une ligne chargée sans analyser
   // toute la page comme s'il s'agissait d'un champ potentiel.
-  const img=ctx.getImageData(0,0,W,H),d=img.data;
+  const img=ctx.getImageData(0,0,W,H),d=img.data,mask=buildPrintedTextMask(W,H,q,textBoxes,.8);
   const px=Math.round(ux*q),py=Math.round(uy*q);
   const rx=Math.round(280*q),ry=Math.round(28*q),x0=Math.max(1,px-rx),x1=Math.min(W-2,px+rx),y0=Math.max(1,py-ry),y1=Math.min(H-2,py+ry);
-  const dark=(x,y)=>{const k=(y*W+x)*4;return d[k]<205&&d[k+1]<205&&d[k+2]<205;};
+  // Le texte imprimé (notamment les libellés placés juste sous les champs) ne doit
+  // jamais être confondu avec la ligne qui définit la longueur de saisie.
+  const dark=(x,y)=>{if(x<0||y<0||x>=W||y>=H||mask[y*W+x])return false;const k=(y*W+x)*4;return d[k]<205&&d[k+1]<205&&d[k+2]<205;};
   const maxGap=Math.max(4,Math.round(9*q)),minSpan=Math.max(22,Math.round(24*q));
   let best=null;
   for(let y=y0;y<=y1;y++){
@@ -1580,16 +1623,52 @@ function detectLocalHorizontalAtPoint(ctx,W,H,q,ux,uy,textBoxes=[]){
     test();
   }
   if(!best)return null;
-  // Coupe le segment aux objets texte imprimés les plus proches sur la même bande.
-  // On conserve toutefois une marge pour les pointillés accolés au libellé.
-  let sx=best.x,ex=best.x+best.w;
-  const near=textBoxes.filter(t=>!t.isGuide&&Math.abs((t.y+t.h*.65)-best.y)<Math.max(8,t.h*1.1));
-  for(const t of near){
-    if(t.x+t.w<=ux&&t.x+t.w>sx)sx=Math.min(ux,t.x+t.w+2);
-    if(t.x>=ux&&t.x<ex)ex=Math.max(ux,t.x-2);
+  // Sur les tableaux et les champs en L, la ligne basse peut continuer dans la
+  // cellule voisine. Les vrais traits verticaux deviennent alors les limites.
+  const linePy=Math.round(best.y*q),scanTop=Math.max(1,linePy-Math.round(24*q)),scanBottom=Math.min(H-2,linePy+Math.round(4*q));
+  const bx0=Math.max(1,Math.round(best.x*q)),bx1=Math.min(W-2,Math.round((best.x+best.w)*q));
+  const minVerticalRun=Math.max(6,Math.round(6*q)),verticalColumns=[];
+  for(let x=bx0;x<=bx1;x++){
+    let run=0,longest=0,gap=0;
+    for(let y=scanTop;y<=scanBottom;y++){
+      // Ignorer la bande horizontale elle-même : elle ne doit pas transformer
+      // chaque pixel de la ligne en faux séparateur vertical.
+      if(Math.abs(y-linePy)<=2){gap=0;continue;}
+      const on=dark(x,y)||dark(x-1,y)||dark(x+1,y);
+      if(on){run+=1+gap;gap=0;longest=Math.max(longest,run);}
+      else if(run&&gap<1)gap++;else{run=0;gap=0;}
+    }
+    if(longest>=minVerticalRun)verticalColumns.push(x);
   }
-  if(ex-sx>=24){best.x=sx;best.w=ex-sx;}
+  const boundaries=[];
+  for(let i=0;i<verticalColumns.length;){let j=i+1;while(j<verticalColumns.length&&verticalColumns[j]<=verticalColumns[j-1]+1)j++;boundaries.push((verticalColumns[i]+verticalColumns[j-1])/(2*q));i=j;}
+  let sx=best.x,ex=best.x+best.w;
+  const left=boundaries.filter(x=>x<=ux+2&&x>=sx-2).at(-1),right=boundaries.find(x=>x>=ux+8&&x<=ex+2);
+  if(Number.isFinite(left))sx=Math.max(sx,left+.75);
+  if(Number.isFinite(right))ex=Math.min(ex,right-.75);
+  if(ex-sx>=18){best.x=sx;best.w=ex-sx;}
   return best;
+}
+function detectBestHorizontalAtPoint(ctx,W,H,q,ux,uy,textBoxes=[]){
+  const candidates=[];
+  const add=(line,kind='line')=>{
+    if(!line)return;
+    const dx=ux<line.x?line.x-ux:(ux>line.x+line.w?ux-(line.x+line.w):0),dy=Math.abs(uy-line.y);
+    if(dx>12||dy>18||line.w<18)return;
+    const priority=kind==='boxes'?-18:line.fromTextGuide?-7:0;
+    candidates.push({line,score:dy*3.2+dx*2.4-Math.min(line.w,240)*.012+priority});
+  };
+  add(detectLocalHorizontalAtPoint(ctx,W,H,q,ux,uy,textBoxes),'local');
+  // Les suites de cellules ont une longueur géométrique beaucoup plus fiable que
+  // le trait raster : elles sont prioritaires lorsque le clic tombe sur leur ligne.
+  if(autoBoxDetectOn){
+    for(const g of detectPageBoxGroups(ctx,W,H,q,textBoxes))add({x:g.x,y:g.lineY,w:g.w,h:1,boxedGroup:true},'boxes');
+  }
+  // Les guides PDF (pointillés sous forme de texte) et les longues lignes vectorielles
+  // complètent la recherche locale, notamment quand l'antialiasing coupe le raster.
+  for(const line of detectPageHorizontalLines(ctx,W,H,q,textBoxes))add(line,'line');
+  candidates.sort((a,b)=>a.score-b.score);
+  return candidates[0]?.line||null;
 }
 async function detectFieldAtClick(ev){
   if(!pdfProxy||!document.getElementById('clickDetect')?.checked||pendingPlacement)return;
@@ -1785,7 +1864,7 @@ function selectedData(){if(!selected)return null;const base={x:parseFloat(select
 function copySelected(){const d=selectedData();if(!d){setStatus('Select an area');return;}clipboardItem=JSON.parse(JSON.stringify(d));setStatus('Area copied');}
 function pasteSelected(){if(!pdfProxy||!clipboardItem){setStatus('Nothing to paste');return;}collectCurrentPage();const d=JSON.parse(JSON.stringify(clipboardItem)),off=12,oldX=d.x||0;d.x=Math.max(0,Math.min(pageW-d.w,oldX+off));d.y=Math.max(0,Math.min(pageH-d.h,(d.y||0)+off));if(d.type==='field'){const dx=d.x-oldX,dy=d.y-(clipboardItem.y||0);if(d.boxes?.length)d.boxes=d.boxes.map(b=>({...b,x:+(b.x+dx).toFixed(2)}));if(Number.isFinite(+d.lineY))d.lineY=+(+d.lineY+dy).toFixed(2);}let el=null;if(d.type==='field'){d.id=uid('text');getPageState(currentPage).fields.push(d);createTextDom(d);applyFont();el=document.querySelector(`.field[data-id="${d.id}"]`);}else if(d.type==='check'){d.id=uid('check');d.detected=false;getPageState(currentPage).checks.push(d);createCheckDom(d);el=document.querySelector(`.check-zone[data-id="${d.id}"]`);if(el)scheduleCheckDetection(el,false);}else if(d.type==='image'){d.id=uid('img');getPageState(currentPage).images.push(d);createImageDom(d);el=document.querySelector(`.image-zone[data-id="${d.id}"]`);}else if(d.type==='mask'){d.id=uid('mask');getPageState(currentPage).masks.push(d);createMaskDom(d);el=document.querySelector(`.mask-zone[data-id="${d.id}"]`);}if(el){select(el);clipboardItem={...clipboardItem,x:d.x,y:d.y};enterAdjust();collectCurrentPage();setStatus('Area pasted');}}
 
-function selectedBoxes(){return [...selectedItems].filter(el=>el&&el.isConnected&&['field','check-zone','image-zone','mask-zone'].some(c=>el.classList.contains(c)));}
+function selectedFields(){return [...selectedItems].filter(el=>el&&el.isConnected&&el.classList.contains('field'));}
 function setTextAlignment(mode){
   const align=(mode==='center'||mode==='right')?mode:'left';
   const all=document.getElementById('textAlignAllDocument')?.checked===true;
@@ -1802,7 +1881,21 @@ function setTextAlignment(mode){
   collectCurrentPage();
   setStatus(`Text ${align==='left'?'aligned left':align==='center'?'centered':'aligned right'} in the active area`);
 }
-function alignSelected(axis){const items=selectedBoxes();if(items.length<2){setStatus('Select at least 2 items with Ctrl+click');return;}const centers=items.map(el=>axis==='vertical'?parseFloat(el.style.left)+parseFloat(el.style.width)/2:parseFloat(el.style.top)+parseFloat(el.style.height)/2);const target=centers.reduce((a,b)=>a+b,0)/centers.length;for(const el of items){if(axis==='vertical'){const w=parseFloat(el.style.width);el.style.left=Math.max(0,Math.min(pageW-w,target-w/2))+'px';}else{const h=parseFloat(el.style.height);el.style.top=Math.max(0,Math.min(pageH-h,target-h/2))+'px';}if(el.classList.contains('field')){const h=document.querySelector(`.text-resize[data-for-id="${el.dataset.id}"]`);if(h)updateTextHandle(el,h);syncBoxLayerGeometry(el);scheduleTextRecognition(el,false);}}collectCurrentPage();setStatus(axis==='vertical'?'Items aligned vertically':'Items aligned horizontally');}
+function alignSelected(mode){
+  const items=selectedFields();if(items.length<2){setStatus('Select at least 2 fields with Ctrl+click');return;}
+  const rects=items.map(el=>({el,x:parseFloat(el.style.left)||0,w:parseFloat(el.style.width)||0}));
+  const target=mode==='left'?Math.min(...rects.map(r=>r.x)):mode==='right'?Math.max(...rects.map(r=>r.x+r.w)):rects.reduce((sum,r)=>sum+r.x+r.w/2,0)/rects.length;
+  for(const {el,x,w} of rects){
+    const nextX=mode==='left'?target:mode==='right'?target-w:target-w/2;
+    const boundedX=Math.max(0,Math.min(pageW-w,nextX)),dx=boundedX-x,boxes=fieldBoxData(el);
+    el.style.left=boundedX+'px';
+    // Les cases détectées font partie du champ : elles suivent son déplacement,
+    // sans toucher à l'alignement du texte contenu dans le champ.
+    if(boxes.length)el.dataset.boxes=JSON.stringify(boxes.map(b=>({...b,x:+(b.x+dx).toFixed(2)})));
+    const h=document.querySelector(`.text-resize[data-for-id="${el.dataset.id}"]`);if(h)updateTextHandle(el,h);syncBoxLayerGeometry(el);
+  }
+  collectCurrentPage();setStatus(mode==='left'?'Items aligned to their left edges':mode==='right'?'Items aligned to their right edges':'Items aligned on the same vertical axis');
+}
 function applyMenuScale(){menuScale=Math.max(.65,Math.min(1.5,menuScale||1));document.documentElement.style.setProperty('--menu-scale',menuScale);const e=document.getElementById('menuPercent');if(e)e.textContent=Math.round(menuScale*100)+'%';}
 function setMenuScale(v){menuScale=v;applyMenuScale();}
 
@@ -1914,8 +2007,8 @@ window.addEventListener('pageshow',()=>{document.querySelectorAll('.messages-pan
 
 // Ancien bouton de détection globale conservé pour réactivation :
 // document.getElementById('detectPageFields').addEventListener('click',detectEditableFieldsOnPage);
-document.getElementById('alignVertical').addEventListener('click',()=>alignSelected('vertical'));document.getElementById('alignHorizontal').addEventListener('click',()=>alignSelected('horizontal'));document.getElementById('autoYUp').addEventListener('click',()=>adjustTextYOffset(-0.5));document.getElementById('autoYDown').addEventListener('click',()=>adjustTextYOffset(+0.5));document.getElementById('autoYReset').addEventListener('click',resetAllTextYOffsets);autoYAllDocument?.addEventListener('change',updateAutoYValue);autoLineEnabled.addEventListener('change',()=>setAutoLineEnabled(autoLineEnabled.checked));autoCheckDetect.addEventListener('change',()=>setAutoCheckDetect(autoCheckDetect.checked));autoBoxDetect.addEventListener('change',()=>setAutoBoxDetect(autoBoxDetect.checked));autoTextSize.addEventListener('change',()=>setAutoTextSize(autoTextSize.checked));document.getElementById('menuSmaller').addEventListener('click',()=>setMenuScale(menuScale/1.1));document.getElementById('menuLarger').addEventListener('click',()=>setMenuScale(menuScale*1.1));document.getElementById('addField').addEventListener('click',addText);document.getElementById('addCheck').addEventListener('click',addCheck);document.getElementById('addImage').addEventListener('click',()=>document.getElementById('imagePicker').click());document.getElementById('imagePicker').addEventListener('change',e=>{addImageFile(e.target.files[0]);e.target.value='';});document.getElementById('addMask').addEventListener('click',addMask);document.getElementById('deleteItem').addEventListener('click',deleteSelected);
-document.getElementById('textAlignLeft').addEventListener('click',()=>setTextAlignment('left'));document.getElementById('textAlignCenter').addEventListener('click',()=>setTextAlignment('center'));document.getElementById('textAlignRight').addEventListener('click',()=>setTextAlignment('right'));fontFamily.addEventListener('change',applyFontFamily);fontSize.addEventListener('change',applyFontSize);textColor.addEventListener('input',applyTextColor);document.getElementById('save').addEventListener('click',saveProject);document.getElementById('exportLayout').addEventListener('click',exportLayout);document.getElementById('importLayout').addEventListener('click',()=>document.getElementById('layoutPicker').click());document.getElementById('layoutPicker').addEventListener('change',e=>{importLayoutFile(e.target.files[0]);e.target.value='';});document.getElementById('clear').addEventListener('click',clearValues);document.getElementById('exportPdf').addEventListener('click',exportDocument);document.addEventListener('keydown',e=>{if(e.key==='Escape'&&pendingPlacement){e.preventDefault();cancelPlacement(true);return;}const typing=document.activeElement&&document.activeElement.classList&&document.activeElement.classList.contains('field');const mod=e.ctrlKey||e.metaKey;if(mod&&e.key.toLowerCase()==='c'&&selected&&(!typing||document.body.classList.contains('adjust'))){e.preventDefault();copySelected();return;}if(mod&&e.key.toLowerCase()==='v'&&clipboardItem&&(!typing||document.body.classList.contains('adjust'))){e.preventDefault();pasteSelected();return;}if((e.key==='Delete'||e.key==='Backspace')&&selected){if(typing&&!document.body.classList.contains('adjust'))return;e.preventDefault();deleteSelected();}});
+document.getElementById('alignVertical').addEventListener('click',()=>alignSelected('vertical'));document.getElementById('alignLeft').addEventListener('click',()=>alignSelected('left'));document.getElementById('alignRight').addEventListener('click',()=>alignSelected('right'));document.getElementById('autoYUp').addEventListener('click',()=>adjustTextYOffset(-0.5));document.getElementById('autoYDown').addEventListener('click',()=>adjustTextYOffset(+0.5));document.getElementById('autoYReset').addEventListener('click',resetAllTextYOffsets);autoYAllDocument?.addEventListener('change',updateAutoYValue);autoLineEnabled.addEventListener('change',()=>setAutoLineEnabled(autoLineEnabled.checked));autoCheckDetect.addEventListener('change',()=>setAutoCheckDetect(autoCheckDetect.checked));autoBoxDetect.addEventListener('change',()=>setAutoBoxDetect(autoBoxDetect.checked));autoTextSize.addEventListener('change',()=>setAutoTextSize(autoTextSize.checked));document.getElementById('menuSmaller').addEventListener('click',()=>setMenuScale(menuScale/1.1));document.getElementById('menuLarger').addEventListener('click',()=>setMenuScale(menuScale*1.1));document.getElementById('addField').addEventListener('click',addText);document.getElementById('addCheck').addEventListener('click',addCheck);document.getElementById('addImage').addEventListener('click',()=>document.getElementById('imagePicker').click());document.getElementById('imagePicker').addEventListener('change',e=>{addImageFile(e.target.files[0]);e.target.value='';});document.getElementById('addMask').addEventListener('click',addMask);document.getElementById('deleteItem').addEventListener('click',deleteSelected);
+document.getElementById('textAlignLeft').addEventListener('click',()=>setTextAlignment('left'));document.getElementById('textAlignCenter').addEventListener('click',()=>setTextAlignment('center'));document.getElementById('textAlignRight').addEventListener('click',()=>setTextAlignment('right'));fontFamily.addEventListener('change',applyFontFamily);fontSize.addEventListener('change',applyFontSize);document.getElementById('fontSizeSmaller').addEventListener('click',()=>stepFontSize(-0.5));document.getElementById('fontSizeLarger').addEventListener('click',()=>stepFontSize(0.5));textColor.addEventListener('input',applyTextColor);document.getElementById('save').addEventListener('click',saveProject);document.getElementById('exportLayout').addEventListener('click',exportLayout);document.getElementById('importLayout').addEventListener('click',()=>document.getElementById('layoutPicker').click());document.getElementById('layoutPicker').addEventListener('change',e=>{importLayoutFile(e.target.files[0]);e.target.value='';});document.getElementById('clear').addEventListener('click',clearValues);document.getElementById('exportPdf').addEventListener('click',exportDocument);document.addEventListener('keydown',e=>{if(e.key==='Escape'&&pendingPlacement){e.preventDefault();cancelPlacement(true);return;}const typing=document.activeElement&&document.activeElement.classList&&document.activeElement.classList.contains('field');const mod=e.ctrlKey||e.metaKey;if(mod&&e.key.toLowerCase()==='c'&&selected&&(!typing||document.body.classList.contains('adjust'))){e.preventDefault();copySelected();return;}if(mod&&e.key.toLowerCase()==='v'&&clipboardItem&&(!typing||document.body.classList.contains('adjust'))){e.preventDefault();pasteSelected();return;}if((e.key==='Delete'||e.key==='Backspace')&&selected){if(typing&&!document.body.classList.contains('adjust'))return;e.preventDefault();deleteSelected();}});
 document.getElementById('prevPage').addEventListener('click',()=>renderPage(currentPage-1));document.getElementById('nextPage').addEventListener('click',()=>renderPage(currentPage+1));document.getElementById('pageNumber').addEventListener('change',e=>renderPage(parseInt(e.target.value)||1));
 document.getElementById('languageSelect').addEventListener('change',e=>applyLanguage(e.target.value));
 window.addEventListener('wheel',handleCtrlWheelZoom,{passive:false,capture:true});
