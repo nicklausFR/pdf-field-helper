@@ -247,7 +247,7 @@ html[data-darkreader-scheme="dark"] .field.box-detected {
       <label class="inline" ><span id="fontLabel">Font</span> <select id="fontFamily"><option value="Helvetica">Helvetica / Arial</option><option value="TimesRoman">Times</option><option value="Courier">Courier</option></select></label>
       <div class="font-size-setting"><span id="sizeLabel">Size</span><div class="font-size-control"><input id="fontSize" type="number" min="5" max="48" step="0.5" value="8" aria-labelledby="sizeLabel"><button id="fontSizeSmaller" class="bigctl" type="button" title="Reduce font size" aria-label="Reduce font size">−</button><button id="fontSizeLarger" class="bigctl" type="button" title="Increase font size" aria-label="Increase font size">+</button></div></div>
       <label class="inline" ><span id="colorLabel">Color</span> <input id="textColor" type="color" value="#000000" title="Text color"></label>
-      <label class="inline" title="Apply font, size and color to all text areas in the document"><input id="fontAllDocument" type="checkbox"> <span class="entireDocumentLabel">Entire document</span></label>
+      <label class="inline" title="Apply font, size and color to all text areas in the document"><input id="fontAllDocument" type="checkbox" checked> <span class="entireDocumentLabel">Entire document</span></label>
       <span class="sep"></span>
       <span class="subsection-label" id="alignmentLabel">Alignment:</span>
       <button id="textAlignLeft" class="align-icon-button" title="Align text left" aria-label="Align text left"><span class="align-icon align-left" aria-hidden="true"><i></i><i></i><i></i></span></button>
@@ -258,7 +258,7 @@ html[data-darkreader-scheme="dark"] .field.box-detected {
       <span class="subsection-label" id="heightLabel">Text baseline:</span>
       <div class="pair"><button id="autoYUp" class="bigctl" title="Move the text baseline upward">↑</button><button id="autoYDown" class="bigctl" title="Move the text baseline downward">↓</button></div>
       <span id="autoYValue" class="menuval">0.0 px</span>
-      <label class="inline" title="Apply this text baseline adjustment to every text area in the document"><input id="autoYAllDocument" type="checkbox"> <span class="entireDocumentLabel">Entire document</span></label>
+      <label class="inline" title="Apply this text baseline adjustment to every text area in the document"><input id="autoYAllDocument" type="checkbox" checked> <span class="entireDocumentLabel">Entire document</span></label>
       <button id="autoYReset" title="Reset the text baseline adjustment of every text area in the document">Reset</button>
     </div>
   </div>
@@ -363,7 +363,14 @@ function updateAutoYValue(){
   if(autoYValue)autoYValue.textContent=clampTextYOffset(v).toFixed(1)+' px';
 }
 function refreshFieldRendering(e){if(!e||!e.isConnected)return;updateBoxCharLayer(e);updateLineGuide(e);}
-function refreshAllFieldRendering(){document.querySelectorAll('.field').forEach(refreshFieldRendering);}
+function refreshAllFieldRendering(){
+  // Reconstruire tous les rendus dérivés dans une seule passe. Un ancien calque
+  // miroir ou un calque de cases dupliqué pouvait sinon rester à sa position
+  // précédente et donner l'impression que seules certaines zones avaient bougé.
+  const fields=[...document.querySelectorAll('.field')];
+  document.querySelectorAll('.box-char-layer,.field-text-layer,.line-guide-layer').forEach(e=>e.remove());
+  fields.forEach(e=>{e.classList.remove('mirrored');refreshFieldRendering(e);});
+}
 // Compatibilité avec les anciens appels internes qui utilisaient applyFont().
 function applyFont(){refreshAllFieldRendering();}
 function setFieldYOffset(e,v){
@@ -391,13 +398,15 @@ function resetAllTextYOffsets(){
 function adjustTextYOffset(delta){
   const d=Number(delta)||0;if(!d)return;
   if(autoYAllDocument?.checked){
-    // Sauvegarder d'abord la page visible puis appliquer le même delta à toutes les pages.
+    // En mode document, toutes les zones doivent partager une valeur unique. Si des
+    // zones avaient auparavant été réglées individuellement, ajouter le delta à
+    // chacune conserverait leurs écarts et donnerait l'impression que la correction
+    // se fait en plusieurs clics.
     collectCurrentPage();
-    const oldDefault=autoYOffset;let count=0;
-    for(const st of Object.values(pageStates))for(const f of st.fields||[]){f.yOffset=clampTextYOffset(stateFieldYOffset(f,oldDefault)+d);count++;}
-    autoYOffset=clampTextYOffset(oldDefault+d);
-    const cur=getPageState(currentPage),byId=new Map((cur.fields||[]).map(f=>[f.id,f]));
-    document.querySelectorAll('.field').forEach(e=>{const f=byId.get(e.dataset.id);e.dataset.yOffset=clampTextYOffset(f?f.yOffset:autoYOffset).toFixed(1);refreshFieldRendering(e);});
+    autoYOffset=clampTextYOffset(autoYOffset+d);let count=0;
+    for(const st of Object.values(pageStates))for(const f of st.fields||[]){f.yOffset=autoYOffset;count++;}
+    document.querySelectorAll('.field').forEach(e=>{e.dataset.yOffset=autoYOffset.toFixed(1);});
+    refreshAllFieldRendering();
     updateAutoYValue();collectCurrentPage();setStatus(`Vertical adjustment applied to ${count} text area(s) in the document`);return;
   }
   if(!selected||!selected.classList.contains('field')){setStatus('Select an active text area');return;}
@@ -705,8 +714,8 @@ async function loadPdf(data,name,savedState=null){
     docKey=(pdfProxy.fingerprints&&pdfProxy.fingerprints[0])||('doc_'+pdfBytes.length+'_'+name);
     docName=name||'document.pdf';updateOpenPdfButton();updateWindowTitle();
     pageStates=(savedState&&savedState.pageStates)||{};
-    if(autoYAllDocument)autoYAllDocument.checked=false;
-    if(savedState){fontFamily.value=savedState.fontFamily||'Helvetica';fontSize.value=savedState.fontSize||8;textColor.value=savedState.textColor||'#000000';autoYOffset=Number.isFinite(+savedState.autoYOffset)?+savedState.autoYOffset:0;autoLineOn=savedState.autoLineOn!==false;autoCheckDetectOn=savedState.autoCheckDetectOn!==false;autoBoxDetectOn=savedState.autoBoxDetectOn!==false;autoTextSizeOn=savedState.autoTextSizeOn!==false;if(autoLineEnabled)autoLineEnabled.checked=autoLineOn;if(autoCheckDetect)autoCheckDetect.checked=autoCheckDetectOn;if(autoBoxDetect)autoBoxDetect.checked=autoBoxDetectOn;if(autoTextSize)autoTextSize.checked=autoTextSizeOn;if(document.getElementById('clickDetect'))document.getElementById('clickDetect').checked=savedState.clickDetectOn!==false;updateAutoYValue();userZoom=savedState.userZoom||1;menuScale=1;applyMenuScale();currentPage=Math.min(Math.max(1,savedState.currentPage||1),pdfProxy.numPages);}else{currentPage=1;userZoom=1;menuScale=1;autoYOffset=0;autoLineOn=true;autoCheckDetectOn=true;autoBoxDetectOn=true;autoTextSizeOn=true;if(autoYAllDocument)autoYAllDocument.checked=false;if(autoLineEnabled)autoLineEnabled.checked=true;if(autoCheckDetect)autoCheckDetect.checked=true;if(autoBoxDetect)autoBoxDetect.checked=true;if(autoTextSize)autoTextSize.checked=true;updateAutoYValue();applyMenuScale();}updateZoomLabel();
+    if(autoYAllDocument)autoYAllDocument.checked=true;
+    if(savedState){fontFamily.value=savedState.fontFamily||'Helvetica';fontSize.value=savedState.fontSize||8;textColor.value=savedState.textColor||'#000000';autoYOffset=Number.isFinite(+savedState.autoYOffset)?+savedState.autoYOffset:0;autoLineOn=savedState.autoLineOn!==false;autoCheckDetectOn=savedState.autoCheckDetectOn!==false;autoBoxDetectOn=savedState.autoBoxDetectOn!==false;autoTextSizeOn=savedState.autoTextSizeOn!==false;if(autoLineEnabled)autoLineEnabled.checked=autoLineOn;if(autoCheckDetect)autoCheckDetect.checked=autoCheckDetectOn;if(autoBoxDetect)autoBoxDetect.checked=autoBoxDetectOn;if(autoTextSize)autoTextSize.checked=autoTextSizeOn;if(document.getElementById('clickDetect'))document.getElementById('clickDetect').checked=savedState.clickDetectOn!==false;updateAutoYValue();userZoom=savedState.userZoom||1;menuScale=1;applyMenuScale();currentPage=Math.min(Math.max(1,savedState.currentPage||1),pdfProxy.numPages);}else{currentPage=1;userZoom=1;menuScale=1;autoYOffset=0;autoLineOn=true;autoCheckDetectOn=true;autoBoxDetectOn=true;autoTextSizeOn=true;if(autoYAllDocument)autoYAllDocument.checked=true;if(autoLineEnabled)autoLineEnabled.checked=true;if(autoCheckDetect)autoCheckDetect.checked=true;if(autoBoxDetect)autoBoxDetect.checked=true;if(autoTextSize)autoTextSize.checked=true;updateAutoYValue();applyMenuScale();}updateZoomLabel();
     document.getElementById('pageCount').textContent=pdfProxy.numPages;setNavigationEnabled(true);
     localStorage.setItem(LAST_KEY,docKey);
     await renderPage(currentPage);setStatus(savedState?'Document and state restored':'PDF loaded');
@@ -788,7 +797,7 @@ function handleCtrlWheelZoom(e){
   wheelZoomRenderTimer=setTimeout(()=>{wheelZoomRenderTimer=null;rerenderPdfCanvasOnly();},120);
 }
 function closeDocument(){collectCurrentPage();pdfBytes=null;pdfProxy=null;docKey=null;docName='';updateOpenPdfButton();currentPage=1;pageStates={};selected=null;selectedItems.clear();clipboardItem=null;setNavigationEnabled(false);document.getElementById('pageCount').textContent='0';document.getElementById('pageNumber').value='1';updateWindowTitle();stage.innerHTML='<div class="empty">'+t('empty')+'</div>';updateHorizontalScrollbar();localStorage.removeItem(LAST_KEY);setStatus('Document closed');}
-async function resetDocument(){if(!pdfProxy)return;cancelPlacement(false);selected=null;selectedItems.clear();clipboardItem=null;pageStates={};autoYOffset=0;autoLineOn=true;autoCheckDetectOn=true;autoBoxDetectOn=true;autoTextSizeOn=true;if(autoYAllDocument)autoYAllDocument.checked=false;if(autoLineEnabled)autoLineEnabled.checked=true;if(autoCheckDetect)autoCheckDetect.checked=true;if(autoBoxDetect)autoBoxDetect.checked=true;if(autoTextSize)autoTextSize.checked=true;if(document.getElementById('clickDetect'))document.getElementById('clickDetect').checked=true;updateAutoYValue();try{if(docKey)await dbDelete(docKey);}catch(_e){}// Important : vider l'ancien overlay avant renderPage, sinon collectCurrentPage() le réinjecte dans pageStates.
+async function resetDocument(){if(!pdfProxy)return;cancelPlacement(false);selected=null;selectedItems.clear();clipboardItem=null;pageStates={};autoYOffset=0;autoLineOn=true;autoCheckDetectOn=true;autoBoxDetectOn=true;autoTextSizeOn=true;if(autoYAllDocument)autoYAllDocument.checked=true;if(autoLineEnabled)autoLineEnabled.checked=true;if(autoCheckDetect)autoCheckDetect.checked=true;if(autoBoxDetect)autoBoxDetect.checked=true;if(autoTextSize)autoTextSize.checked=true;if(document.getElementById('clickDetect'))document.getElementById('clickDetect').checked=true;updateAutoYValue();try{if(docKey)await dbDelete(docKey);}catch(_e){}// Important : vider l'ancien overlay avant renderPage, sinon collectCurrentPage() le réinjecte dans pageStates.
 stage.innerHTML='';await renderPage(currentPage);setStatus('Document reset');}
 
 function buildOverlays(){const o=document.getElementById('overlay');if(!o)return;const st=getPageState(currentPage);st.fields.forEach(createTextDom);(st.checks||[]).forEach(createCheckDom);st.images.forEach(createImageDom);st.masks.forEach(createMaskDom);refreshEditorTextColors();}
@@ -893,7 +902,7 @@ function applyTextColor(){applyTypographyChange('textColor',textColor.value||'#0
 
 function fieldBoxData(e){try{return e.dataset.boxes?JSON.parse(e.dataset.boxes):[];}catch(_){return [];}}
 function setFieldBoxData(e,boxes){if(boxes&&boxes.length>=2){e.dataset.boxes=JSON.stringify(boxes);e.classList.add('box-detected');e.style.color='transparent';e.style.setProperty('caret-color','transparent','important');removeFieldTextLayer(e.dataset.id);e.classList.remove('mirrored');}else{delete e.dataset.boxes;e.classList.remove('box-detected');e.style.color=textColor.value;e.style.setProperty('caret-color',fieldTextColor(e),'important');}updateBoxCharLayer(e);updateFieldTextLayer(e);}
-function removeBoxCharLayer(id){document.querySelector(`.box-char-layer[data-for-id="${id}"]`)?.remove();}
+function removeBoxCharLayer(id){document.querySelectorAll(`.box-char-layer[data-for-id="${id}"]`).forEach(n=>n.remove());}
 function updateBoxCharLayer(e){
   removeBoxCharLayer(e.dataset.id);
   const boxes=fieldBoxData(e);if(!boxes.length)return;
@@ -949,7 +958,7 @@ function updateFieldBlueGeometry(e){
   e.style.setProperty('--blue-top',topPct.toFixed(2)+'%');
   e.style.setProperty('--blue-bottom',bottomPct.toFixed(2)+'%');
 }
-function removeLineGuide(id){document.querySelector(`.line-guide-layer[data-for-id="${id}"]`)?.remove();}
+function removeLineGuide(id){document.querySelectorAll(`.line-guide-layer[data-for-id="${id}"]`).forEach(n=>n.remove());}
 function clearFieldLine(e){if(!e)return;delete e.dataset.lineY;e.classList.remove('line-detected');e.style.paddingTop='1px';updateFieldBlueGeometry(e);removeLineGuide(e.dataset.id);}
 function removeFieldTextLayer(id){document.querySelectorAll(`.field-text-layer[data-for-id="${id}"]`).forEach(n=>n.remove());}
 function classicFieldTextGeometry(e){
@@ -2007,7 +2016,7 @@ window.addEventListener('pageshow',()=>{document.querySelectorAll('.messages-pan
 
 // Ancien bouton de détection globale conservé pour réactivation :
 // document.getElementById('detectPageFields').addEventListener('click',detectEditableFieldsOnPage);
-document.getElementById('alignVertical').addEventListener('click',()=>alignSelected('vertical'));document.getElementById('alignLeft').addEventListener('click',()=>alignSelected('left'));document.getElementById('alignRight').addEventListener('click',()=>alignSelected('right'));document.getElementById('autoYUp').addEventListener('click',()=>adjustTextYOffset(-0.5));document.getElementById('autoYDown').addEventListener('click',()=>adjustTextYOffset(+0.5));document.getElementById('autoYReset').addEventListener('click',resetAllTextYOffsets);autoYAllDocument?.addEventListener('change',updateAutoYValue);autoLineEnabled.addEventListener('change',()=>setAutoLineEnabled(autoLineEnabled.checked));autoCheckDetect.addEventListener('change',()=>setAutoCheckDetect(autoCheckDetect.checked));autoBoxDetect.addEventListener('change',()=>setAutoBoxDetect(autoBoxDetect.checked));autoTextSize.addEventListener('change',()=>setAutoTextSize(autoTextSize.checked));document.getElementById('menuSmaller').addEventListener('click',()=>setMenuScale(menuScale/1.1));document.getElementById('menuLarger').addEventListener('click',()=>setMenuScale(menuScale*1.1));document.getElementById('addField').addEventListener('click',addText);document.getElementById('addCheck').addEventListener('click',addCheck);document.getElementById('addImage').addEventListener('click',()=>document.getElementById('imagePicker').click());document.getElementById('imagePicker').addEventListener('change',e=>{addImageFile(e.target.files[0]);e.target.value='';});document.getElementById('addMask').addEventListener('click',addMask);document.getElementById('deleteItem').addEventListener('click',deleteSelected);
+document.getElementById('alignVertical').addEventListener('click',()=>alignSelected('vertical'));document.getElementById('alignLeft').addEventListener('click',()=>alignSelected('left'));document.getElementById('alignRight').addEventListener('click',()=>alignSelected('right'));document.getElementById('autoYUp').addEventListener('click',()=>adjustTextYOffset(-1));document.getElementById('autoYDown').addEventListener('click',()=>adjustTextYOffset(+1));document.getElementById('autoYReset').addEventListener('click',resetAllTextYOffsets);autoYAllDocument?.addEventListener('change',updateAutoYValue);autoLineEnabled.addEventListener('change',()=>setAutoLineEnabled(autoLineEnabled.checked));autoCheckDetect.addEventListener('change',()=>setAutoCheckDetect(autoCheckDetect.checked));autoBoxDetect.addEventListener('change',()=>setAutoBoxDetect(autoBoxDetect.checked));autoTextSize.addEventListener('change',()=>setAutoTextSize(autoTextSize.checked));document.getElementById('menuSmaller').addEventListener('click',()=>setMenuScale(menuScale/1.1));document.getElementById('menuLarger').addEventListener('click',()=>setMenuScale(menuScale*1.1));document.getElementById('addField').addEventListener('click',addText);document.getElementById('addCheck').addEventListener('click',addCheck);document.getElementById('addImage').addEventListener('click',()=>document.getElementById('imagePicker').click());document.getElementById('imagePicker').addEventListener('change',e=>{addImageFile(e.target.files[0]);e.target.value='';});document.getElementById('addMask').addEventListener('click',addMask);document.getElementById('deleteItem').addEventListener('click',deleteSelected);
 document.getElementById('textAlignLeft').addEventListener('click',()=>setTextAlignment('left'));document.getElementById('textAlignCenter').addEventListener('click',()=>setTextAlignment('center'));document.getElementById('textAlignRight').addEventListener('click',()=>setTextAlignment('right'));fontFamily.addEventListener('change',applyFontFamily);fontSize.addEventListener('change',applyFontSize);document.getElementById('fontSizeSmaller').addEventListener('click',()=>stepFontSize(-0.5));document.getElementById('fontSizeLarger').addEventListener('click',()=>stepFontSize(0.5));textColor.addEventListener('input',applyTextColor);document.getElementById('save').addEventListener('click',saveProject);document.getElementById('exportLayout').addEventListener('click',exportLayout);document.getElementById('importLayout').addEventListener('click',()=>document.getElementById('layoutPicker').click());document.getElementById('layoutPicker').addEventListener('change',e=>{importLayoutFile(e.target.files[0]);e.target.value='';});document.getElementById('clear').addEventListener('click',clearValues);document.getElementById('exportPdf').addEventListener('click',exportDocument);document.addEventListener('keydown',e=>{if(e.key==='Escape'&&pendingPlacement){e.preventDefault();cancelPlacement(true);return;}const typing=document.activeElement&&document.activeElement.classList&&document.activeElement.classList.contains('field');const mod=e.ctrlKey||e.metaKey;if(mod&&e.key.toLowerCase()==='c'&&selected&&(!typing||document.body.classList.contains('adjust'))){e.preventDefault();copySelected();return;}if(mod&&e.key.toLowerCase()==='v'&&clipboardItem&&(!typing||document.body.classList.contains('adjust'))){e.preventDefault();pasteSelected();return;}if((e.key==='Delete'||e.key==='Backspace')&&selected){if(typing&&!document.body.classList.contains('adjust'))return;e.preventDefault();deleteSelected();}});
 document.getElementById('prevPage').addEventListener('click',()=>renderPage(currentPage-1));document.getElementById('nextPage').addEventListener('click',()=>renderPage(currentPage+1));document.getElementById('pageNumber').addEventListener('change',e=>renderPage(parseInt(e.target.value)||1));
 document.getElementById('languageSelect').addEventListener('change',e=>applyLanguage(e.target.value));
