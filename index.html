@@ -150,11 +150,12 @@ html[data-darkreader-scheme="dark"] .field.box-detected {
 /* v93 : verrou uniquement sur le texte du PDF ; l'interface reste gérée par Dark Reader. */
 .field[data-darkreader-lock], .field-text-layer[data-darkreader-lock], .box-char-layer[data-darkreader-lock], .box-char[data-darkreader-lock], .box-caret[data-darkreader-lock]{forced-color-adjust:none}
 
-/* Detected checkboxes use the same native browser rendering as ordinary checkboxes.
-   Detection still controls geometry/snap only; it no longer switches to a second visual renderer. */
+/* Pour une case détectée, le contour du PDF reste le repère visuel exact.
+   Le contrôle natif du navigateur ajoute sinon son propre contour intérieur, dont
+   les marges varient avec le navigateur et donnent une impression de décalage. */
 .check-zone.check-detected input{
-  -webkit-appearance:auto!important;
-  appearance:auto!important;
+  -webkit-appearance:none!important;
+  appearance:none!important;
   display:block!important;
   box-sizing:border-box;
   width:100%!important;
@@ -165,8 +166,14 @@ html[data-darkreader-scheme="dark"] .field.box-detected {
   margin:0!important;
   opacity:1!important;
   visibility:visible!important;
+  border:0!important;
+  outline:0!important;
+  background:transparent!important;
 }
 .check-zone.check-detected .check-mark{display:none!important}
+.check-zone.check-detected.checked .check-mark{display:block!important}
+.check-zone.check-detected .check-mark:before,.check-zone.check-detected .check-mark:after{content:none!important}
+.check-zone.check-detected .check-mark line{stroke:#111;stroke-width:10;stroke-linecap:round;stroke-linejoin:round}
 /* Same resize handle as an ordinary checkbox: detected/non-detected now differ only in snap metadata. */
 .check-zone.check-detected .check-resize{background:var(--red)!important}
 </style>
@@ -174,7 +181,7 @@ html[data-darkreader-scheme="dark"] .field.box-detected {
 <body>
 <div class="toolbar">
   <div class="toolbar-top">
-    <div class="app-heading"><a class="app-name app-name-link" href="https://github.com/nicklausFR/pdf-field-helper" target="_blank" rel="noopener noreferrer" title="GitHub — PDF Field Helper">PDF Field Helper</a><span class="app-version">v1.2</span></div>
+    <div class="app-heading"><a class="app-name app-name-link" href="https://github.com/nicklausFR/pdf-field-helper" target="_blank" rel="noopener noreferrer" title="GitHub — PDF Field Helper">PDF Field Helper</a><span class="app-version">v1.3</span></div>
     <div class="toolbar-top-actions">
       <div class="menu-scale-control">
         <span id="menuLabel">Menu</span>
@@ -190,6 +197,8 @@ html[data-darkreader-scheme="dark"] .field.box-detected {
     <input id="pdfPicker" type="file" accept="application/pdf" hidden>
     <button id="closePdf">Close</button>
     <button id="resetDocument" class="danger">Reset</button>
+    <button id="undoAction" type="button" title="Undo (Ctrl+Z)" disabled>Undo</button>
+    <button id="redoAction" type="button" title="Redo (Ctrl+Y / Ctrl+Shift+Z)" disabled>Redo</button>
     <button id="save">Save</button>
     <button id="exportLayout">Save overlay</button>
     <button id="importLayout">Load overlay</button>
@@ -229,6 +238,7 @@ html[data-darkreader-scheme="dark"] .field.box-detected {
       <span class="sep"></span>
       <span class="subsection-label" id="alignFieldsLabel">Align fields:</span>
       <button id="alignVertical" title="Align field centers on the same vertical axis">Vertical axis</button>
+      <button id="alignHorizontal" title="Align field centers on the same horizontal axis">Horizontal axis</button>
       <button id="alignLeft" title="Align fields to the leftmost selected edge">Left edges</button>
       <button id="alignRight" title="Align fields to the rightmost selected edge">Right edges</button>
       <span class="sep"></span>
@@ -273,6 +283,8 @@ html[data-darkreader-scheme="dark"] .field.box-detected {
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
 const DB_NAME='generic_pdf_editor_db', DB_VERSION=1, STORE='documents', LAST_KEY='generic_pdf_editor_last';
 let pdfBytes=null,pdfProxy=null,docKey=null,docName='',currentPage=1,pageStates={},selected=null,selectedItems=new Set(),clipboardItem=null,renderToken=0,scaleNow=1,userZoom=1,menuScale=1;
+const HISTORY_LIMIT=50;
+let undoHistory=[],redoHistory=[],historyRestoring=false,historyBusy=false,lastHistoryCoalesceKey='',lastHistoryCoalesceAt=0;
 let pageW=595,pageH=842;
 let pendingPlacement=null;
 const stage=document.getElementById('stage'),status=document.getElementById('status');
@@ -292,13 +304,13 @@ function updateHorizontalScrollbar(){
 }
 stage.addEventListener('scroll',()=>{if(syncingHorizontalScroll||!horizontalScrollbar)return;syncingHorizontalScroll=true;horizontalScrollbar.scrollLeft=stage.scrollLeft;syncingHorizontalScroll=false;});
 horizontalScrollbar?.addEventListener('scroll',()=>{if(syncingHorizontalScroll)return;syncingHorizontalScroll=true;stage.scrollLeft=horizontalScrollbar.scrollLeft;syncingHorizontalScroll=false;});
-const APP_VERSION='1.2';
-const SNAP_GUARD_BUILD='2026-08-16c'; // internal build marker; public version remains v1.2
+const APP_VERSION='1.3';
+const SNAP_GUARD_BUILD='2026-09-04a'; // internal build marker; public version remains v1.3
 console.log('PDF Field Helper snap-guard build',SNAP_GUARD_BUILD);
 let uiLanguage=localStorage.getItem('pdfFieldHelperLanguage')||'en';
 const UI_TEXT={
-  en:{language:'Language',document:'Document',open:'Open',close:'Close',reset:'Reset',save:'Save',saveOverlay:'Save overlay',loadOverlay:'Load overlay',clear:'Clear values',generate:'Generate PDF',view:'View',hideFrames:'Hide frames',showFrames:'Show frames',zoom:'Zoom',pages:'Pages',page:'Page',menu:'Menu',layerMode:'Overlay creation mode',editMode:'Edit mode',addText:'+ Text',addCheck:'+ Checkbox',addImage:'+ Image',addMask:'+ Mask',delete:'Delete',alignFields:'Align fields:',alignV:'Vertical axis',alignLeft:'Left edges',alignRight:'Right edges',autoDetection:'Automatic detection',autoSize:'Automatic width / height',checkbox:'Checkbox',delimited:'Delimited text area',verticalAlign:'Vertical alignment',font:'Font',size:'Size',color:'Color',entire:'Entire document',alignment:'Alignment:',height:'Text baseline:',messages:'Messages / Debug',ready:'Ready.',empty:'Open a PDF document to begin.'},
-  fr:{language:'Langue',document:'Document',open:'Ouvrir',close:'Fermer',reset:'Réinitialiser',save:'Enregistrer',saveOverlay:'Enregistrer calque',loadOverlay:'Charger calque',clear:'Effacer valeurs',generate:'Générer PDF',view:'Affichage',hideFrames:'Masquer cadres',showFrames:'Afficher cadres',zoom:'Zoom',pages:'Pages',page:'Page',menu:'Menu',layerMode:'Mode création calque',editMode:'Mode édition',addText:'+ Texte',addCheck:'+ Case',addImage:'+ Image',addMask:'+ Masque',delete:'Supprimer',alignFields:'Aligner les champs :',alignV:'Axe vertical',alignLeft:'Bords gauches',alignRight:'Bords droits',autoDetection:'Détection automatique',autoSize:'Largeur / hauteur automatique',checkbox:'Case à cocher',delimited:'Zone texte avec délimitation',verticalAlign:'Alignement vertical',font:'Police',size:'Taille',color:'Couleur',entire:'Tout le document',alignment:'Alignement :',height:'Ligne de base du texte :',messages:'Messages / Debug',ready:'Prêt.',empty:'Ouvrir un document PDF pour commencer.'}
+  en:{language:'Language',document:'Document',open:'Open',close:'Close',reset:'Reset',undo:'Undo',redo:'Redo',save:'Save',saveOverlay:'Save overlay',loadOverlay:'Load overlay',clear:'Clear values',generate:'Generate PDF',view:'View',hideFrames:'Hide frames',showFrames:'Show frames',zoom:'Zoom',pages:'Pages',page:'Page',menu:'Menu',layerMode:'Overlay creation mode',editMode:'Edit mode',addText:'+ Text',addCheck:'+ Checkbox',addImage:'+ Image',addMask:'+ Mask',delete:'Delete',alignFields:'Align fields:',alignV:'Vertical axis',alignH:'Horizontal axis',alignLeft:'Left edges',alignRight:'Right edges',autoDetection:'Automatic detection',autoSize:'Automatic width / height',checkbox:'Checkbox',delimited:'Delimited text area',verticalAlign:'Vertical alignment',font:'Font',size:'Size',color:'Color',entire:'Entire document',alignment:'Alignment:',height:'Text baseline:',messages:'Messages / Debug',ready:'Ready.',empty:'Open a PDF document to begin.'},
+  fr:{language:'Langue',document:'Document',open:'Ouvrir',close:'Fermer',reset:'Réinitialiser',undo:'Annuler',redo:'Rétablir',save:'Enregistrer',saveOverlay:'Enregistrer calque',loadOverlay:'Charger calque',clear:'Effacer valeurs',generate:'Générer PDF',view:'Affichage',hideFrames:'Masquer cadres',showFrames:'Afficher cadres',zoom:'Zoom',pages:'Pages',page:'Page',menu:'Menu',layerMode:'Mode création calque',editMode:'Mode édition',addText:'+ Texte',addCheck:'+ Case',addImage:'+ Image',addMask:'+ Masque',delete:'Supprimer',alignFields:'Aligner les champs :',alignV:'Axe vertical',alignH:'Axe horizontal',alignLeft:'Bords gauches',alignRight:'Bords droits',autoDetection:'Détection automatique',autoSize:'Largeur / hauteur automatique',checkbox:'Case à cocher',delimited:'Zone texte avec délimitation',verticalAlign:'Alignement vertical',font:'Police',size:'Taille',color:'Couleur',entire:'Tout le document',alignment:'Alignement :',height:'Ligne de base du texte :',messages:'Messages / Debug',ready:'Prêt.',empty:'Ouvrir un document PDF pour commencer.'}
 };
 function t(k){return (UI_TEXT[uiLanguage]&&UI_TEXT[uiLanguage][k])||UI_TEXT.en[k]||k;}
 function updateWindowTitle(){document.title='PDF Field Helper'+(docName?' — '+docName:'');}
@@ -312,7 +324,7 @@ function applyLanguage(lang){
   if(q('documentTitleLabel'))q('documentTitleLabel').textContent=t('document');
   if(q('viewTitleLabel'))q('viewTitleLabel').textContent=t('view');
   if(q('zoomLabel'))q('zoomLabel').textContent=t('zoom'); if(q('pagesLabel'))q('pagesLabel').textContent=t('pages'); if(q('pageLabel'))q('pageLabel').textContent=t('page'); if(q('menuLabel'))q('menuLabel').textContent=t('menu');
-  const map={openPdf:'open',closePdf:'close',resetDocument:'reset',save:'save',exportLayout:'saveOverlay',importLayout:'loadOverlay',clear:'clear',exportPdf:'generate',tabLayerButton:'layerMode',tabEditButton:'editMode',addField:'addText',addCheck:'addCheck',addImage:'addImage',addMask:'addMask',deleteItem:'delete',alignFieldsLabel:'alignFields',alignVertical:'alignV',alignLeft:'alignLeft',alignRight:'alignRight',autoYReset:'reset'};
+  const map={openPdf:'open',closePdf:'close',resetDocument:'reset',undoAction:'undo',redoAction:'redo',save:'save',exportLayout:'saveOverlay',importLayout:'loadOverlay',clear:'clear',exportPdf:'generate',tabLayerButton:'layerMode',tabEditButton:'editMode',addField:'addText',addCheck:'addCheck',addImage:'addImage',addMask:'addMask',deleteItem:'delete',alignFieldsLabel:'alignFields',alignVertical:'alignV',alignHorizontal:'alignH',alignLeft:'alignLeft',alignRight:'alignRight',autoYReset:'reset'};
   for(const [id,key] of Object.entries(map)){const e=q(id);if(e)e.textContent=t(key);}
   if(q('toggleClean'))q('toggleClean').textContent=document.body.classList.contains('clean')?t('showFrames'):t('hideFrames');
   if(q('automaticDetectionLabel'))q('automaticDetectionLabel').textContent=t('autoDetection');
@@ -381,7 +393,7 @@ function setAutoYOffset(v){
   // Réglage document / valeur par défaut pour les nouveaux champs.
   autoYOffset=clampTextYOffset(v);
   document.querySelectorAll('.field').forEach(e=>{e.dataset.yOffset=autoYOffset.toFixed(1);refreshFieldRendering(e);});
-  updateAutoYValue();collectCurrentPage();
+  updateAutoYValue();collectCurrentPage();historyCheckpoint('Text baseline');
 }
 function resetAllTextYOffsets(){
   // Réinitialise explicitement le réglage vertical de TOUS les fields, sur toutes les pages.
@@ -393,6 +405,7 @@ function resetAllTextYOffsets(){
   }
   document.querySelectorAll('.field').forEach(e=>{e.dataset.yOffset='0.0';refreshFieldRendering(e);});
   updateAutoYValue();collectCurrentPage();
+  historyCheckpoint('Reset text baseline');
   setStatus(`Vertical adjustment reset for ${count} text area(s) in the document`);
 }
 function adjustTextYOffset(delta){
@@ -407,16 +420,16 @@ function adjustTextYOffset(delta){
     for(const st of Object.values(pageStates))for(const f of st.fields||[]){f.yOffset=autoYOffset;count++;}
     document.querySelectorAll('.field').forEach(e=>{e.dataset.yOffset=autoYOffset.toFixed(1);});
     refreshAllFieldRendering();
-    updateAutoYValue();collectCurrentPage();setStatus(`Vertical adjustment applied to ${count} text area(s) in the document`);return;
+    updateAutoYValue();collectCurrentPage();historyCheckpoint('Text baseline');setStatus(`Vertical adjustment applied to ${count} text area(s) in the document`);return;
   }
   if(!selected||!selected.classList.contains('field')){setStatus('Select an active text area');return;}
-  const n=setFieldYOffset(selected,fieldYOffset(selected)+d);updateAutoYValue();collectCurrentPage();
+  const n=setFieldYOffset(selected,fieldYOffset(selected)+d);updateAutoYValue();collectCurrentPage();historyCheckpoint('Text baseline');
   setStatus(`Vertical adjustment: ${n.toFixed(1)} px`);
 }
-function setAutoLineEnabled(v){autoLineOn=!!v;if(autoLineEnabled)autoLineEnabled.checked=autoLineOn;document.querySelectorAll('.field').forEach(e=>{if(autoLineOn)scheduleTextRecognition(e,false);else clearFieldLine(e);});applyFont();}
-function setAutoCheckDetect(v){autoCheckDetectOn=!!v;if(autoCheckDetect)autoCheckDetect.checked=autoCheckDetectOn;document.querySelectorAll('.check-zone').forEach(e=>{if(autoCheckDetectOn)scheduleCheckDetection(e,false);else setCheckDetected(e,false);});}
-function setAutoBoxDetect(v){autoBoxDetectOn=!!v;if(autoBoxDetect)autoBoxDetect.checked=autoBoxDetectOn;document.querySelectorAll('.field').forEach(e=>{if(autoBoxDetectOn)scheduleTextRecognition(e,false);else{setFieldBoxData(e,[]);if(autoLineOn)detectTextLineUnderField(e,false);}});}
-function setAutoTextSize(v){autoTextSizeOn=!!v;if(autoTextSize)autoTextSize.checked=autoTextSizeOn;}
+function setAutoLineEnabled(v){autoLineOn=!!v;if(autoLineEnabled)autoLineEnabled.checked=autoLineOn;document.querySelectorAll('.field').forEach(e=>{if(autoLineOn)scheduleTextRecognition(e,false);else clearFieldLine(e);});applyFont();collectCurrentPage();historyCheckpoint('Vertical detection');}
+function setAutoCheckDetect(v){autoCheckDetectOn=!!v;if(autoCheckDetect)autoCheckDetect.checked=autoCheckDetectOn;document.querySelectorAll('.check-zone').forEach(e=>{if(autoCheckDetectOn)scheduleCheckDetection(e,false);else setCheckDetected(e,false);});collectCurrentPage();historyCheckpoint('Checkbox detection');}
+function setAutoBoxDetect(v){autoBoxDetectOn=!!v;if(autoBoxDetect)autoBoxDetect.checked=autoBoxDetectOn;document.querySelectorAll('.field').forEach(e=>{if(autoBoxDetectOn)scheduleTextRecognition(e,false);else{setFieldBoxData(e,[]);if(autoLineOn)detectTextLineUnderField(e,false);}});collectCurrentPage();historyCheckpoint('Delimited text detection');}
+function setAutoTextSize(v){autoTextSizeOn=!!v;if(autoTextSize)autoTextSize.checked=autoTextSizeOn;historyCheckpoint('Automatic field sizing');}
 function hexToRgb01(hex){const h=(hex||'#000000').replace('#','').padEnd(6,'0').slice(0,6);return {r:parseInt(h.slice(0,2),16)/255,g:parseInt(h.slice(2,4),16)/255,b:parseInt(h.slice(4,6),16)/255};}
 function uid(prefix){return prefix+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);}
 function setStatus(s){
@@ -631,6 +644,7 @@ function finalizePlacement(pp){
   }
   const repeatType=(pp.type==='text'||pp.type==='check')?pp.type:null;
   cancelPlacement(false);collectCurrentPage();if(el)select(el);
+  historyCheckpoint(pp.type==='text'?'Add text area':pp.type==='check'?'Add checkbox':pp.type==='image'?'Add image':'Add mask');
   // IMPORTANT : ne jamais recréer le prochain placement pendant le même événement click.
   // Sur certains PDF / navigateurs, le clic de validation pouvait alors être réutilisé
   // par le nouveau placement et l'ancrer immédiatement à l'ancien point de départ.
@@ -718,12 +732,12 @@ async function loadPdf(data,name,savedState=null){
     if(savedState){fontFamily.value=savedState.fontFamily||'Helvetica';fontSize.value=savedState.fontSize||8;textColor.value=savedState.textColor||'#000000';autoYOffset=Number.isFinite(+savedState.autoYOffset)?+savedState.autoYOffset:0;autoLineOn=savedState.autoLineOn!==false;autoCheckDetectOn=savedState.autoCheckDetectOn!==false;autoBoxDetectOn=savedState.autoBoxDetectOn!==false;autoTextSizeOn=savedState.autoTextSizeOn!==false;if(autoLineEnabled)autoLineEnabled.checked=autoLineOn;if(autoCheckDetect)autoCheckDetect.checked=autoCheckDetectOn;if(autoBoxDetect)autoBoxDetect.checked=autoBoxDetectOn;if(autoTextSize)autoTextSize.checked=autoTextSizeOn;if(document.getElementById('clickDetect'))document.getElementById('clickDetect').checked=savedState.clickDetectOn!==false;updateAutoYValue();userZoom=savedState.userZoom||1;menuScale=1;applyMenuScale();currentPage=Math.min(Math.max(1,savedState.currentPage||1),pdfProxy.numPages);}else{currentPage=1;userZoom=1;menuScale=1;autoYOffset=0;autoLineOn=true;autoCheckDetectOn=true;autoBoxDetectOn=true;autoTextSizeOn=true;if(autoYAllDocument)autoYAllDocument.checked=true;if(autoLineEnabled)autoLineEnabled.checked=true;if(autoCheckDetect)autoCheckDetect.checked=true;if(autoBoxDetect)autoBoxDetect.checked=true;if(autoTextSize)autoTextSize.checked=true;updateAutoYValue();applyMenuScale();}updateZoomLabel();
     document.getElementById('pageCount').textContent=pdfProxy.numPages;setNavigationEnabled(true);
     localStorage.setItem(LAST_KEY,docKey);
-    await renderPage(currentPage);setStatus(savedState?'Document and state restored':'PDF loaded');
+    await renderPage(currentPage);resetHistory();setStatus(savedState?'Document and state restored':'PDF loaded');
   }catch(err){console.error(err);setStatus('PDF error: '+err.message);}
 }
 
 async function renderPage(n){cancelPlacement(false);
-  if(!pdfProxy)return;collectCurrentPage();select(null);currentPage=Math.max(1,Math.min(pdfProxy.numPages,n));document.getElementById('pageNumber').value=currentPage;
+  if(!pdfProxy)return;if(!historyRestoring)collectCurrentPage();select(null);currentPage=Math.max(1,Math.min(pdfProxy.numPages,n));document.getElementById('pageNumber').value=currentPage;
   const token=++renderToken;const pg=await pdfProxy.getPage(currentPage);if(token!==renderToken)return;
   const vp=pg.getViewport({scale:1});pageW=vp.width;pageH=vp.height;
   stage.innerHTML='<div id="viewport" class="viewport"><div id="pageSurface" class="pageSurface"><canvas id="pdfCanvas"></canvas><div id="overlay" class="overlay"></div></div></div>';
@@ -796,9 +810,9 @@ function handleCtrlWheelZoom(e){
   if(wheelZoomRenderTimer)clearTimeout(wheelZoomRenderTimer);
   wheelZoomRenderTimer=setTimeout(()=>{wheelZoomRenderTimer=null;rerenderPdfCanvasOnly();},120);
 }
-function closeDocument(){collectCurrentPage();pdfBytes=null;pdfProxy=null;docKey=null;docName='';updateOpenPdfButton();currentPage=1;pageStates={};selected=null;selectedItems.clear();clipboardItem=null;setNavigationEnabled(false);document.getElementById('pageCount').textContent='0';document.getElementById('pageNumber').value='1';updateWindowTitle();stage.innerHTML='<div class="empty">'+t('empty')+'</div>';updateHorizontalScrollbar();localStorage.removeItem(LAST_KEY);setStatus('Document closed');}
+function closeDocument(){collectCurrentPage();pdfBytes=null;pdfProxy=null;docKey=null;docName='';updateOpenPdfButton();currentPage=1;pageStates={};selected=null;selectedItems.clear();clipboardItem=null;clearHistory();setNavigationEnabled(false);document.getElementById('pageCount').textContent='0';document.getElementById('pageNumber').value='1';updateWindowTitle();stage.innerHTML='<div class="empty">'+t('empty')+'</div>';updateHorizontalScrollbar();localStorage.removeItem(LAST_KEY);setStatus('Document closed');}
 async function resetDocument(){if(!pdfProxy)return;cancelPlacement(false);selected=null;selectedItems.clear();clipboardItem=null;pageStates={};autoYOffset=0;autoLineOn=true;autoCheckDetectOn=true;autoBoxDetectOn=true;autoTextSizeOn=true;if(autoYAllDocument)autoYAllDocument.checked=true;if(autoLineEnabled)autoLineEnabled.checked=true;if(autoCheckDetect)autoCheckDetect.checked=true;if(autoBoxDetect)autoBoxDetect.checked=true;if(autoTextSize)autoTextSize.checked=true;if(document.getElementById('clickDetect'))document.getElementById('clickDetect').checked=true;updateAutoYValue();try{if(docKey)await dbDelete(docKey);}catch(_e){}// Important : vider l'ancien overlay avant renderPage, sinon collectCurrentPage() le réinjecte dans pageStates.
-stage.innerHTML='';await renderPage(currentPage);setStatus('Document reset');}
+stage.innerHTML='';await renderPage(currentPage);historyCheckpoint('Reset document');setStatus('Document reset');}
 
 function buildOverlays(){const o=document.getElementById('overlay');if(!o)return;const st=getPageState(currentPage);st.fields.forEach(createTextDom);(st.checks||[]).forEach(createCheckDom);st.images.forEach(createImageDom);st.masks.forEach(createMaskDom);refreshEditorTextColors();}
 function lockEditorTextColor(el,color,transparent=false){
@@ -870,7 +884,7 @@ function refreshEditorTextColors(){
   document.querySelectorAll('.field-text-layer,.box-char-layer').forEach(layer=>{const id=layer.dataset.forId;const e=id?document.querySelector(`.field[data-id="${id}"]`):null;lockEditorTextColor(layer,e?fieldTextColor(e):'#000000',false);});
   document.querySelectorAll('.box-char').forEach(sp=>{const layer=sp.closest('.box-char-layer');const id=layer?.dataset?.forId;const e=id?document.querySelector(`.field[data-id="${id}"]`):null;lockEditorTextColor(sp,e?fieldTextColor(e):'#000000',false);});
 }
-function applyTypographyChange(prop,value,label){
+function applyTypographyChange(prop,value,label,coalesceKey=''){
   const all=fontAllDocument?.checked===true;
   collectCurrentPage();
   if(all){
@@ -883,12 +897,14 @@ function applyTypographyChange(prop,value,label){
     document.querySelectorAll('.field').forEach(e=>applyFieldTypography(e,prop,value));
     // Resynchroniser la page visible sans écraser les autres pages.
     collectCurrentPage();
+    historyCheckpoint(label,coalesceKey);
     setStatus(`${label} applied to ${count} text area(s) in the document`);
     return;
   }
   if(!selected||!selected.classList.contains('field')){setStatus('Select an active text area');return;}
   applyFieldTypography(selected,prop,value);
   collectCurrentPage();
+  historyCheckpoint(label,coalesceKey);
   setStatus(`${label} applied to the active area`);
 }
 function applyFontFamily(){applyTypographyChange('fontFamily',fontFamily.value||'Helvetica','Font');}
@@ -898,7 +914,7 @@ function stepFontSize(delta){
   if(next===fs())return;
   fontSize.value=String(next);applyFontSize();
 }
-function applyTextColor(){applyTypographyChange('textColor',textColor.value||'#000000','Color');}
+function applyTextColor(){applyTypographyChange('textColor',textColor.value||'#000000','Color','textColor');}
 
 function fieldBoxData(e){try{return e.dataset.boxes?JSON.parse(e.dataset.boxes):[];}catch(_){return [];}}
 function setFieldBoxData(e,boxes){if(boxes&&boxes.length>=2){e.dataset.boxes=JSON.stringify(boxes);e.classList.add('box-detected');e.style.color='transparent';e.style.setProperty('caret-color','transparent','important');removeFieldTextLayer(e.dataset.id);e.classList.remove('mirrored');}else{delete e.dataset.boxes;e.classList.remove('box-detected');e.style.color=textColor.value;e.style.setProperty('caret-color',fieldTextColor(e),'important');}updateBoxCharLayer(e);updateFieldTextLayer(e);}
@@ -1776,7 +1792,7 @@ async function detectEditableFieldsOnPage(){
 }
 
 function addText(){beginPlacement('text');}
-function createTextDom(d){const o=document.getElementById('overlay');if(!o)return;const e=document.createElement('textarea');e.className='field';e.dataset.id=d.id;e.value=d.value||'';e.spellcheck=false;if(d.boxes&&d.boxes.length)e.dataset.boxes=JSON.stringify(d.boxes);if(Number.isFinite(+d.lineY))e.dataset.lineY=(+d.lineY).toFixed(2);e.dataset.fontFamily=d.fontFamily||fontFamily.value||'Helvetica';e.dataset.fontSize=String(Number.isFinite(+d.fontSize)?+d.fontSize:fs());e.dataset.textColor=d.textColor||textColor.value||'#000000';e.dataset.yOffset=clampTextYOffset(Number.isFinite(+d.yOffset)?+d.yOffset:autoYOffset).toFixed(1);Object.assign(e.style,{left:d.x+'px',top:d.y+'px',width:d.w+'px',height:d.h+'px',textAlign:(d.textAlign==='center'||d.textAlign==='right')?d.textAlign:'left',fontFamily:cssFont(e.dataset.fontFamily),fontSize:fieldFontSize(e)+'px'});o.appendChild(e);lockEditorTextColor(e,fieldTextColor(e),!!(d.boxes&&d.boxes.length));const h=document.createElement('div');h.className='text-resize';h.dataset.forId=d.id;o.appendChild(h);updateTextHandle(e,h);enableTextDrag(e,h);enableTextResize(e,h);e.addEventListener('pointerdown',ev=>selectFromEvent(ev,e));e.addEventListener('focus',()=>{if(!selectedItems.has(e))select(e);removeFieldTextLayer(e.dataset.id);e.classList.remove('mirrored');lockEditorTextColor(e,fieldTextColor(e),e.classList.contains('box-detected'));if(!fieldBoxData(e).length&&fieldLineData(e)!=null)updateLineGuide(e);else scheduleTextRecognition(e,true);updateBoxCharLayer(e);});e.addEventListener('blur',()=>{updateBoxCharLayer(e);updateFieldTextLayer(e);});e.addEventListener('input',()=>{updateBoxCharLayer(e);updateLineGuide(e);updateFieldTextLayer(e);});e.addEventListener('click',()=>{if(e.classList.contains('box-detected'))updateBoxCharLayer(e);});e.addEventListener('keyup',()=>{if(e.classList.contains('box-detected'))updateBoxCharLayer(e);});e.addEventListener('select',()=>{if(e.classList.contains('box-detected'))updateBoxCharLayer(e);});if(d.boxes&&d.boxes.length){e.classList.add('box-detected');updateBoxCharLayer(e);}else if(Number.isFinite(+d.lineY)){e.classList.add('line-detected');updateLineGuide(e);}else scheduleTextRecognition(e,false);updateFieldTextLayer(e);}
+function createTextDom(d){const o=document.getElementById('overlay');if(!o)return;const e=document.createElement('textarea');e.className='field';e.dataset.id=d.id;e.value=d.value||'';e.spellcheck=false;if(d.boxes&&d.boxes.length)e.dataset.boxes=JSON.stringify(d.boxes);if(Number.isFinite(+d.lineY))e.dataset.lineY=(+d.lineY).toFixed(2);e.dataset.fontFamily=d.fontFamily||fontFamily.value||'Helvetica';e.dataset.fontSize=String(Number.isFinite(+d.fontSize)?+d.fontSize:fs());e.dataset.textColor=d.textColor||textColor.value||'#000000';e.dataset.yOffset=clampTextYOffset(Number.isFinite(+d.yOffset)?+d.yOffset:autoYOffset).toFixed(1);Object.assign(e.style,{left:d.x+'px',top:d.y+'px',width:d.w+'px',height:d.h+'px',textAlign:(d.textAlign==='center'||d.textAlign==='right')?d.textAlign:'left',fontFamily:cssFont(e.dataset.fontFamily),fontSize:fieldFontSize(e)+'px'});o.appendChild(e);lockEditorTextColor(e,fieldTextColor(e),!!(d.boxes&&d.boxes.length));const h=document.createElement('div');h.className='text-resize';h.dataset.forId=d.id;o.appendChild(h);updateTextHandle(e,h);enableTextDrag(e,h);enableTextResize(e,h);e.addEventListener('pointerdown',ev=>selectFromEvent(ev,e));e.addEventListener('focus',()=>{if(!selectedItems.has(e))select(e);removeFieldTextLayer(e.dataset.id);e.classList.remove('mirrored');lockEditorTextColor(e,fieldTextColor(e),e.classList.contains('box-detected'));if(!fieldBoxData(e).length&&fieldLineData(e)!=null)updateLineGuide(e);else scheduleTextRecognition(e,true);updateBoxCharLayer(e);});e.addEventListener('blur',()=>{updateBoxCharLayer(e);updateFieldTextLayer(e);});e.addEventListener('input',()=>{updateBoxCharLayer(e);updateLineGuide(e);updateFieldTextLayer(e);collectCurrentPage();historyCheckpoint('Edit text','text:'+e.dataset.id);});e.addEventListener('click',()=>{if(e.classList.contains('box-detected'))updateBoxCharLayer(e);});e.addEventListener('keyup',()=>{if(e.classList.contains('box-detected'))updateBoxCharLayer(e);});e.addEventListener('select',()=>{if(e.classList.contains('box-detected'))updateBoxCharLayer(e);});if(d.boxes&&d.boxes.length){e.classList.add('box-detected');updateBoxCharLayer(e);}else if(Number.isFinite(+d.lineY)){e.classList.add('line-detected');updateLineGuide(e);}else scheduleTextRecognition(e,false);updateFieldTextLayer(e);}
 function updateTextHandle(e,h){const x=parseFloat(e.style.left),y=parseFloat(e.style.top),w=parseFloat(e.style.width),hh=parseFloat(e.style.height);h.style.left=(x+w-5)+'px';h.style.top=(y+hh-5)+'px';}
 function applyBoxBaseline(e,boxes,announce=false){
   if(!boxes||boxes.length<2)return false;
@@ -1787,25 +1803,26 @@ function applyBoxBaseline(e,boxes,announce=false){
 function enableTextDrag(e,h){let sx,sy,ox,oy,drag=false,wasBoxed=false,startLineY=null;e.addEventListener('pointerdown',ev=>{if(!document.body.classList.contains('adjust'))return;drag=true;wasBoxed=fieldBoxData(e).length>0;startLineY=fieldLineData(e);clearTimeout(e._textDetectTimer);e.classList.add('dragging');sx=ev.clientX;sy=ev.clientY;ox=parseFloat(e.style.left);oy=parseFloat(e.style.top);e.setPointerCapture(ev.pointerId);ev.preventDefault();});e.addEventListener('pointermove',ev=>{if(!drag)return;const w=parseFloat(e.style.width),hh=parseFloat(e.style.height);e.style.left=Math.max(0,Math.min(pageW-w,ox+(ev.clientX-sx)/scaleNow))+'px';e.style.top=Math.max(0,Math.min(pageH-hh,oy+(ev.clientY-sy)/scaleNow))+'px';updateTextHandle(e,h);syncBoxLayerGeometry(e);});e.addEventListener('pointerup',()=>{if(!drag)return;drag=false;e.classList.remove('dragging');
   // Une zone déjà à cases conserve exactement l'ancien comportement très agressif :
   // après déplacement on réanalyse et elle se recale sur les cases imprimées.
-  if(wasBoxed){scheduleTextRecognition(e,true);return;}
+  if(wasBoxed){collectCurrentPage();historyCheckpoint('Move text area');scheduleTextRecognition(e,true);return;}
   // Pour un champ classique, on tente UNIQUEMENT la détection de cases. Cela permet
   // de poser/déplacer un champ classique sur une rangée de cases et de retrouver le
   // snap automatique, sans relancer le détecteur de ligne qui causait les régressions.
   const boxes=autoBoxDetectOn?detectBoxesUnderField(e,false):[];
-  if(applyBoxBaseline(e,boxes,true))return;
+  if(applyBoxBaseline(e,boxes,true)){historyCheckpoint('Move text area');return;}
   const newY=parseFloat(e.style.top),dy=newY-oy;
-  if(Number.isFinite(startLineY)){e.dataset.lineY=(startLineY+dy).toFixed(2);e.classList.add('line-detected');updateLineGuide(e);}else{updateFieldBlueGeometry(e);updateFieldTextLayer(e);}collectCurrentPage();
+  if(Number.isFinite(startLineY)){e.dataset.lineY=(startLineY+dy).toFixed(2);e.classList.add('line-detected');updateLineGuide(e);}else{updateFieldBlueGeometry(e);updateFieldTextLayer(e);}collectCurrentPage();historyCheckpoint('Move text area');
 });e.addEventListener('pointercancel',()=>{drag=false;e.classList.remove('dragging');});}
 function enableTextResize(e,h){let sx,sy,ow,oh,on=false,wasBoxed=false;h.addEventListener('pointerdown',ev=>{if(!document.body.classList.contains('adjust'))return;select(e);on=true;wasBoxed=fieldBoxData(e).length>0;sx=ev.clientX;sy=ev.clientY;ow=parseFloat(e.style.width);oh=parseFloat(e.style.height);h.setPointerCapture(ev.pointerId);ev.preventDefault();ev.stopPropagation();});h.addEventListener('pointermove',ev=>{if(!on)return;const x=parseFloat(e.style.left),y=parseFloat(e.style.top);e.style.width=Math.max(4,Math.min(pageW-x,ow+(ev.clientX-sx)/scaleNow))+'px';e.style.height=Math.max(4,Math.min(pageH-y,oh+(ev.clientY-sy)/scaleNow))+'px';updateTextHandle(e,h);syncBoxLayerGeometry(e);});h.addEventListener('pointerup',()=>{if(!on)return;on=false;
   // Les zones à cases gardent le comportement historique : le resize relance leur
   // détection complète afin qu'elles se remettent précisément sur les séparateurs.
-  if(wasBoxed){scheduleTextRecognition(e,true);return;}
-  const classicBaseline=fieldLineData(e)!=null;if(classicBaseline){updateLineGuide(e);collectCurrentPage();}else scheduleTextRecognition(e,true);
+  if(wasBoxed){collectCurrentPage();historyCheckpoint('Resize text area');scheduleTextRecognition(e,true);return;}
+  const classicBaseline=fieldLineData(e)!=null;if(classicBaseline)updateLineGuide(e);else scheduleTextRecognition(e,true);collectCurrentPage();historyCheckpoint('Resize text area');
 });}
 
 function addCheck(){beginPlacement('check');}
 function setCheckDetected(b,on){if(on){b.dataset.detected='1';b.classList.add('check-detected');}else{delete b.dataset.detected;b.classList.remove('check-detected');}const c=b.querySelector('input');b.classList.toggle('checked',!!c?.checked);}
-function lineDarkRatio(data,W,H,x1,y1,x2,y2){let dark=0,n=0;if(y1===y2){const y=Math.max(0,Math.min(H-1,Math.round(y1)));for(let x=Math.max(0,Math.round(x1));x<=Math.min(W-1,Math.round(x2));x++){n++;if(darkPixel(data,(y*W+x)*4))dark++;}}else{const x=Math.max(0,Math.min(W-1,Math.round(x1)));for(let y=Math.max(0,Math.round(y1));y<=Math.min(H-1,Math.round(y2));y++){n++;if(darkPixel(data,(y*W+x)*4))dark++;}}return n?dark/n:0;}
+function checkboxInkPixel(data,idx){return Math.max(data[idx],data[idx+1],data[idx+2])<225;}
+function lineDarkRatio(data,W,H,x1,y1,x2,y2){let dark=0,n=0;if(y1===y2){const y=Math.max(0,Math.min(H-1,Math.round(y1)));for(let x=Math.max(0,Math.round(x1));x<=Math.min(W-1,Math.round(x2));x++){n++;if(checkboxInkPixel(data,(y*W+x)*4))dark++;}}else{const x=Math.max(0,Math.min(W-1,Math.round(x1)));for(let y=Math.max(0,Math.round(y1));y<=Math.min(H-1,Math.round(y2));y++){n++;if(checkboxInkPixel(data,(y*W+x)*4))dark++;}}return n?dark/n:0;}
 function detectCheckboxUnderZone(b,announce=false){
   if(!autoCheckDetectOn){setCheckDetected(b,false);return false;}
   const canvas=document.getElementById('pdfCanvas');
@@ -1820,7 +1837,9 @@ function detectCheckboxUnderZone(b,announce=false){
   if(px1-px0<8||py1-py0<8){setCheckDetected(b,false);return false;}
   const ctx=canvas.getContext('2d',{willReadFrequently:true}),img=ctx.getImageData(px0,py0,px1-px0+1,py1-py0+1),d=img.data,W=img.width,H=img.height;
   const dark=new Uint8Array(W*H);
-  for(let y=0;y<H;y++)for(let x=0;x<W;x++)dark[y*W+x]=darkPixel(d,(y*W+x)*4)?1:0;
+  // Inclure l'antialiasing gris du contour (jusqu'à 224) permet de récupérer ses
+  // limites extérieures, au lieu d'une version rétrécie aux seuls pixels très foncés.
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++)dark[y*W+x]=checkboxInkPixel(d,(y*W+x)*4)?1:0;
 
   // Cherche des composantes sombres quasi carrées. Contrairement à l'ancienne
   // méthode, la détection ne dépend plus de la taille de la zone utilisateur.
@@ -1842,7 +1861,10 @@ function detectCheckboxUnderZone(b,announce=false){
     // Vérifie que les quatre bords du rectangle sont réellement présents.
     const top=lineDarkRatio(d,W,H,minx,miny,maxx,miny),bottom=lineDarkRatio(d,W,H,minx,maxy,maxx,maxy),left=lineDarkRatio(d,W,H,minx,miny,minx,maxy),right=lineDarkRatio(d,W,H,maxx,miny,maxx,maxy);
     const edge=Math.min(top,bottom,left,right);if(edge<.34)continue;
-    const x=ux0+minx/sx,y=uy0+miny/sy,ccx=x+wu/2,ccy=y+hu/2,dist=Math.hypot(ccx-cx,ccy-cy);
+    // Repartir de l'origine réellement découpée dans le canvas. px0/py0 ont été
+    // arrondis à l'entier : réutiliser ux0/uy0 ajoutait un décalage fractionnaire
+    // différent pour chaque case selon la position initiale de la zone.
+    const x=(px0+minx)/sx,y=(py0+miny)/sy,ccx=x+wu/2,ccy=y+hu/2,dist=Math.hypot(ccx-cx,ccy-cy);
     // Favorise fortement le carré le plus proche du centre de la zone déposée.
     const score=dist*1.45+Math.abs(wu-hu)*1.2+(1-edge)*3;
     if(score<bestScore){bestScore=score;best={x,y,w:wu,h:hu};}
@@ -1854,24 +1876,73 @@ function detectCheckboxUnderZone(b,announce=false){
   return true;
 }
 function scheduleCheckDetection(b,announce=false){clearTimeout(b._checkDetectTimer);b._checkDetectTimer=setTimeout(()=>detectCheckboxUnderZone(b,announce),80);}
-function createCheckDom(d){const o=document.getElementById('overlay');if(!o)return;const b=document.createElement('div');b.className='check-zone';b.dataset.id=d.id;Object.assign(b.style,{left:d.x+'px',top:d.y+'px',width:(d.w||12)+'px',height:(d.h||d.w||12)+'px'});const c=document.createElement('input');c.type='checkbox';c.checked=!!d.checked;b.appendChild(c);const mark=document.createElementNS('http://www.w3.org/2000/svg','svg');mark.setAttribute('viewBox','0 0 100 100');mark.setAttribute('preserveAspectRatio','none');mark.classList.add('check-mark');const l1=document.createElementNS('http://www.w3.org/2000/svg','line');l1.setAttribute('x1','24');l1.setAttribute('y1','24');l1.setAttribute('x2','76');l1.setAttribute('y2','76');const l2=document.createElementNS('http://www.w3.org/2000/svg','line');l2.setAttribute('x1','76');l2.setAttribute('y1','24');l2.setAttribute('x2','24');l2.setAttribute('y2','76');mark.appendChild(l1);mark.appendChild(l2);b.appendChild(mark);const h=document.createElement('div');h.className='check-resize';b.appendChild(h);o.appendChild(b);if(d.detected)setCheckDetected(b,true);enableCheckDrag(b,h,c);enableCheckResize(b,h);b.addEventListener('pointerdown',ev=>selectFromEvent(ev,b));c.addEventListener('focus',()=>{if(!selectedItems.has(b))select(b);});c.addEventListener('change',()=>b.classList.toggle('checked',c.checked));if(!d.detected)scheduleCheckDetection(b,false);}
-function enableCheckDrag(b,h,c){let sx,sy,ox,oy,on=false;b.addEventListener('pointerdown',ev=>{if(!document.body.classList.contains('adjust')||ev.target===h)return;on=true;sx=ev.clientX;sy=ev.clientY;ox=parseFloat(b.style.left);oy=parseFloat(b.style.top);b.setPointerCapture(ev.pointerId);ev.preventDefault();});b.addEventListener('pointermove',ev=>{if(!on)return;const w=parseFloat(b.style.width),hh=parseFloat(b.style.height);b.style.left=Math.max(0,Math.min(pageW-w,ox+(ev.clientX-sx)/scaleNow))+'px';b.style.top=Math.max(0,Math.min(pageH-hh,oy+(ev.clientY-sy)/scaleNow))+'px';});b.addEventListener('pointerup',()=>{on=false;scheduleCheckDetection(b,true);});}
-function enableCheckResize(b,h){let sx,sy,ow,on=false;h.addEventListener('pointerdown',ev=>{if(!document.body.classList.contains('adjust'))return;select(b);on=true;sx=ev.clientX;sy=ev.clientY;ow=parseFloat(b.style.width);h.setPointerCapture(ev.pointerId);ev.preventDefault();ev.stopPropagation();});h.addEventListener('pointermove',ev=>{if(!on)return;const x=parseFloat(b.style.left),y=parseFloat(b.style.top),d=Math.max((ev.clientX-sx)/scaleNow,(ev.clientY-sy)/scaleNow);let nw=Math.max(6,Math.min(pageW-x,pageH-y,ow+d));b.style.width=nw+'px';b.style.height=nw+'px';});h.addEventListener('pointerup',()=>{on=false;scheduleCheckDetection(b,true);});}
+function createCheckDom(d){const o=document.getElementById('overlay');if(!o)return;const b=document.createElement('div');b.className='check-zone';b.dataset.id=d.id;Object.assign(b.style,{left:d.x+'px',top:d.y+'px',width:(d.w||12)+'px',height:(d.h||d.w||12)+'px'});const c=document.createElement('input');c.type='checkbox';c.checked=!!d.checked;b.appendChild(c);const mark=document.createElementNS('http://www.w3.org/2000/svg','svg');mark.setAttribute('viewBox','0 0 100 100');mark.setAttribute('preserveAspectRatio','none');mark.classList.add('check-mark');const l1=document.createElementNS('http://www.w3.org/2000/svg','line');l1.setAttribute('x1','18');l1.setAttribute('y1','52');l1.setAttribute('x2','40');l1.setAttribute('y2','74');const l2=document.createElementNS('http://www.w3.org/2000/svg','line');l2.setAttribute('x1','40');l2.setAttribute('y1','74');l2.setAttribute('x2','84');l2.setAttribute('y2','24');mark.appendChild(l1);mark.appendChild(l2);b.appendChild(mark);const h=document.createElement('div');h.className='check-resize';b.appendChild(h);o.appendChild(b);if(d.detected)setCheckDetected(b,true);enableCheckDrag(b,h,c);enableCheckResize(b,h);b.addEventListener('pointerdown',ev=>selectFromEvent(ev,b));c.addEventListener('focus',()=>{if(!selectedItems.has(b))select(b);});c.addEventListener('change',()=>{b.classList.toggle('checked',c.checked);collectCurrentPage();historyCheckpoint('Toggle checkbox');});if(!d.detected)scheduleCheckDetection(b,false);}
+function enableCheckDrag(b,h,c){let sx,sy,ox,oy,on=false;b.addEventListener('pointerdown',ev=>{if(!document.body.classList.contains('adjust')||ev.target===h)return;on=true;sx=ev.clientX;sy=ev.clientY;ox=parseFloat(b.style.left);oy=parseFloat(b.style.top);b.setPointerCapture(ev.pointerId);ev.preventDefault();});b.addEventListener('pointermove',ev=>{if(!on)return;const w=parseFloat(b.style.width),hh=parseFloat(b.style.height);b.style.left=Math.max(0,Math.min(pageW-w,ox+(ev.clientX-sx)/scaleNow))+'px';b.style.top=Math.max(0,Math.min(pageH-hh,oy+(ev.clientY-sy)/scaleNow))+'px';});b.addEventListener('pointerup',()=>{if(!on)return;on=false;scheduleCheckDetection(b,true);setTimeout(()=>{if(b.isConnected){collectCurrentPage();historyCheckpoint('Move checkbox');}},100);});}
+function enableCheckResize(b,h){let sx,sy,ow,on=false;h.addEventListener('pointerdown',ev=>{if(!document.body.classList.contains('adjust'))return;select(b);on=true;sx=ev.clientX;sy=ev.clientY;ow=parseFloat(b.style.width);h.setPointerCapture(ev.pointerId);ev.preventDefault();ev.stopPropagation();});h.addEventListener('pointermove',ev=>{if(!on)return;const x=parseFloat(b.style.left),y=parseFloat(b.style.top),d=Math.max((ev.clientX-sx)/scaleNow,(ev.clientY-sy)/scaleNow);let nw=Math.max(6,Math.min(pageW-x,pageH-y,ow+d));b.style.width=nw+'px';b.style.height=nw+'px';});h.addEventListener('pointerup',()=>{if(!on)return;on=false;scheduleCheckDetection(b,true);setTimeout(()=>{if(b.isConnected){collectCurrentPage();historyCheckpoint('Resize checkbox');}},100);});}
 
 function addImageFile(file){if(!pdfProxy||!file)return;const r=new FileReader();r.onload=()=>{const probe=new Image();probe.onload=()=>{const ratio=probe.naturalWidth/probe.naturalHeight||1,w=Math.min(190,pageW*.35),h=w/ratio;beginPlacement('image',{w,h,aspect:ratio,src:r.result});};probe.src=r.result;};r.readAsDataURL(file);}
 function createImageDom(d){const o=document.getElementById('overlay');if(!o)return;const b=document.createElement('div');b.className='image-zone';b.dataset.id=d.id;b.dataset.aspect=d.aspect||1;Object.assign(b.style,{left:d.x+'px',top:d.y+'px',width:d.w+'px',height:d.h+'px'});const im=document.createElement('img');im.src=d.src;b.appendChild(im);const h=document.createElement('div');h.className='image-resize';b.appendChild(h);o.appendChild(b);enableBoxDrag(b,h);enableImageResize(b,h);b.addEventListener('pointerdown',ev=>selectFromEvent(ev,b));}
-function enableImageResize(b,h){let sx,sy,ow,oh,on=false;h.addEventListener('pointerdown',ev=>{if(!document.body.classList.contains('adjust'))return;select(b);on=true;sx=ev.clientX;sy=ev.clientY;ow=parseFloat(b.style.width);oh=parseFloat(b.style.height);h.setPointerCapture(ev.pointerId);ev.preventDefault();ev.stopPropagation();});h.addEventListener('pointermove',ev=>{if(!on)return;const ratio=parseFloat(b.dataset.aspect)||ow/oh||1,dx=(ev.clientX-sx)/scaleNow,dy=(ev.clientY-sy)/scaleNow,x=parseFloat(b.style.left),y=parseFloat(b.style.top);let nw=Math.abs(dx)>=Math.abs(dy)?ow+dx:(oh+dy)*ratio;nw=Math.max(20,Math.min(pageW-x,nw));let nh=nw/ratio;if(nh>pageH-y){nh=pageH-y;nw=nh*ratio;}b.style.width=nw+'px';b.style.height=nh+'px';});h.addEventListener('pointerup',()=>on=false);}
+function enableImageResize(b,h){let sx,sy,ow,oh,on=false;h.addEventListener('pointerdown',ev=>{if(!document.body.classList.contains('adjust'))return;select(b);on=true;sx=ev.clientX;sy=ev.clientY;ow=parseFloat(b.style.width);oh=parseFloat(b.style.height);h.setPointerCapture(ev.pointerId);ev.preventDefault();ev.stopPropagation();});h.addEventListener('pointermove',ev=>{if(!on)return;const ratio=parseFloat(b.dataset.aspect)||ow/oh||1,dx=(ev.clientX-sx)/scaleNow,dy=(ev.clientY-sy)/scaleNow,x=parseFloat(b.style.left),y=parseFloat(b.style.top);let nw=Math.abs(dx)>=Math.abs(dy)?ow+dx:(oh+dy)*ratio;nw=Math.max(20,Math.min(pageW-x,nw));let nh=nw/ratio;if(nh>pageH-y){nh=pageH-y;nw=nh*ratio;}b.style.width=nw+'px';b.style.height=nh+'px';});h.addEventListener('pointerup',()=>{if(!on)return;on=false;collectCurrentPage();historyCheckpoint('Resize image');});}
 
 function addMask(){beginPlacement('mask');}
 function createMaskDom(d){const o=document.getElementById('overlay');if(!o)return;const b=document.createElement('div');b.className='mask-zone';b.dataset.id=d.id;Object.assign(b.style,{left:d.x+'px',top:d.y+'px',width:d.w+'px',height:d.h+'px'});const h=document.createElement('div');h.className='mask-resize';b.appendChild(h);o.appendChild(b);enableBoxDrag(b,h);enableBoxResize(b,h);b.addEventListener('pointerdown',ev=>selectFromEvent(ev,b));}
-function enableBoxDrag(b,h){let sx,sy,ox,oy,on=false;b.addEventListener('pointerdown',ev=>{if(!document.body.classList.contains('adjust')||ev.target===h)return;on=true;sx=ev.clientX;sy=ev.clientY;ox=parseFloat(b.style.left);oy=parseFloat(b.style.top);b.setPointerCapture(ev.pointerId);ev.preventDefault();});b.addEventListener('pointermove',ev=>{if(!on)return;const w=parseFloat(b.style.width),hh=parseFloat(b.style.height);b.style.left=Math.max(0,Math.min(pageW-w,ox+(ev.clientX-sx)/scaleNow))+'px';b.style.top=Math.max(0,Math.min(pageH-hh,oy+(ev.clientY-sy)/scaleNow))+'px';});b.addEventListener('pointerup',()=>on=false);}
-function enableBoxResize(b,h){let sx,sy,ow,oh,on=false;h.addEventListener('pointerdown',ev=>{if(!document.body.classList.contains('adjust'))return;select(b);on=true;sx=ev.clientX;sy=ev.clientY;ow=parseFloat(b.style.width);oh=parseFloat(b.style.height);h.setPointerCapture(ev.pointerId);ev.preventDefault();ev.stopPropagation();});h.addEventListener('pointermove',ev=>{if(!on)return;const x=parseFloat(b.style.left),y=parseFloat(b.style.top);b.style.width=Math.max(10,Math.min(pageW-x,ow+(ev.clientX-sx)/scaleNow))+'px';b.style.height=Math.max(10,Math.min(pageH-y,oh+(ev.clientY-sy)/scaleNow))+'px';});h.addEventListener('pointerup',()=>on=false);}
+function enableBoxDrag(b,h){let sx,sy,ox,oy,on=false;b.addEventListener('pointerdown',ev=>{if(!document.body.classList.contains('adjust')||ev.target===h)return;on=true;sx=ev.clientX;sy=ev.clientY;ox=parseFloat(b.style.left);oy=parseFloat(b.style.top);b.setPointerCapture(ev.pointerId);ev.preventDefault();});b.addEventListener('pointermove',ev=>{if(!on)return;const w=parseFloat(b.style.width),hh=parseFloat(b.style.height);b.style.left=Math.max(0,Math.min(pageW-w,ox+(ev.clientX-sx)/scaleNow))+'px';b.style.top=Math.max(0,Math.min(pageH-hh,oy+(ev.clientY-sy)/scaleNow))+'px';});b.addEventListener('pointerup',()=>{if(!on)return;on=false;collectCurrentPage();historyCheckpoint(b.classList.contains('image-zone')?'Move image':'Move mask');});}
+function enableBoxResize(b,h){let sx,sy,ow,oh,on=false;h.addEventListener('pointerdown',ev=>{if(!document.body.classList.contains('adjust'))return;select(b);on=true;sx=ev.clientX;sy=ev.clientY;ow=parseFloat(b.style.width);oh=parseFloat(b.style.height);h.setPointerCapture(ev.pointerId);ev.preventDefault();ev.stopPropagation();});h.addEventListener('pointermove',ev=>{if(!on)return;const x=parseFloat(b.style.left),y=parseFloat(b.style.top);b.style.width=Math.max(10,Math.min(pageW-x,ow+(ev.clientX-sx)/scaleNow))+'px';b.style.height=Math.max(10,Math.min(pageH-y,oh+(ev.clientY-sy)/scaleNow))+'px';});h.addEventListener('pointerup',()=>{if(!on)return;on=false;collectCurrentPage();historyCheckpoint('Resize mask');});}
 
 function collectCurrentPage(){const o=document.getElementById('overlay');if(!o||!pdfProxy)return;const st=getPageState(currentPage);st.fields=[...o.querySelectorAll('.field')].map(e=>({id:e.dataset.id,x:+parseFloat(e.style.left).toFixed(2),y:+parseFloat(e.style.top).toFixed(2),w:+parseFloat(e.style.width).toFixed(2),h:+parseFloat(e.style.height).toFixed(2),value:e.value,fontFamily:fieldFontFamily(e),fontSize:fieldFontSize(e),textColor:fieldTextColor(e),textAlign:(e.style.textAlign==='center'||e.style.textAlign==='right')?e.style.textAlign:'left',yOffset:fieldYOffset(e),boxes:fieldBoxData(e),lineY:fieldLineData(e)}));st.checks=[...o.querySelectorAll('.check-zone')].map(e=>({id:e.dataset.id,x:+parseFloat(e.style.left).toFixed(2),y:+parseFloat(e.style.top).toFixed(2),w:+parseFloat(e.style.width).toFixed(2),h:+parseFloat(e.style.height).toFixed(2),checked:e.querySelector('input').checked,detected:e.dataset.detected==='1'}));st.images=[...o.querySelectorAll('.image-zone')].map(e=>({id:e.dataset.id,x:+parseFloat(e.style.left).toFixed(2),y:+parseFloat(e.style.top).toFixed(2),w:+parseFloat(e.style.width).toFixed(2),h:+parseFloat(e.style.height).toFixed(2),aspect:parseFloat(e.dataset.aspect)||1,src:e.querySelector('img').src}));st.masks=[...o.querySelectorAll('.mask-zone')].map(e=>({id:e.dataset.id,x:+parseFloat(e.style.left).toFixed(2),y:+parseFloat(e.style.top).toFixed(2),w:+parseFloat(e.style.width).toFixed(2),h:+parseFloat(e.style.height).toFixed(2)}));}
-function deleteSelected(){const items=[...selectedItems];if(!items.length){setStatus('Select an area');return;}for(const el of items){if(el.classList.contains('field')){const id=el.dataset.id;clearTimeout(el._textDetectTimer);clearTimeout(el._boxDetectTimer);const h=document.querySelector(`.text-resize[data-for-id="${id}"]`);if(h)h.remove();removeBoxCharLayer(id);removeLineGuide(id);removeFieldTextLayer(id);}el.remove();}selectedItems.clear();selected=null;collectCurrentPage();setStatus(items.length>1?items.length+' areas deleted':'Area deleted');}
+function historyStateData(){
+  collectCurrentPage();
+  return JSON.stringify({pageStates,fontFamily:fontFamily.value||'Helvetica',fontSize:fs(),textColor:textColor.value||'#000000',autoYOffset,autoLineOn,autoCheckDetectOn,autoBoxDetectOn,autoTextSizeOn});
+}
+function updateHistoryButtons(){
+  const undoButton=document.getElementById('undoAction'),redoButton=document.getElementById('redoAction');
+  if(undoButton)undoButton.disabled=historyBusy||undoHistory.length<2;
+  if(redoButton)redoButton.disabled=historyBusy||redoHistory.length<1;
+}
+function clearHistory(){undoHistory=[];redoHistory=[];historyBusy=false;lastHistoryCoalesceKey='';lastHistoryCoalesceAt=0;updateHistoryButtons();}
+function resetHistory(){
+  clearHistory();
+  if(!pdfProxy)return;
+  undoHistory.push({data:historyStateData(),label:'Initial state'});
+  updateHistoryButtons();
+}
+function historyCheckpoint(label,coalesceKey=''){
+  if(historyRestoring||historyBusy||!pdfProxy)return;
+  const data=historyStateData(),previous=undoHistory.at(-1);
+  if(previous?.data===data)return;
+  const now=Date.now(),coalesce=!!coalesceKey&&coalesceKey===lastHistoryCoalesceKey&&now-lastHistoryCoalesceAt<1200&&undoHistory.length>1;
+  const entry={data,label:label||'Change'};
+  if(coalesce)undoHistory[undoHistory.length-1]=entry;
+  else undoHistory.push(entry);
+  if(undoHistory.length>HISTORY_LIMIT)undoHistory.splice(0,undoHistory.length-HISTORY_LIMIT);
+  redoHistory=[];lastHistoryCoalesceKey=coalesceKey;lastHistoryCoalesceAt=now;updateHistoryButtons();
+}
+async function restoreHistoryEntry(entry,message){
+  if(!entry||!pdfProxy)return;
+  historyBusy=true;historyRestoring=true;updateHistoryButtons();cancelPlacement(false);select(null);
+  try{
+    const state=JSON.parse(entry.data);
+    pageStates=state.pageStates||{};
+    fontFamily.value=state.fontFamily||'Helvetica';fontSize.value=String(state.fontSize||8);textColor.value=state.textColor||'#000000';
+    autoYOffset=Number.isFinite(+state.autoYOffset)?+state.autoYOffset:0;
+    autoLineOn=state.autoLineOn!==false;autoCheckDetectOn=state.autoCheckDetectOn!==false;autoBoxDetectOn=state.autoBoxDetectOn!==false;autoTextSizeOn=state.autoTextSizeOn!==false;
+    if(autoLineEnabled)autoLineEnabled.checked=autoLineOn;if(autoCheckDetect)autoCheckDetect.checked=autoCheckDetectOn;if(autoBoxDetect)autoBoxDetect.checked=autoBoxDetectOn;if(autoTextSize)autoTextSize.checked=autoTextSizeOn;
+    updateAutoYValue();stage.innerHTML='';await renderPage(currentPage);setStatus(message);
+  }catch(err){console.error(err);setStatus('Unable to restore the previous state');}
+  finally{historyRestoring=false;historyBusy=false;lastHistoryCoalesceKey='';lastHistoryCoalesceAt=0;updateHistoryButtons();}
+}
+async function undoAction(){
+  if(historyBusy||undoHistory.length<2)return;
+  const current=undoHistory.pop();redoHistory.push(current);await restoreHistoryEntry(undoHistory.at(-1),(uiLanguage==='fr'?'Annulé : ':'Undone: ')+current.label);
+}
+async function redoAction(){
+  if(historyBusy||!redoHistory.length)return;
+  const next=redoHistory.pop();undoHistory.push(next);await restoreHistoryEntry(next,(uiLanguage==='fr'?'Rétabli : ':'Redone: ')+next.label);
+}
+function deleteSelected(){const items=[...selectedItems];if(!items.length){setStatus('Select an area');return;}for(const el of items){if(el.classList.contains('field')){const id=el.dataset.id;clearTimeout(el._textDetectTimer);clearTimeout(el._boxDetectTimer);const h=document.querySelector(`.text-resize[data-for-id="${id}"]`);if(h)h.remove();removeBoxCharLayer(id);removeLineGuide(id);removeFieldTextLayer(id);}el.remove();}selectedItems.clear();selected=null;collectCurrentPage();historyCheckpoint(items.length>1?'Delete areas':'Delete area');setStatus(items.length>1?items.length+' areas deleted':'Area deleted');}
 function selectedData(){if(!selected)return null;const base={x:parseFloat(selected.style.left)||0,y:parseFloat(selected.style.top)||0,w:parseFloat(selected.style.width)||18,h:parseFloat(selected.style.height)||18};if(selected.classList.contains('field'))return {...base,type:'field',value:selected.value||'',fontFamily:fieldFontFamily(selected),fontSize:fieldFontSize(selected),textColor:fieldTextColor(selected),textAlign:(selected.style.textAlign==='center'||selected.style.textAlign==='right')?selected.style.textAlign:'left',yOffset:fieldYOffset(selected),boxes:fieldBoxData(selected),lineY:fieldLineData(selected)};if(selected.classList.contains('check-zone'))return {...base,type:'check',checked:!!selected.querySelector('input')?.checked,detected:selected.dataset.detected==='1'};if(selected.classList.contains('image-zone'))return {...base,type:'image',aspect:parseFloat(selected.dataset.aspect)||1,src:selected.querySelector('img')?.src||''};if(selected.classList.contains('mask-zone'))return {...base,type:'mask'};return null;}
 function copySelected(){const d=selectedData();if(!d){setStatus('Select an area');return;}clipboardItem=JSON.parse(JSON.stringify(d));setStatus('Area copied');}
-function pasteSelected(){if(!pdfProxy||!clipboardItem){setStatus('Nothing to paste');return;}collectCurrentPage();const d=JSON.parse(JSON.stringify(clipboardItem)),off=12,oldX=d.x||0;d.x=Math.max(0,Math.min(pageW-d.w,oldX+off));d.y=Math.max(0,Math.min(pageH-d.h,(d.y||0)+off));if(d.type==='field'){const dx=d.x-oldX,dy=d.y-(clipboardItem.y||0);if(d.boxes?.length)d.boxes=d.boxes.map(b=>({...b,x:+(b.x+dx).toFixed(2)}));if(Number.isFinite(+d.lineY))d.lineY=+(+d.lineY+dy).toFixed(2);}let el=null;if(d.type==='field'){d.id=uid('text');getPageState(currentPage).fields.push(d);createTextDom(d);applyFont();el=document.querySelector(`.field[data-id="${d.id}"]`);}else if(d.type==='check'){d.id=uid('check');d.detected=false;getPageState(currentPage).checks.push(d);createCheckDom(d);el=document.querySelector(`.check-zone[data-id="${d.id}"]`);if(el)scheduleCheckDetection(el,false);}else if(d.type==='image'){d.id=uid('img');getPageState(currentPage).images.push(d);createImageDom(d);el=document.querySelector(`.image-zone[data-id="${d.id}"]`);}else if(d.type==='mask'){d.id=uid('mask');getPageState(currentPage).masks.push(d);createMaskDom(d);el=document.querySelector(`.mask-zone[data-id="${d.id}"]`);}if(el){select(el);clipboardItem={...clipboardItem,x:d.x,y:d.y};enterAdjust();collectCurrentPage();setStatus('Area pasted');}}
+function pasteSelected(){if(!pdfProxy||!clipboardItem){setStatus('Nothing to paste');return;}collectCurrentPage();const d=JSON.parse(JSON.stringify(clipboardItem)),off=12,oldX=d.x||0;d.x=Math.max(0,Math.min(pageW-d.w,oldX+off));d.y=Math.max(0,Math.min(pageH-d.h,(d.y||0)+off));if(d.type==='field'){const dx=d.x-oldX,dy=d.y-(clipboardItem.y||0);if(d.boxes?.length)d.boxes=d.boxes.map(b=>({...b,x:+(b.x+dx).toFixed(2)}));if(Number.isFinite(+d.lineY))d.lineY=+(+d.lineY+dy).toFixed(2);}let el=null;if(d.type==='field'){d.id=uid('text');getPageState(currentPage).fields.push(d);createTextDom(d);applyFont();el=document.querySelector(`.field[data-id="${d.id}"]`);}else if(d.type==='check'){d.id=uid('check');d.detected=false;getPageState(currentPage).checks.push(d);createCheckDom(d);el=document.querySelector(`.check-zone[data-id="${d.id}"]`);if(el)scheduleCheckDetection(el,false);}else if(d.type==='image'){d.id=uid('img');getPageState(currentPage).images.push(d);createImageDom(d);el=document.querySelector(`.image-zone[data-id="${d.id}"]`);}else if(d.type==='mask'){d.id=uid('mask');getPageState(currentPage).masks.push(d);createMaskDom(d);el=document.querySelector(`.mask-zone[data-id="${d.id}"]`);}if(el){select(el);clipboardItem={...clipboardItem,x:d.x,y:d.y};enterAdjust();collectCurrentPage();historyCheckpoint('Paste area');setStatus('Area pasted');}}
 
 function selectedFields(){return [...selectedItems].filter(el=>el&&el.isConnected&&el.classList.contains('field'));}
 function setTextAlignment(mode){
@@ -1881,29 +1952,33 @@ function setTextAlignment(mode){
   if(all){
     let count=0;
     for(const st of Object.values(pageStates))for(const f of st.fields||[]){f.textAlign=align;count++;}
-    document.querySelectorAll('.field').forEach(e=>e.style.textAlign=align);
+    document.querySelectorAll('.field').forEach(e=>{e.style.textAlign=align;updateFieldTextLayer(e);});
+    collectCurrentPage();historyCheckpoint('Text alignment');
     setStatus(`Alignment ${align==='left'?'left':align==='center'?'centered':'right'} applied to ${count} text area(s) in the document`);
     return;
   }
   if(!selected||!selected.classList.contains('field')){setStatus('Select an active text area');return;}
   selected.style.textAlign=align;
-  collectCurrentPage();
+  updateFieldTextLayer(selected);collectCurrentPage();historyCheckpoint('Text alignment');
   setStatus(`Text ${align==='left'?'aligned left':align==='center'?'centered':'aligned right'} in the active area`);
 }
 function alignSelected(mode){
   const items=selectedFields();if(items.length<2){setStatus('Select at least 2 fields with Ctrl+click');return;}
-  const rects=items.map(el=>({el,x:parseFloat(el.style.left)||0,w:parseFloat(el.style.width)||0}));
-  const target=mode==='left'?Math.min(...rects.map(r=>r.x)):mode==='right'?Math.max(...rects.map(r=>r.x+r.w)):rects.reduce((sum,r)=>sum+r.x+r.w/2,0)/rects.length;
-  for(const {el,x,w} of rects){
+  const rects=items.map(el=>({el,x:parseFloat(el.style.left)||0,y:parseFloat(el.style.top)||0,w:parseFloat(el.style.width)||0,h:parseFloat(el.style.height)||0}));
+  const horizontal=mode==='horizontal';
+  const target=horizontal?rects.reduce((sum,r)=>sum+r.y+r.h/2,0)/rects.length:mode==='left'?Math.min(...rects.map(r=>r.x)):mode==='right'?Math.max(...rects.map(r=>r.x+r.w)):rects.reduce((sum,r)=>sum+r.x+r.w/2,0)/rects.length;
+  for(const {el,x,y,w,h} of rects){
     const nextX=mode==='left'?target:mode==='right'?target-w:target-w/2;
-    const boundedX=Math.max(0,Math.min(pageW-w,nextX)),dx=boundedX-x,boxes=fieldBoxData(el);
-    el.style.left=boundedX+'px';
+    const boundedX=horizontal?x:Math.max(0,Math.min(pageW-w,nextX)),dx=boundedX-x,boxes=fieldBoxData(el);
+    const boundedY=horizontal?Math.max(0,Math.min(pageH-h,target-h/2)):y,dy=boundedY-y;
+    el.style.left=boundedX+'px';el.style.top=boundedY+'px';
     // Les cases détectées font partie du champ : elles suivent son déplacement,
     // sans toucher à l'alignement du texte contenu dans le champ.
-    if(boxes.length)el.dataset.boxes=JSON.stringify(boxes.map(b=>({...b,x:+(b.x+dx).toFixed(2)})));
-    const h=document.querySelector(`.text-resize[data-for-id="${el.dataset.id}"]`);if(h)updateTextHandle(el,h);syncBoxLayerGeometry(el);
+    if(boxes.length)el.dataset.boxes=JSON.stringify(boxes.map(b=>({...b,x:+(b.x+dx).toFixed(2),lineY:Number.isFinite(+b.lineY)?+(+b.lineY+dy).toFixed(2):b.lineY})));
+    const lineY=fieldLineData(el);if(horizontal&&lineY!=null)el.dataset.lineY=(lineY+dy).toFixed(2);
+    const handle=document.querySelector(`.text-resize[data-for-id="${el.dataset.id}"]`);if(handle)updateTextHandle(el,handle);syncBoxLayerGeometry(el);
   }
-  collectCurrentPage();setStatus(mode==='left'?'Items aligned to their left edges':mode==='right'?'Items aligned to their right edges':'Items aligned on the same vertical axis');
+  collectCurrentPage();historyCheckpoint('Align fields');setStatus(horizontal?'Items aligned on the same horizontal axis':mode==='left'?'Items aligned to their left edges':mode==='right'?'Items aligned to their right edges':'Items aligned on the same vertical axis');
 }
 function applyMenuScale(){menuScale=Math.max(.65,Math.min(1.5,menuScale||1));document.documentElement.style.setProperty('--menu-scale',menuScale);const e=document.getElementById('menuPercent');if(e)e.textContent=Math.round(menuScale*100)+'%';}
 function setMenuScale(v){menuScale=v;applyMenuScale();}
@@ -1917,12 +1992,12 @@ function flashSaveSuccess(buttonId,label){
   clearTimeout(b._saveTimer);b._saveTimer=setTimeout(()=>{b.textContent=b.dataset.normalLabel||old;b.classList.remove('save-ok');},1800);
 }
 function exportLayout(){if(!pdfProxy)return;try{const blob=new Blob([JSON.stringify(layoutSnapshot(),null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='overlay.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);setStatus('Overlay saved');flashSaveSuccess('exportLayout','Overlay saved');}catch(err){console.error(err);setStatus('Overlay error: '+err.message);}}
-function applyLayout(layout){if(!layout||layout.format!=='generic-pdf-mask-layout')throw new Error('Unrecognized overlay file');collectCurrentPage();fontFamily.value=layout.fontFamily||'Helvetica';fontSize.value=layout.fontSize||8;textColor.value=layout.textColor||'#000000';autoYOffset=Number.isFinite(+layout.autoYOffset)?+layout.autoYOffset:0;autoLineOn=layout.autoLineOn!==false;autoCheckDetectOn=layout.autoCheckDetectOn!==false;autoBoxDetectOn=layout.autoBoxDetectOn!==false;autoTextSizeOn=layout.autoTextSizeOn!==false;if(autoLineEnabled)autoLineEnabled.checked=autoLineOn;if(autoCheckDetect)autoCheckDetect.checked=autoCheckDetectOn;if(autoBoxDetect)autoBoxDetect.checked=autoBoxDetectOn;if(autoTextSize)autoTextSize.checked=autoTextSizeOn;updateAutoYValue();const vals={};for(const [p,st] of Object.entries(pageStates)){vals[p]={};for(const f of st.fields||[])vals[p][f.id]=f.value||'';}pageStates={};for(const [p,st] of Object.entries(layout.pageStates||{})){pageStates[p]={fields:(st.fields||[]).map(f=>({...f,value:(vals[p]&&vals[p][f.id])||''})),checks:(st.checks||[]).map(c=>({...c,checked:false})),images:(st.images||[]).map(i=>({...i})),masks:(st.masks||[]).map(m=>({...m}))};}renderPage(currentPage);setStatus('Overlay loaded');}
-function importLayoutFile(file){if(!file)return;const r=new FileReader();r.onload=()=>{try{applyLayout(JSON.parse(r.result));}catch(err){console.error(err);setStatus('Overlay error: '+err.message);}};r.readAsText(file);}
+async function applyLayout(layout){if(!layout||layout.format!=='generic-pdf-mask-layout')throw new Error('Unrecognized overlay file');collectCurrentPage();fontFamily.value=layout.fontFamily||'Helvetica';fontSize.value=layout.fontSize||8;textColor.value=layout.textColor||'#000000';autoYOffset=Number.isFinite(+layout.autoYOffset)?+layout.autoYOffset:0;autoLineOn=layout.autoLineOn!==false;autoCheckDetectOn=layout.autoCheckDetectOn!==false;autoBoxDetectOn=layout.autoBoxDetectOn!==false;autoTextSizeOn=layout.autoTextSizeOn!==false;if(autoLineEnabled)autoLineEnabled.checked=autoLineOn;if(autoCheckDetect)autoCheckDetect.checked=autoCheckDetectOn;if(autoBoxDetect)autoBoxDetect.checked=autoBoxDetectOn;if(autoTextSize)autoTextSize.checked=autoTextSizeOn;updateAutoYValue();const vals={};for(const [p,st] of Object.entries(pageStates)){vals[p]={};for(const f of st.fields||[])vals[p][f.id]=f.value||'';}pageStates={};for(const [p,st] of Object.entries(layout.pageStates||{})){pageStates[p]={fields:(st.fields||[]).map(f=>({...f,value:(vals[p]&&vals[p][f.id])||''})),checks:(st.checks||[]).map(c=>({...c,checked:false})),images:(st.images||[]).map(i=>({...i})),masks:(st.masks||[]).map(m=>({...m}))};}stage.innerHTML='';await renderPage(currentPage);historyCheckpoint('Load overlay');setStatus('Overlay loaded');}
+function importLayoutFile(file){if(!file)return;const r=new FileReader();r.onload=async()=>{try{await applyLayout(JSON.parse(r.result));}catch(err){console.error(err);setStatus('Overlay error: '+err.message);}};r.readAsText(file);}
 
 async function saveProject(){if(!pdfProxy)return;collectCurrentPage();try{const state={fontFamily:fontFamily.value,fontSize:fs(),textColor:textColor.value,autoYOffset,autoLineOn,autoCheckDetectOn,autoBoxDetectOn,autoTextSizeOn,clickDetectOn:document.getElementById('clickDetect')?.checked!==false,currentPage,userZoom,menuScale,pageStates};await dbPut({key:docKey,name:docName,pdfData:new Uint8Array(pdfBytes),state,updated:Date.now()});localStorage.setItem(LAST_KEY,docKey);setStatus('State saved');flashSaveSuccess('save','Saved');}catch(err){console.error(err);setStatus('Unable to save');}}
 async function restoreLast(){const key=localStorage.getItem(LAST_KEY);if(!key)return;try{const rec=await dbGet(key);if(rec)await loadPdf(rec.pdfData,rec.name,rec.state);}catch(err){console.warn(err);}}
-function clearValues(){collectCurrentPage();Object.values(pageStates).forEach(st=>{st.fields.forEach(f=>f.value='');(st.checks||[]).forEach(c=>c.checked=false);});document.querySelectorAll('.field').forEach(e=>e.value='');document.querySelectorAll('.check-zone input').forEach(e=>e.checked=false);setStatus('Values cleared (not saved)');}
+function clearValues(){collectCurrentPage();Object.values(pageStates).forEach(st=>{st.fields.forEach(f=>f.value='');(st.checks||[]).forEach(c=>c.checked=false);});document.querySelectorAll('.field').forEach(e=>{e.value='';updateBoxCharLayer(e);updateFieldTextLayer(e);});document.querySelectorAll('.check-zone input').forEach(e=>{e.checked=false;e.closest('.check-zone')?.classList.remove('checked');});collectCurrentPage();historyCheckpoint('Clear values');setStatus('Values cleared (not saved)');}
 
 function browserBoxTextMetrics(fontFamilyName,size){
   // Mesure la baseline CSS réelle du navigateur pour cette police/taille. Cela reste
@@ -2008,7 +2083,7 @@ if(saveHandle){
 
 async function openPicked(file){if(!file)return;const buf=await file.arrayBuffer();await loadPdf(new Uint8Array(buf),file.name);}
 document.getElementById('openPdf').addEventListener('click',()=>document.getElementById('pdfPicker').click());document.getElementById('pdfPicker').addEventListener('change',e=>{openPicked(e.target.files[0]);e.target.value='';});
-document.getElementById('closePdf').addEventListener('click',closeDocument);document.getElementById('resetDocument').addEventListener('click',resetDocument);document.getElementById('zoomOut').addEventListener('click',()=>setZoom(userZoom/1.2));document.getElementById('zoomIn').addEventListener('click',()=>setZoom(userZoom*1.2));
+document.getElementById('closePdf').addEventListener('click',closeDocument);document.getElementById('resetDocument').addEventListener('click',resetDocument);document.getElementById('undoAction').addEventListener('click',undoAction);document.getElementById('redoAction').addEventListener('click',redoAction);document.getElementById('zoomOut').addEventListener('click',()=>setZoom(userZoom/1.2));document.getElementById('zoomIn').addEventListener('click',()=>setZoom(userZoom*1.2));
 document.getElementById('toggleClean').addEventListener('click',e=>{const on=document.body.classList.toggle('clean');e.currentTarget.textContent=on?t('showFrames'):t('hideFrames');});
 
 // Toujours démarrer avec la zone de debug repliée, même si le navigateur restaure l'état précédent.
@@ -2016,8 +2091,8 @@ window.addEventListener('pageshow',()=>{document.querySelectorAll('.messages-pan
 
 // Ancien bouton de détection globale conservé pour réactivation :
 // document.getElementById('detectPageFields').addEventListener('click',detectEditableFieldsOnPage);
-document.getElementById('alignVertical').addEventListener('click',()=>alignSelected('vertical'));document.getElementById('alignLeft').addEventListener('click',()=>alignSelected('left'));document.getElementById('alignRight').addEventListener('click',()=>alignSelected('right'));document.getElementById('autoYUp').addEventListener('click',()=>adjustTextYOffset(-1));document.getElementById('autoYDown').addEventListener('click',()=>adjustTextYOffset(+1));document.getElementById('autoYReset').addEventListener('click',resetAllTextYOffsets);autoYAllDocument?.addEventListener('change',updateAutoYValue);autoLineEnabled.addEventListener('change',()=>setAutoLineEnabled(autoLineEnabled.checked));autoCheckDetect.addEventListener('change',()=>setAutoCheckDetect(autoCheckDetect.checked));autoBoxDetect.addEventListener('change',()=>setAutoBoxDetect(autoBoxDetect.checked));autoTextSize.addEventListener('change',()=>setAutoTextSize(autoTextSize.checked));document.getElementById('menuSmaller').addEventListener('click',()=>setMenuScale(menuScale/1.1));document.getElementById('menuLarger').addEventListener('click',()=>setMenuScale(menuScale*1.1));document.getElementById('addField').addEventListener('click',addText);document.getElementById('addCheck').addEventListener('click',addCheck);document.getElementById('addImage').addEventListener('click',()=>document.getElementById('imagePicker').click());document.getElementById('imagePicker').addEventListener('change',e=>{addImageFile(e.target.files[0]);e.target.value='';});document.getElementById('addMask').addEventListener('click',addMask);document.getElementById('deleteItem').addEventListener('click',deleteSelected);
-document.getElementById('textAlignLeft').addEventListener('click',()=>setTextAlignment('left'));document.getElementById('textAlignCenter').addEventListener('click',()=>setTextAlignment('center'));document.getElementById('textAlignRight').addEventListener('click',()=>setTextAlignment('right'));fontFamily.addEventListener('change',applyFontFamily);fontSize.addEventListener('change',applyFontSize);document.getElementById('fontSizeSmaller').addEventListener('click',()=>stepFontSize(-0.5));document.getElementById('fontSizeLarger').addEventListener('click',()=>stepFontSize(0.5));textColor.addEventListener('input',applyTextColor);document.getElementById('save').addEventListener('click',saveProject);document.getElementById('exportLayout').addEventListener('click',exportLayout);document.getElementById('importLayout').addEventListener('click',()=>document.getElementById('layoutPicker').click());document.getElementById('layoutPicker').addEventListener('change',e=>{importLayoutFile(e.target.files[0]);e.target.value='';});document.getElementById('clear').addEventListener('click',clearValues);document.getElementById('exportPdf').addEventListener('click',exportDocument);document.addEventListener('keydown',e=>{if(e.key==='Escape'&&pendingPlacement){e.preventDefault();cancelPlacement(true);return;}const typing=document.activeElement&&document.activeElement.classList&&document.activeElement.classList.contains('field');const mod=e.ctrlKey||e.metaKey;if(mod&&e.key.toLowerCase()==='c'&&selected&&(!typing||document.body.classList.contains('adjust'))){e.preventDefault();copySelected();return;}if(mod&&e.key.toLowerCase()==='v'&&clipboardItem&&(!typing||document.body.classList.contains('adjust'))){e.preventDefault();pasteSelected();return;}if((e.key==='Delete'||e.key==='Backspace')&&selected){if(typing&&!document.body.classList.contains('adjust'))return;e.preventDefault();deleteSelected();}});
+document.getElementById('alignVertical').addEventListener('click',()=>alignSelected('vertical'));document.getElementById('alignHorizontal').addEventListener('click',()=>alignSelected('horizontal'));document.getElementById('alignLeft').addEventListener('click',()=>alignSelected('left'));document.getElementById('alignRight').addEventListener('click',()=>alignSelected('right'));document.getElementById('autoYUp').addEventListener('click',()=>adjustTextYOffset(-1));document.getElementById('autoYDown').addEventListener('click',()=>adjustTextYOffset(+1));document.getElementById('autoYReset').addEventListener('click',resetAllTextYOffsets);autoYAllDocument?.addEventListener('change',updateAutoYValue);autoLineEnabled.addEventListener('change',()=>setAutoLineEnabled(autoLineEnabled.checked));autoCheckDetect.addEventListener('change',()=>setAutoCheckDetect(autoCheckDetect.checked));autoBoxDetect.addEventListener('change',()=>setAutoBoxDetect(autoBoxDetect.checked));autoTextSize.addEventListener('change',()=>setAutoTextSize(autoTextSize.checked));document.getElementById('menuSmaller').addEventListener('click',()=>setMenuScale(menuScale/1.1));document.getElementById('menuLarger').addEventListener('click',()=>setMenuScale(menuScale*1.1));document.getElementById('addField').addEventListener('click',addText);document.getElementById('addCheck').addEventListener('click',addCheck);document.getElementById('addImage').addEventListener('click',()=>document.getElementById('imagePicker').click());document.getElementById('imagePicker').addEventListener('change',e=>{addImageFile(e.target.files[0]);e.target.value='';});document.getElementById('addMask').addEventListener('click',addMask);document.getElementById('deleteItem').addEventListener('click',deleteSelected);
+document.getElementById('textAlignLeft').addEventListener('click',()=>setTextAlignment('left'));document.getElementById('textAlignCenter').addEventListener('click',()=>setTextAlignment('center'));document.getElementById('textAlignRight').addEventListener('click',()=>setTextAlignment('right'));fontFamily.addEventListener('change',applyFontFamily);fontSize.addEventListener('change',applyFontSize);document.getElementById('fontSizeSmaller').addEventListener('click',()=>stepFontSize(-0.5));document.getElementById('fontSizeLarger').addEventListener('click',()=>stepFontSize(0.5));textColor.addEventListener('input',applyTextColor);document.getElementById('save').addEventListener('click',saveProject);document.getElementById('exportLayout').addEventListener('click',exportLayout);document.getElementById('importLayout').addEventListener('click',()=>document.getElementById('layoutPicker').click());document.getElementById('layoutPicker').addEventListener('change',e=>{importLayoutFile(e.target.files[0]);e.target.value='';});document.getElementById('clear').addEventListener('click',clearValues);document.getElementById('exportPdf').addEventListener('click',exportDocument);document.addEventListener('keydown',e=>{if(e.key==='Escape'&&pendingPlacement){e.preventDefault();cancelPlacement(true);return;}const typing=document.activeElement&&document.activeElement.classList&&document.activeElement.classList.contains('field');const mod=e.ctrlKey||e.metaKey,key=e.key.toLowerCase();if(mod&&key==='z'){e.preventDefault();if(e.shiftKey)redoAction();else undoAction();return;}if(mod&&key==='y'){e.preventDefault();redoAction();return;}if(mod&&key==='c'&&selected&&(!typing||document.body.classList.contains('adjust'))){e.preventDefault();copySelected();return;}if(mod&&key==='v'&&clipboardItem&&(!typing||document.body.classList.contains('adjust'))){e.preventDefault();pasteSelected();return;}if((e.key==='Delete'||e.key==='Backspace')&&selected){if(typing&&!document.body.classList.contains('adjust'))return;e.preventDefault();deleteSelected();}});
 document.getElementById('prevPage').addEventListener('click',()=>renderPage(currentPage-1));document.getElementById('nextPage').addEventListener('click',()=>renderPage(currentPage+1));document.getElementById('pageNumber').addEventListener('change',e=>renderPage(parseInt(e.target.value)||1));
 document.getElementById('languageSelect').addEventListener('change',e=>applyLanguage(e.target.value));
 window.addEventListener('wheel',handleCtrlWheelZoom,{passive:false,capture:true});
