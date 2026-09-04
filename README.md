@@ -2,6 +2,12 @@
 
 A lightweight browser-based tool for creating overlays on top of existing PDF documents, with automatic field detection and snapping.
 
+## Download
+
+[**Download PDF Field Helper v1.2 — standalone HTML file**](https://github.com/nicklausFR/pdf-field-helper/releases/download/v1.2/PDF-Field-Helper-v1.2.html)
+
+No installation is required. Download the file, then open it with a double-click in Brave, Chrome or Edge. The standalone version works offline.
+
 ## Features
 
 - Add editable text fields, checkboxes, images and masks
