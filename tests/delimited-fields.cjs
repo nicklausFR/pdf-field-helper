@@ -6,7 +6,7 @@ const path=require('node:path');
 const http=require('node:http');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const root=path.resolve(__dirname,'..');
-const standalone=fs.readFileSync(path.join(root,'PDF-Field-Helper-v1.4.html'),'utf8');
+const standalone=fs.readFileSync(path.join(root,'PDF-Field-Helper-v1.4.1.html'),'utf8');
 const scripts=[...standalone.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
 const worker=Buffer.from(standalone.match(/const _pdfWorkerBinary=atob\('([^']+)'/)[1],'base64');
 const server=http.createServer((req,res)=>{

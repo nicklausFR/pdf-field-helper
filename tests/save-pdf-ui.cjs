@@ -6,7 +6,7 @@ const root=path.resolve(__dirname,'..'),out=path.join(root,'tmp','portable-form-
   const browser=await chromium.launch({channel:'chrome',headless:true});
   try{
     const page=await browser.newPage({viewport:{width:1500,height:1200},acceptDownloads:true});
-    await page.goto(pathToFileURL(path.join(root,'PDF-Field-Helper-v1.4.html')).href);
+    await page.goto(pathToFileURL(path.join(root,'PDF-Field-Helper-v1.4.1.html')).href);
     await page.locator('#pdfPicker').setInputFiles(path.join(out,'editable.pdf'));
     await page.waitForFunction(()=>!!document.querySelector('[data-id="plain"]'));
     await page.evaluate(()=>{

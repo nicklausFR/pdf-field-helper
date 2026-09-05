@@ -7,7 +7,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const root=path.resolve(__dirname,'..');
 fs.mkdirSync(path.join(root,'tmp'),{recursive:true});
 const profile=fs.mkdtempSync(path.join(root,'tmp','browser-storage-'));
-const url=pathToFileURL(path.join(root,'PDF-Field-Helper-v1.4.html')).href;
+const url=pathToFileURL(path.join(root,'PDF-Field-Helper-v1.4.1.html')).href;
 let context;
 async function open(){
   context=await chromium.launchPersistentContext(profile,{channel:'chrome',headless:true,viewport:{width:1550,height:950},serviceWorkers:'block'});

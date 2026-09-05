@@ -3,7 +3,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const {pathToFileURL}=require('node:url');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const root=path.resolve(__dirname,'..'),out=path.join(root,'tmp','portable-form-qa');fs.mkdirSync(out,{recursive:true});
-const standalone=fs.readFileSync(path.join(root,'PDF-Field-Helper-v1.4.html'),'utf8');
+const standalone=fs.readFileSync(path.join(root,'PDF-Field-Helper-v1.4.1.html'),'utf8');
 const scripts=[...standalone.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
 const worker=Buffer.from(standalone.match(/const _pdfWorkerBinary=atob\('([^']+)'/)[1],'base64');
 const server=http.createServer((req,res)=>{
@@ -33,7 +33,7 @@ const server=http.createServer((req,res)=>{
       createTextDom({id:'comb',x:90,y:120,w:48,h:18,value:'A 12',fontSize:12,lineY:136,boxes:[0,12,24,36].map(x=>({x:90+x,w:12,lineY:136})),manualPlacement:true});
       createTextDom({id:'date',x:90,y:150,w:108,h:18,value:'12032026',fontSize:12,lineY:166,boxes:[0,12,30,42,60,72,84,96].map(x=>({x:90+x,w:10,lineY:166})),manualPlacement:true});
       createTextDom({id:'multi',x:35,y:220,w:380,h:65,value:'Première ligne\nDeuxième ligne\nTroisième ligne',fontSize:12,manualPlacement:true});
-      createCheckDom({id:'checked',x:250,y:295,w:14,h:14,checked:true,manualPlacement:true});
+      createCheckDom({id:'checked',x:250,y:295,w:14,h:14,checked:true,detected:true,textColor:'#173e80',manualPlacement:true});
       createCheckDom({id:'unchecked',x:250,y:325,w:14,h:14,checked:false,manualPlacement:true});
       createImageDom({id:'drawing',x:35,y:355,w:150,h:80,drawing:{strokes:[{color:'#173e80',width:.015,points:[{x:.1,y:.2,p:.5},{x:.5,y:.7,p:.7},{x:.9,y:.1,p:.5}]}]}});
       const c=document.createElement('canvas');c.width=c.height=16;c.getContext('2d').fillRect(2,2,12,12);
@@ -67,6 +67,7 @@ const server=http.createServer((req,res)=>{
     assert.equal(acro.fields.filter(f=>f.comb).length,9);assert.equal(acro.fields.filter(f=>f.multi).length,1);
     assert.equal(acro.fields.filter(f=>f.checked===true).length,1);assert.ok(acro.fields.every(f=>f.widgets===1));
     assert.equal(acro.project.state.pageStates[1].images.find(i=>i.id==='drawing').drawing.strokes.length,1);
+    assert.equal(acro.project.state.pageStates[1].checks.find(c=>c.id==='checked').textColor,'#173e80');
     await page.evaluate(async()=>{
       const proxy=await pdfjsLib.getDocument({data:new Uint8Array(window.exported[0].bytes)}).promise,pg=await proxy.getPage(1),vp=pg.getViewport({scale:1.5}),canvas=document.createElement('canvas');canvas.id='export-preview';canvas.width=vp.width;canvas.height=vp.height;
       document.getElementById('stage').appendChild(canvas);await pg.render({canvasContext:canvas.getContext('2d'),viewport:vp,annotationMode:pdfjsLib.AnnotationMode.ENABLE}).promise;await proxy.destroy();
@@ -83,6 +84,7 @@ const server=http.createServer((req,res)=>{
     assert.equal(changed.pageStates[1].fields.find(f=>f.id==='plain').value,'Modifié ailleurs','canonical values override embedded JSON');
     assert.equal(changed.pageStates[1].fields.find(f=>f.id==='date').value,'22032026');
     assert.equal(changed.pageStates[1].checks.find(f=>f.id==='checked').checked,false);
+    assert.equal(changed.pageStates[1].checks.find(c=>c.id==='checked').textColor,'#173e80','checkbox color survives editable PDF roundtrip');
     assert.equal(changed.pageStates[1].images.find(f=>f.id==='drawing').drawing.strokes.length,1,'editable drawing survives PDF roundtrip');
     assert.deepEqual(changed.pageStates[1].fields.find(f=>f.id==='date').boxes,acro.project.state.pageStates[1].fields.find(f=>f.id==='date').boxes);
     await page.locator('#exportForm').click();
@@ -94,6 +96,8 @@ const server=http.createServer((req,res)=>{
     await staticForm.goto(pathToFileURL(htmlFile).href);
     assert.deepEqual(await staticForm.locator('#documentActions button').evaluateAll(buttons=>buttons.filter(b=>b.getClientRects().length).map(b=>b.id)),['save','saveAs','clear','exportPdf'],'generated HTML already contains the restricted interface before startup');
     assert.equal(await staticForm.locator('#tabLayerButton').isVisible(),false);
+    assert.equal(await staticForm.locator('.toolbar-top').isVisible(),true);
+    assert.equal(await staticForm.locator('#toggleClean').isVisible(),true);
     await staticForm.close();
     const offline=await browser.newContext({viewport:{width:1500,height:1200},serviceWorkers:'block'});await offline.setOffline(true);
     const fill=await offline.newPage(),requests=[];fill.on('pageerror',e=>errors.push(e.message));fill.on('request',r=>{if(/^https?:/.test(r.url()))requests.push(r.url());});
@@ -103,8 +107,37 @@ const server=http.createServer((req,res)=>{
     assert.equal(await fill.locator('#tabLayerButton').isVisible(),false);assert.equal(await fill.locator('#exportForm').isVisible(),false);
     assert.equal(await fill.locator('#tabEditButton').isVisible(),false);
     assert.deepEqual(await fill.locator('#documentActions button').evaluateAll(buttons=>buttons.filter(b=>b.getClientRects().length).map(b=>b.id)),['save','saveAs','clear','exportPdf'],'exactly four document actions');
-    assert.equal(await fill.evaluate(()=>document.body.classList.contains('clean')),true,'field highlights hidden by default');
-    assert.equal(await fill.locator('#toggleClean').isVisible(),false,'frame toggle is not offered');
+    assert.equal(await fill.evaluate(()=>document.body.classList.contains('clean')),false,'field highlights visible by default');
+    assert.match(await fill.locator('[data-id="plain"]').evaluate(e=>getComputedStyle(e).backgroundImage),/linear-gradient/);
+    assert.notEqual(await fill.locator('[data-id="circle"]').evaluate(e=>getComputedStyle(e).backgroundColor),'rgba(0, 0, 0, 0)','empty mark masks are visible on opening');
+    for(const selector of ['.app-heading','#menuSmaller','#menuLarger','#languageSelect','#toggleClean']){
+      assert.equal(await fill.locator(selector).isVisible(),true,'top and frame controls available: '+selector);
+      assert.equal(await fill.locator(selector).isEnabled(),true);
+    }
+    await fill.locator('#languageSelect').selectOption('fr');
+    assert.equal(await fill.locator('#toggleClean').innerText(),'Masquer cadres');
+    await fill.locator('#toggleClean').click();
+    assert.equal(await fill.evaluate(()=>document.body.classList.contains('clean')),true);
+    assert.equal(await fill.locator('#toggleClean').innerText(),'Afficher cadres');
+    await fill.locator('#toggleClean').click();
+    assert.equal(await fill.evaluate(()=>document.body.classList.contains('clean')),false);
+    assert.equal(await fill.locator('#toggleClean').innerText(),'Masquer cadres');
+    assert.match(await fill.locator('[data-id="plain"]').evaluate(e=>getComputedStyle(e).backgroundImage),/linear-gradient/);
+    await fill.evaluate(()=>setEditTab('edit'));
+    assert.equal(await fill.evaluate(()=>document.body.classList.contains('clean')),false,'edit mode preserves visible frames');
+    await fill.locator('#languageSelect').selectOption('en');
+    assert.equal(await fill.locator('#toggleClean').innerText(),'Hide frames');
+    await fill.locator('#toggleClean').click();
+    assert.equal(await fill.evaluate(()=>document.body.classList.contains('clean')),true);
+    assert.equal(await fill.locator('[data-id="plain"]').evaluate(e=>getComputedStyle(e).backgroundColor),'rgba(0, 0, 0, 0)');
+    assert.equal(await fill.locator('[data-id="plain"]').evaluate(e=>getComputedStyle(e).backgroundImage),'none');
+    assert.equal(await fill.locator('#toggleClean').innerText(),'Show frames');
+    await fill.locator('#languageSelect').selectOption('fr');
+    const initialMenuScale=await fill.evaluate(()=>menuScale);
+    await fill.locator('#menuLarger').click();
+    assert.ok(await fill.evaluate(()=>menuScale)>initialMenuScale,'menu size can be increased');
+    await fill.locator('#menuSmaller').click();
+    assert.equal(await fill.evaluate(()=>menuScale),initialMenuScale);
     assert.equal(await fill.locator('#viewControls').evaluate(e=>getComputedStyle(e).position),'relative','zoom and page navigation use the normal toolbar layout');
     assert.ok((await fill.locator('#viewControls').boundingBox()).y<(await fill.locator('#tabEdit').boundingBox()).y,'navigation stays above text settings');
     for(const id of ['fontFamily','fontSize','fontBold','textAlignCenter'])assert.equal(await fill.locator('#'+id).isVisible(),true,'editing control available: '+id);
@@ -121,6 +154,21 @@ const server=http.createServer((req,res)=>{
     assert.equal(await fill.locator('[data-id="plain"]').getAttribute('data-font-family'),'Courier');
     assert.equal(await fill.locator('[data-id="plain"]').evaluate(e=>e.style.textAlign),'right');
     await fill.locator('[data-id="checked"] input').check();
+    assert.equal(await fill.locator('#textColor').inputValue(),'#173e80','selecting a checkbox shows its saved color');
+    await fill.locator('#textColor').fill('#234567');
+    await fill.locator('#textColor').dispatchEvent('input');
+    assert.equal(await fill.locator('[data-id="checked"] .check-mark line').first().evaluate(e=>getComputedStyle(e).stroke),'rgb(35, 69, 103)');
+    assert.equal(await fill.locator('[data-id="unchecked"]').getAttribute('data-text-color'),'#000000','local color does not alter other checkboxes');
+    await fill.evaluate(async()=>{collectCurrentPage();await renderPage(2);createCheckDom({id:'color-page2',x:35,y:150,w:14,h:14,checked:false,manualPlacement:true});collectCurrentPage();await renderPage(1);});
+    await fill.locator('#fontAllDocument').check();
+    await fill.locator('#textColor').fill('#345678');await fill.locator('#textColor').dispatchEvent('input');
+    assert.equal(await fill.locator('[data-id="unchecked"] input').evaluate(e=>getComputedStyle(e).accentColor),'rgb(52, 86, 120)');
+    assert.equal(await fill.evaluate(()=>pageStates[2].checks.find(c=>c.id==='color-page2').textColor),'#345678','document color includes checkboxes on other pages');
+    await fill.locator('#fontAllDocument').uncheck();
+    await fill.locator('[data-id="checked"] input').focus();
+    await fill.locator('#textColor').fill('#234567');await fill.locator('#textColor').dispatchEvent('input');
+    const copiedCheckColor=await fill.evaluate(()=>selectedData(document.querySelector('[data-id="checked"]')).textColor);
+    assert.equal(copiedCheckColor,'#234567','copying a checkbox retains its color');
     await fill.locator('[data-id="circle"]').click();
     const canvas=fill.locator('[data-id="drawing"] canvas');await canvas.click();await fill.locator('#drawingDraw').click();await canvas.scrollIntoViewIfNeeded();const box=await canvas.boundingBox();
     await fill.mouse.move(box.x+10,box.y+10);await fill.mouse.down();await fill.mouse.move(box.x+80,box.y+45,{steps:6});await fill.mouse.up();
@@ -148,14 +196,23 @@ const server=http.createServer((req,res)=>{
     assert.equal(await reopen.locator('[data-id="plain"]').evaluate(e=>e.style.textAlign),'right');
     assert.equal(await reopen.evaluate(()=>window.injected),undefined,'saved answers remain data, never executable HTML');
     assert.equal(await reopen.locator('[data-id="checked"] input').isChecked(),true);
+    assert.equal(await reopen.locator('[data-id="checked"] .check-mark line').first().evaluate(e=>getComputedStyle(e).stroke),'rgb(35, 69, 103)','checkbox color survives HTML roundtrip');
+    assert.equal(await reopen.evaluate(()=>document.body.classList.contains('clean')),false,'reopened form shows its masks by default');
     assert.equal(await reopen.locator('[data-id="drawing"]').evaluate(e=>e._drawing.strokes.length),1);
     assert.deepEqual(await reopen.locator('[data-id="drawing"]').evaluate(e=>e._drawing.image),resizedImage,'imported image and transformation persist in the HTML copy');
     assert.equal(await reopen.locator('[data-id="circle"]').getAttribute('data-mask-style'),'strike');
     await fill.locator('#exportPdf').click();await fill.waitForFunction(()=>window.exported.length===2);
     const finalPdf=await fill.evaluate(()=>window.exported[1]);fs.writeFileSync(path.join(out,'filled.pdf'),Buffer.from(finalPdf.bytes));
+    const strokeColors=await fill.evaluate(async()=>{
+      const proxy=await pdfjsLib.getDocument({data:new Uint8Array(window.exported[1].bytes)}).promise;
+      const page=await proxy.getPage(1),ops=await page.getOperatorList();
+      const colors=ops.fnArray.flatMap((fn,i)=>fn===pdfjsLib.OPS.setStrokeRGBColor?[Array.from(ops.argsArray[i])]:[]);
+      await proxy.destroy();return colors;
+    });
+    assert.ok(strokeColors.some(c=>c.join(',')==='35,69,103'),'finished PDF uses the checkbox color');
     await fill.locator('.toolbar').screenshot({path:path.join(out,'fillable-toolbar.png')});
     const standalonePage=await offline.newPage();standalonePage.on('pageerror',e=>errors.push(e.message));
-    await standalonePage.goto(pathToFileURL(path.join(root,'PDF-Field-Helper-v1.4.html')).href);
+    await standalonePage.goto(pathToFileURL(path.join(root,'PDF-Field-Helper-v1.4.1.html')).href);
     await standalonePage.evaluate(async project=>{await loadPdf(base64ToBytes(project.sourcePdf),project.name,project.state);},acro.project);
     const fromStandalone=await standalonePage.evaluate(async()=>standaloneFormHtml(projectSnapshot()));
     const offlineExport=path.join(out,'standalone-generated.html');fs.writeFileSync(offlineExport,fromStandalone);

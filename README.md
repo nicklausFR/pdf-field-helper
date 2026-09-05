@@ -4,7 +4,7 @@ Prepare, fill and save PDF forms in your browser. Save your work as an editable 
 
 ## Download
 
-[**Download PDF Field Helper v1.4 — standalone HTML file**](https://github.com/nicklausFR/pdf-field-helper/releases/download/v1.4/PDF-Field-Helper-v1.4.html)
+[**Download PDF Field Helper v1.4.1 — standalone HTML file**](https://github.com/nicklausFR/pdf-field-helper/releases/download/v1.4.1/PDF-Field-Helper-v1.4.1.html)
 
 Open the downloaded file in Brave, Chrome or Edge. The standalone application works offline and requires no installation. Its interface is available in English and French.
 
@@ -36,7 +36,9 @@ Drawings, images, Strike / Circle marks and some layout settings are not standar
 
 **Generate a fillable form** creates a separate, self-contained **HTML file** containing the PDF and its prepared fields. Response fields start empty. Send this file to the recipient, who can open it in a supported browser and fill it offline without installing PDF Field Helper.
 
-The generated form opens directly for filling. It retains font, size, bold, color, alignment and baseline controls. Field creation tabs and the frame visibility toggle are omitted; field backgrounds and frames stay hidden. Zoom and page navigation remain at the top.
+The generated form opens directly for filling. It retains the top bar with the application name, menu size and language controls, as well as font, size, bold, color, alignment and baseline controls. Field creation tabs are omitted. Field backgrounds and frames start visible and can be shown or hidden with the same toggle as in the main editor. Zoom and page navigation remain at the top.
+
+Checkbox marks use the font color control. Change a selected checkbox's color, or enable **Entire document** to apply the color to text and checkboxes across all pages. Checkbox colors are preserved in saved PDFs, generated forms and finished PDFs.
 
 Its document actions are **Save**, **Save as…**, **Reset all values** and **Generate PDF**. Saving produces an editable PDF with the answers; generating a PDF produces the finished document.
 
@@ -60,4 +62,4 @@ HTML, CSS and JavaScript using PDF.js and pdf-lib. A PWA version is also support
 
 ## Version
 
-**v1.4** — [Release notes](https://github.com/nicklausFR/pdf-field-helper/releases/tag/v1.4)
+**v1.4.1** — [Release notes](https://github.com/nicklausFR/pdf-field-helper/releases/tag/v1.4.1)

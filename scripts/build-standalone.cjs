@@ -2,7 +2,7 @@
 const fs=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
-const root=path.resolve(__dirname,'..'),file=path.join(root,'PDF-Field-Helper-v1.4.html');
+const root=path.resolve(__dirname,'..'),file=path.join(root,'PDF-Field-Helper-v1.4.1.html');
 const old=fs.readFileSync(file,'utf8'),index=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const scripts=[...old.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
 const end="{type:'text/javascript'}));",start=scripts[2].indexOf('const _pdfWorkerBinary=');
