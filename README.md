@@ -4,7 +4,7 @@ A lightweight browser-based tool for creating overlays on top of existing PDF do
 
 ## Download
 
-[**Download PDF Field Helper v1.3 — standalone HTML file**](https://github.com/nicklausFR/pdf-field-helper/releases/download/v1.3/PDF-Field-Helper-v1.3.html)
+[**Download PDF Field Helper v1.4 — standalone HTML file**](https://github.com/nicklausFR/pdf-field-helper/releases/download/v1.4/PDF-Field-Helper-v1.4.html)
 
 No installation is required. Download the file, then open it with a double-click in Brave, Chrome or Edge. The standalone version works offline.
 
