@@ -1,0 +1,168 @@
+// Run with node tests/portable-form.cjs (Playwright and Chrome required).
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),http=require('node:http');
+const {pathToFileURL}=require('node:url');
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
+const root=path.resolve(__dirname,'..'),out=path.join(root,'tmp','portable-form-qa');fs.mkdirSync(out,{recursive:true});
+const standalone=fs.readFileSync(path.join(root,'PDF-Field-Helper-v1.4.html'),'utf8');
+const scripts=[...standalone.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
+const worker=Buffer.from(standalone.match(/const _pdfWorkerBinary=atob\('([^']+)'/)[1],'base64');
+const server=http.createServer((req,res)=>{
+  if(req.url==='/worker.js'){res.setHeader('Content-Type','text/javascript');res.end(worker);return;}
+  if(req.url==='/pdf.js'||req.url==='/pdf-lib.js'){res.setHeader('Content-Type','text/javascript');res.end(scripts[req.url==='/pdf.js'?0:1]);return;}
+  if(req.url==='/'){
+    let i=0;const html=fs.readFileSync(path.join(root,'index.html'),'utf8')
+      .replace('https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js','/worker.js')
+      .replace(/<script src="[^"]+"><\/script>/g,()=>'<script src="'+['/pdf.js','/pdf-lib.js'][i++]+'"></script>');
+    res.setHeader('Content-Type','text/html; charset=utf-8');res.end(html);return;
+  }
+  res.writeHead(404).end();
+});
+(async()=>{
+  await new Promise(r=>server.listen(0,'127.0.0.1',r));
+  const browser=await chromium.launch({channel:'chrome',headless:true});
+  try{
+    const page=await browser.newPage({viewport:{width:1500,height:1200},serviceWorkers:'block'}),errors=[];
+    page.on('pageerror',e=>errors.push(e.message));
+    await page.goto('http://127.0.0.1:'+server.address().port);await page.waitForFunction(()=>typeof loadPdf==='function');
+    await page.evaluate(async()=>{
+      const doc=await PDFLib.PDFDocument.create(),p=doc.addPage([595,842]);doc.addPage([595,842]);
+      p.drawText('Nom :',{x:35,y:737,size:12});p.drawText('Code :',{x:35,y:707,size:12});p.drawText('Date :',{x:35,y:677,size:12});
+      p.drawText('Description :',{x:35,y:637,size:12});p.drawText('Choix',{x:275,y:535,size:12});
+      await loadPdf(await doc.save(),'test-portable.pdf');applyLanguage('fr');
+      createTextDom({id:'plain',x:90,y:90,w:220,h:18,value:'Réponse <test>',fontSize:12,fontWeight:'bold',textColor:'#173e80',lineY:106,manualPlacement:true});
+      createTextDom({id:'comb',x:90,y:120,w:48,h:18,value:'A 12',fontSize:12,lineY:136,boxes:[0,12,24,36].map(x=>({x:90+x,w:12,lineY:136})),manualPlacement:true});
+      createTextDom({id:'date',x:90,y:150,w:108,h:18,value:'12032026',fontSize:12,lineY:166,boxes:[0,12,30,42,60,72,84,96].map(x=>({x:90+x,w:10,lineY:166})),manualPlacement:true});
+      createTextDom({id:'multi',x:35,y:220,w:380,h:65,value:'Première ligne\nDeuxième ligne\nTroisième ligne',fontSize:12,manualPlacement:true});
+      createCheckDom({id:'checked',x:250,y:295,w:14,h:14,checked:true,manualPlacement:true});
+      createCheckDom({id:'unchecked',x:250,y:325,w:14,h:14,checked:false,manualPlacement:true});
+      createImageDom({id:'drawing',x:35,y:355,w:150,h:80,drawing:{strokes:[{color:'#173e80',width:.015,points:[{x:.1,y:.2,p:.5},{x:.5,y:.7,p:.7},{x:.9,y:.1,p:.5}]}]}});
+      const c=document.createElement('canvas');c.width=c.height=16;c.getContext('2d').fillRect(2,2,12,12);
+      createImageDom({id:'image',x:200,y:355,w:20,h:20,src:c.toDataURL(),aspect:1});
+      createMaskDom({id:'circle',x:270,y:290,w:50,h:24,maskStyle:'ellipse',textColor:'#173e80'});
+      createMaskDom({id:'strike',x:330,y:290,w:50,h:24,maskStyle:'strike'});
+      createMaskDom({id:'white',x:390,y:290,w:30,h:24});
+      collectCurrentPage();await renderPage(2);
+      createTextDom({id:'page2',x:35,y:100,w:200,h:20,value:'Page deux',fontSize:12,manualPlacement:true});
+      collectCurrentPage();await renderPage(1);setEditTab('edit');
+      window.exported=[];window.showSaveFilePicker=async opts=>({name:opts.suggestedName,createWritable:async()=>({write:async blob=>window.exported.push({name:opts.suggestedName,bytes:Array.from(new Uint8Array(await blob.arrayBuffer()))}),close:async()=>{}})});
+    });
+    assert.equal(await page.locator('#exportLayout').isVisible(),false,'only the two save actions are shown');
+    assert.equal(await page.locator('#importLayout').count(),0,'obsolete Load overlay button is removed');
+    await page.locator('#save').click();assert.equal(await page.locator('#saveAsDialog').evaluate(e=>e.open),true);
+    assert.match(await page.locator('#saveAsLimits').innerText(),/éditeur PDF classique/);
+    await page.locator('#saveAsDialog').screenshot({path:path.join(out,'compatibility-dialog.png')});
+    await page.locator('#cancelSaveAs').click();assert.equal(await page.evaluate(()=>window.exported.length),0,'cancel creates no file');
+    await page.locator('#save').click();await page.locator('#confirmSaveAs').click();
+    await page.waitForFunction(()=>window.exported.length===1||document.getElementById('status').textContent.startsWith('PDF error:'));
+    assert.equal(await page.evaluate(()=>window.exported.length),1,await page.locator('#status').innerText());
+    const pdfExport=await page.evaluate(()=>window.exported[0]);fs.writeFileSync(path.join(out,'editable.pdf'),Buffer.from(pdfExport.bytes));
+    const acro=await page.evaluate(async()=>{
+      const bytes=new Uint8Array(window.exported[0].bytes),doc=await PDFLib.PDFDocument.load(bytes),form=doc.getForm();
+      const proxy=await pdfjsLib.getDocument({data:bytes.slice()}).promise,attachments=await proxy.getAttachments();
+      const project=JSON.parse(new TextDecoder().decode(attachments['pdf-field-helper.json'].content));
+      const fields=form.getFields().map(f=>({name:f.getName(),type:f.constructor.name,value:f.getText?.(),checked:f.isChecked?.(),comb:f.isCombed?.(),multi:f.isMultiline?.(),widgets:f.acroField.getWidgets().length}));
+      await proxy.destroy();window.portableProject=project;return {fields,project};
+    });
+    assert.equal(acro.fields.length,14,'all pages have canonical form fields, including irregular date cells');
+    assert.equal(acro.fields.filter(f=>f.comb).length,9);assert.equal(acro.fields.filter(f=>f.multi).length,1);
+    assert.equal(acro.fields.filter(f=>f.checked===true).length,1);assert.ok(acro.fields.every(f=>f.widgets===1));
+    assert.equal(acro.project.state.pageStates[1].images.find(i=>i.id==='drawing').drawing.strokes.length,1);
+    await page.evaluate(async()=>{
+      const proxy=await pdfjsLib.getDocument({data:new Uint8Array(window.exported[0].bytes)}).promise,pg=await proxy.getPage(1),vp=pg.getViewport({scale:1.5}),canvas=document.createElement('canvas');canvas.id='export-preview';canvas.width=vp.width;canvas.height=vp.height;
+      document.getElementById('stage').appendChild(canvas);await pg.render({canvasContext:canvas.getContext('2d'),viewport:vp,annotationMode:pdfjsLib.AnnotationMode.ENABLE}).promise;await proxy.destroy();
+    });
+    await page.locator('#export-preview').screenshot({path:path.join(out,'editable.png')});
+    await page.evaluate(()=>document.getElementById('export-preview').remove());
+    const changed=await page.evaluate(async()=>{
+      const doc=await PDFLib.PDFDocument.load(new Uint8Array(window.exported[0].bytes)),form=doc.getForm(),b=window.portableProject.bindings;
+      form.getTextField(b.find(x=>x.id==='plain').parts[0].name).setText('Modifié ailleurs');
+      form.getCheckBox(b.find(x=>x.id==='checked').parts[0].name).uncheck();
+      form.getTextField(b.find(x=>x.id==='date').parts[0].name).setText('2');
+      const bytes=await doc.save();await loadPdf(bytes,'external-edit.pdf');return projectSnapshot();
+    });
+    assert.equal(changed.pageStates[1].fields.find(f=>f.id==='plain').value,'Modifié ailleurs','canonical values override embedded JSON');
+    assert.equal(changed.pageStates[1].fields.find(f=>f.id==='date').value,'22032026');
+    assert.equal(changed.pageStates[1].checks.find(f=>f.id==='checked').checked,false);
+    assert.equal(changed.pageStates[1].images.find(f=>f.id==='drawing').drawing.strokes.length,1,'editable drawing survives PDF roundtrip');
+    assert.deepEqual(changed.pageStates[1].fields.find(f=>f.id==='date').boxes,acro.project.state.pageStates[1].fields.find(f=>f.id==='date').boxes);
+    await page.locator('#exportForm').click();
+    await page.waitForFunction(()=>window.exported.length===2||document.getElementById('status').textContent.startsWith('HTML error:'));
+    assert.equal(await page.evaluate(()=>window.exported.length),2,await page.locator('#status').innerText());
+    const htmlExport=await page.evaluate(()=>window.exported[1]),htmlFile=path.join(out,'form.html');fs.writeFileSync(htmlFile,Buffer.from(htmlExport.bytes));
+    const html=fs.readFileSync(htmlFile,'utf8');assert.ok(!/<script src=/.test(html),'all libraries are embedded');assert.ok(/const _pdfWorkerBinary=atob\('/.test(html),'worker embedded');
+    const staticForm=await browser.newPage({javaScriptEnabled:false});
+    await staticForm.goto(pathToFileURL(htmlFile).href);
+    assert.deepEqual(await staticForm.locator('#documentActions button').evaluateAll(buttons=>buttons.filter(b=>b.getClientRects().length).map(b=>b.id)),['save','saveAs','clear','exportPdf'],'generated HTML already contains the restricted interface before startup');
+    assert.equal(await staticForm.locator('#tabLayerButton').isVisible(),false);
+    await staticForm.close();
+    const offline=await browser.newContext({viewport:{width:1500,height:1200},serviceWorkers:'block'});await offline.setOffline(true);
+    const fill=await offline.newPage(),requests=[];fill.on('pageerror',e=>errors.push(e.message));fill.on('request',r=>{if(/^https?:/.test(r.url()))requests.push(r.url());});
+    await fill.goto(pathToFileURL(htmlFile).href);await fill.waitForFunction(()=>!!document.querySelector('[data-id="plain"]'));
+    assert.equal(await fill.locator('[data-id="plain"]').inputValue(),'','form starts blank');
+    assert.equal(await fill.locator('[data-id="drawing"]').evaluate(e=>e._drawing.strokes.length),0);
+    assert.equal(await fill.locator('#tabLayerButton').isVisible(),false);assert.equal(await fill.locator('#exportForm').isVisible(),false);
+    assert.equal(await fill.locator('#tabEditButton').isVisible(),false);
+    assert.deepEqual(await fill.locator('#documentActions button').evaluateAll(buttons=>buttons.filter(b=>b.getClientRects().length).map(b=>b.id)),['save','saveAs','clear','exportPdf'],'exactly four document actions');
+    assert.equal(await fill.evaluate(()=>document.body.classList.contains('clean')),true,'field highlights hidden by default');
+    assert.equal(await fill.locator('#toggleClean').isVisible(),false,'frame toggle is not offered');
+    assert.equal(await fill.locator('#viewControls').evaluate(e=>getComputedStyle(e).position),'relative','zoom and page navigation use the normal toolbar layout');
+    assert.ok((await fill.locator('#viewControls').boundingBox()).y<(await fill.locator('#tabEdit').boundingBox()).y,'navigation stays above text settings');
+    for(const id of ['fontFamily','fontSize','fontBold','textAlignCenter'])assert.equal(await fill.locator('#'+id).isVisible(),true,'editing control available: '+id);
+    await fill.evaluate(()=>setEditTab('layer'));
+    assert.equal(await fill.evaluate(()=>document.body.classList.contains('adjust')),false,'form stays in Edit mode');
+    for(const id of ['exportForm','addField','addCheck','addDrawing','detectTables'])assert.equal(await fill.locator('#'+id).isDisabled(),true,'creation/export control disabled: '+id);
+    await fill.evaluate(()=>beginPlacement('text'));
+    assert.equal(await fill.evaluate(()=>pendingPlacement),null,'field creation cannot start in a fillable form');
+    const answer='Réponse </script><script>window.injected=true</script>';
+    await fill.locator('[data-id="plain"]').fill(answer);
+    await fill.locator('#fontAllDocument').uncheck();await fill.locator('#fontFamily').selectOption('Courier');
+    await fill.locator('#fontSize').fill('11');await fill.locator('#fontSize').dispatchEvent('change');
+    await fill.locator('#textAlignRight').click();
+    assert.equal(await fill.locator('[data-id="plain"]').getAttribute('data-font-family'),'Courier');
+    assert.equal(await fill.locator('[data-id="plain"]').evaluate(e=>e.style.textAlign),'right');
+    await fill.locator('[data-id="checked"] input').check();
+    await fill.locator('[data-id="circle"]').click();
+    const canvas=fill.locator('[data-id="drawing"] canvas');await canvas.click();await fill.locator('#drawingDraw').click();await canvas.scrollIntoViewIfNeeded();const box=await canvas.boundingBox();
+    await fill.mouse.move(box.x+10,box.y+10);await fill.mouse.down();await fill.mouse.move(box.x+80,box.y+45,{steps:6});await fill.mouse.up();
+    await fill.evaluate(()=>{window.exported=[];window.showSaveFilePicker=async opts=>({createWritable:async()=>({write:async blob=>window.exported.push({name:opts.suggestedName,bytes:Array.from(new Uint8Array(await blob.arrayBuffer()))}),close:async()=>{}})});});
+    const samplePng=await fill.evaluate(()=>{const c=document.createElement('canvas');c.width=120;c.height=60;const ctx=c.getContext('2d');ctx.fillStyle='#b31526';ctx.fillRect(0,0,60,60);ctx.fillStyle='#176baa';ctx.fillRect(60,0,60,60);return c.toDataURL().split(',')[1];});
+    const chooserEvent=fill.waitForEvent('filechooser');await fill.locator('#drawingImport').click();
+    await (await chooserEvent).setFiles({name:'drawing-image.png',mimeType:'image/png',buffer:Buffer.from(samplePng,'base64')});
+    await fill.waitForFunction(()=>!!document.querySelector('[data-id="drawing"]')._drawing.image);
+    let importedBox=await fill.locator('.drawing-import-box:visible').boundingBox();
+    const beforeImage=await canvas.evaluate(e=>({...e.parentElement._drawing.image}));
+    await fill.mouse.move(importedBox.x+importedBox.width/2,importedBox.y+importedBox.height/2);await fill.mouse.down();await fill.mouse.move(importedBox.x+importedBox.width/2+8,importedBox.y+importedBox.height/2+6,{steps:5});await fill.mouse.up();
+    const movedImage=await canvas.evaluate(e=>({...e.parentElement._drawing.image}));assert.ok(movedImage.x>beforeImage.x&&movedImage.y>beforeImage.y,'imported image moves in edit mode');
+    const imageHandle=await fill.locator('.drawing-import-box:visible .drawing-import-resize').boundingBox();
+    await fill.mouse.move(imageHandle.x+4,imageHandle.y+4);await fill.mouse.down();await fill.mouse.move(imageHandle.x-15,imageHandle.y-5,{steps:5});await fill.mouse.up();
+    const resizedImage=await canvas.evaluate(e=>({...e.parentElement._drawing.image}));assert.ok(resizedImage.w<movedImage.w,'imported image resizes');
+    assert.ok(Math.abs(resizedImage.w/resizedImage.h-movedImage.w/movedImage.h)<.001,'image aspect ratio preserved');
+    await fill.keyboard.press('Control+z');assert.equal(await canvas.evaluate(e=>e.parentElement._drawing.image.w),movedImage.w);
+    await fill.keyboard.press('Control+y');await fill.waitForFunction(()=>!!document.querySelector('[data-id="drawing"]')?._drawingImage?.naturalWidth);
+    await fill.evaluate(()=>exportFillableForm(false));await fill.waitForFunction(()=>window.exported.length===1);
+    const filled=await fill.evaluate(()=>window.exported[0]),filledFile=path.join(out,'filled.html');fs.writeFileSync(filledFile,Buffer.from(filled.bytes));
+    const reopen=await offline.newPage();reopen.on('pageerror',e=>errors.push(e.message));await reopen.goto(pathToFileURL(filledFile).href);
+    await reopen.waitForFunction(()=>!!document.querySelector('[data-id="plain"]'));
+    assert.equal(await reopen.locator('[data-id="plain"]').inputValue(),answer);
+    assert.equal(await reopen.locator('[data-id="plain"]').getAttribute('data-font-family'),'Courier');
+    assert.equal(await reopen.locator('[data-id="plain"]').evaluate(e=>e.style.textAlign),'right');
+    assert.equal(await reopen.evaluate(()=>window.injected),undefined,'saved answers remain data, never executable HTML');
+    assert.equal(await reopen.locator('[data-id="checked"] input').isChecked(),true);
+    assert.equal(await reopen.locator('[data-id="drawing"]').evaluate(e=>e._drawing.strokes.length),1);
+    assert.deepEqual(await reopen.locator('[data-id="drawing"]').evaluate(e=>e._drawing.image),resizedImage,'imported image and transformation persist in the HTML copy');
+    assert.equal(await reopen.locator('[data-id="circle"]').getAttribute('data-mask-style'),'strike');
+    await fill.locator('#exportPdf').click();await fill.waitForFunction(()=>window.exported.length===2);
+    const finalPdf=await fill.evaluate(()=>window.exported[1]);fs.writeFileSync(path.join(out,'filled.pdf'),Buffer.from(finalPdf.bytes));
+    await fill.locator('.toolbar').screenshot({path:path.join(out,'fillable-toolbar.png')});
+    const standalonePage=await offline.newPage();standalonePage.on('pageerror',e=>errors.push(e.message));
+    await standalonePage.goto(pathToFileURL(path.join(root,'PDF-Field-Helper-v1.4.html')).href);
+    await standalonePage.evaluate(async project=>{await loadPdf(base64ToBytes(project.sourcePdf),project.name,project.state);},acro.project);
+    const fromStandalone=await standalonePage.evaluate(async()=>standaloneFormHtml(projectSnapshot()));
+    const offlineExport=path.join(out,'standalone-generated.html');fs.writeFileSync(offlineExport,fromStandalone);
+    const standaloneForm=await offline.newPage();standaloneForm.on('pageerror',e=>errors.push(e.message));await standaloneForm.goto(pathToFileURL(offlineExport).href);
+    await standaloneForm.waitForFunction(()=>!!document.querySelector('[data-id="plain"]'));
+    assert.equal(await standaloneForm.locator('[data-id="plain"]').inputValue(),'Réponse <test>','standalone application also exports HTML entirely offline');
+    assert.deepEqual(requests,[],'offline form makes no HTTP requests');assert.deepEqual(errors,[]);
+    await offline.close();console.log('PASS: editable AcroForms, external values, embedded project, offline blank HTML, filled HTML roundtrip and final PDF.');
+  }finally{await browser.close();await new Promise(r=>server.close(r));}
+})().catch(e=>{console.error(e);process.exitCode=1;});
