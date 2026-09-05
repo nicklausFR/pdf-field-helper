@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1769aa">
 <link rel="icon" href="icons/icon-192.png">
 <style>
-:root{--blue:#1769aa;--red:#c52a2a;--menu-scale:1}
+:root{--blue:#1769aa;--red:#c52a2a;--green:#2b8a3e;--menu-scale:1}
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#eceff3;color:#222;overflow-x:hidden}
 .toolbar{position:sticky;top:0;z-index:50;display:flex;flex-direction:column;gap:8px;align-items:stretch;padding:calc(8px * var(--menu-scale));background:#eef1f4;border-bottom:1px solid #cfd4da;font-size:calc(14px * var(--menu-scale))}
@@ -17,6 +17,7 @@ body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#eceff3;color:#2
 button,select,input[type=number]{font-family:inherit;font-size:calc(14px * var(--menu-scale));padding:calc(7px * var(--menu-scale)) calc(9px * var(--menu-scale));border:1px solid #aeb6bf;border-radius:calc(6px * var(--menu-scale));background:#fff}
 button{cursor:pointer}button.save-ok{font-weight:700;box-shadow:0 0 0 2px rgba(46,125,50,.18) inset}button.primary{background:var(--blue);color:#fff;border-color:var(--blue)}button.danger{color:#9d1c1c}
 button.bigctl{box-sizing:border-box;-webkit-appearance:none;appearance:none;font:inherit;line-height:normal;width:calc(38px * var(--menu-scale));min-width:calc(38px * var(--menu-scale));max-width:calc(38px * var(--menu-scale));height:auto;min-height:0;max-height:none;padding:calc(7px * var(--menu-scale)) 0;margin:0;font-weight:600;display:inline-flex;flex:0 0 calc(38px * var(--menu-scale));align-items:center;justify-content:center;vertical-align:middle}button.bigctl:focus{outline:auto}
+button.font-style-toggle{font-weight:800}button.font-style-toggle[aria-pressed="true"]{background:var(--blue);color:#fff;border-color:var(--blue)}button.font-style-toggle[aria-pressed="mixed"]{background:#e6f1f8;color:var(--blue);border-color:var(--blue);box-shadow:inset 0 -3px 0 var(--blue)}
 label.inline{display:flex;align-items:center;gap:calc(5px * var(--menu-scale));font-size:calc(13px * var(--menu-scale))}.status{font-size:calc(12px * var(--menu-scale));white-space:pre-wrap;word-break:break-word}.messages-panel{width:100%;background:#fff;border:1px solid #cfd4da;border-radius:7px;overflow:hidden}.messages-title{cursor:pointer;display:block;padding:calc(6px * var(--menu-scale)) calc(8px * var(--menu-scale));font-size:calc(11px * var(--menu-scale));font-weight:700;color:#65707c;text-transform:uppercase;letter-spacing:.04em;user-select:none}.messages-panel[open] .messages-title{border-bottom:1px solid #e2e5e8}.messages-panel .status{max-height:calc(110px * var(--menu-scale));overflow:auto;padding:calc(7px * var(--menu-scale)) calc(8px * var(--menu-scale))}.debug-footer{padding:0 18px 18px;width:100%}
 .navbar{display:flex;align-items:center;gap:calc(5px * var(--menu-scale))}.pair{display:inline-flex;flex-wrap:nowrap;align-items:center}.navbar.nav-disabled{opacity:.55}.navbar.nav-disabled button,.navbar.nav-disabled input{pointer-events:none}.pair{display:flex;gap:calc(3px * var(--menu-scale));align-items:center}.sep{width:1px;align-self:stretch;min-height:calc(28px * var(--menu-scale));background:#cfd4da;margin:0 calc(5px * var(--menu-scale));flex:0 0 1px}.menuval{font-size:calc(12px * var(--menu-scale));min-width:calc(40px * var(--menu-scale));text-align:center}
 #pageNumber{width:calc(54px * var(--menu-scale));text-align:center}.zoomval{font-size:calc(12px * var(--menu-scale));min-width:calc(42px * var(--menu-scale));text-align:center}.stage{padding:18px;display:block;width:100%;max-width:100vw;overflow-x:auto;overflow-y:visible;scrollbar-width:none}.stage::-webkit-scrollbar{height:0}.horizontal-scrollbar{position:fixed;left:0;right:0;bottom:0;height:17px;overflow-x:auto;overflow-y:hidden;z-index:90;background:#eef1f4;border-top:1px solid #cfd4da;display:none}.horizontal-scrollbar-inner{height:1px}.horizontal-scrollbar.visible{display:block}body.has-horizontal-scrollbar{padding-bottom:17px}.viewport{position:relative;margin-left:auto;margin-right:auto}.pageSurface{position:absolute;left:0;top:0;transform-origin:top left;background:#fff;box-shadow:0 2px 14px rgba(0,0,0,.22);overflow:hidden;isolation:isolate;contain:paint;backface-visibility:hidden}
@@ -32,7 +33,7 @@ body.adjust .field{cursor:move;outline:0;box-shadow:none;background:rgba(35,135,
 .image-resize,.mask-resize{position:absolute;width:6px;height:6px;right:-3px;bottom:-3px;display:none;cursor:nwse-resize;z-index:9;background:var(--red);border-radius:2px}body.adjust .image-resize,body.adjust .mask-resize{display:block}body.clean .image-resize,body.clean .mask-resize{display:none!important}
 .mask-zone{position:absolute;box-sizing:border-box;background:#fff;border:0;outline:0;z-index:3;pointer-events:none}.mask-zone.selected{border:0;outline:0}body.adjust .mask-zone{border:0;cursor:move;pointer-events:auto;background:linear-gradient(rgba(90,90,90,.18),rgba(90,90,90,.18)),#fff}body.adjust .mask-zone.selected,body.adjust .mask-zone.dragging{border:0;background:linear-gradient(rgba(90,90,90,.30),rgba(90,90,90,.30)),#fff}body.clean .mask-zone{border:0!important;outline:0!important;pointer-events:none!important;background:#fff!important}
 .check-zone{position:absolute;box-sizing:border-box;z-index:5;display:flex;align-items:center;justify-content:center;background:rgba(35,135,210,.16)}.check-zone input{margin:0;width:100%;height:100%;cursor:pointer}.check-zone.selected{outline:0}body.adjust .check-zone{cursor:move;background:rgba(35,135,210,.16)}body.adjust .check-zone.selected,body.adjust .check-zone.dragging{background:rgba(35,135,210,.30)}body.clean .check-zone{background:transparent!important}.check-resize{position:absolute;width:6px;height:6px;right:-3px;bottom:-3px;display:none;cursor:nwse-resize;z-index:9;background:var(--red);border-radius:2px}body.adjust .check-resize{display:block}.check-zone.check-detected input{-webkit-appearance:none;appearance:none;border:0;background:transparent;outline:0}.check-zone.check-detected .check-mark{display:none;position:absolute;inset:0;pointer-events:none}.check-zone.check-detected.checked .check-mark{display:block}.check-zone.check-detected .check-mark:before,.check-zone.check-detected .check-mark:after{content:"";position:absolute;left:12%;top:47%;width:76%;height:1.6px;background:#111;transform-origin:center}.check-zone.check-detected .check-mark:before{transform:rotate(45deg)}.check-zone.check-detected .check-mark:after{transform:rotate(-45deg)}body.adjust .check-zone.check-detected.selected{outline:0;box-shadow:none;background:rgba(35,135,210,.30)}.check-zone.check-detected input{display:block;box-sizing:border-box;width:100%;height:100%;padding:0;margin:0}.check-zone.check-detected .check-resize{background:#2b8a3e}body.clean .check-zone.selected,body.clean .check-zone.check-detected.selected{outline:0!important;box-shadow:none!important}body.clean .check-resize{display:none!important}
-.placement-ghost{position:absolute;z-index:30;pointer-events:none;box-sizing:border-box;border:0;background:rgba(35,135,210,.20);display:none}.placement-ghost.check{border-radius:2px}.placement-ghost.mask{background:linear-gradient(rgba(90,90,90,.22),rgba(90,90,90,.22)),rgba(255,255,255,.92)}.placement-ghost.image{background:rgba(35,135,210,.16)}
+.placement-ghost{position:absolute;z-index:30;pointer-events:none;box-sizing:border-box;border:0;background:rgba(35,135,210,.20);display:none}.placement-ghost.detected{border:2px solid var(--green)}.placement-ghost.check{border-radius:2px}.placement-ghost.mask{background:linear-gradient(rgba(90,90,90,.22),rgba(90,90,90,.22)),rgba(255,255,255,.92)}.placement-ghost.image{background:rgba(35,135,210,.16)}
 .empty{padding:60px 20px;text-align:center;color:#666}
 .toolbar-top{display:flex;justify-content:space-between;align-items:center;min-height:calc(28px * var(--menu-scale));padding:0 calc(2px * var(--menu-scale));gap:calc(8px * var(--menu-scale))}
 .app-heading{display:flex;align-items:baseline;gap:calc(8px * var(--menu-scale));min-width:0;color:#65707c}
@@ -256,8 +257,9 @@ html[data-darkreader-scheme="dark"] .field.box-detected {
     <div id="tabEdit" class="edit-tab-panel" role="tabpanel" aria-labelledby="tabEditButton" hidden>
       <label class="inline" ><span id="fontLabel">Font</span> <select id="fontFamily"><option value="Helvetica">Helvetica / Arial</option><option value="TimesRoman">Times</option><option value="Courier">Courier</option></select></label>
       <div class="font-size-setting"><span id="sizeLabel">Size</span><div class="font-size-control"><input id="fontSize" type="number" min="5" max="48" step="0.5" value="8" aria-labelledby="sizeLabel"><button id="fontSizeSmaller" class="bigctl" type="button" title="Reduce font size" aria-label="Reduce font size">−</button><button id="fontSizeLarger" class="bigctl" type="button" title="Increase font size" aria-label="Increase font size">+</button></div></div>
+      <button id="fontBold" class="bigctl font-style-toggle" type="button" title="Bold" aria-label="Bold" aria-pressed="false"><span id="fontBoldText">B</span></button>
       <label class="inline" ><span id="colorLabel">Color</span> <input id="textColor" type="color" value="#000000" title="Text color"></label>
-      <label class="inline" title="Apply font, size and color to all text areas in the document"><input id="fontAllDocument" type="checkbox" checked> <span class="entireDocumentLabel">Entire document</span></label>
+      <label class="inline" title="Apply font, size, bold and color to all text areas in the document"><input id="fontAllDocument" type="checkbox" checked> <span class="entireDocumentLabel">Entire document</span></label>
       <span class="sep"></span>
       <span class="subsection-label" id="alignmentLabel">Alignment:</span>
       <button id="textAlignLeft" class="align-icon-button" title="Align text left" aria-label="Align text left"><span class="align-icon align-left" aria-hidden="true"><i></i><i></i><i></i></span></button>
@@ -282,11 +284,12 @@ html[data-darkreader-scheme="dark"] .field.box-detected {
 'use strict';
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
 const DB_NAME='generic_pdf_editor_db', DB_VERSION=1, STORE='documents', LAST_KEY='generic_pdf_editor_last';
-let pdfBytes=null,pdfProxy=null,docKey=null,docName='',currentPage=1,pageStates={},selected=null,selectedItems=new Set(),clipboardItem=null,renderToken=0,scaleNow=1,userZoom=1,menuScale=1;
+let pdfBytes=null,pdfProxy=null,docKey=null,docName='',currentPage=1,pageStates={},selected=null,selectedItems=new Set(),clipboardItem=null,renderToken=0,pdfLoadSeq=0,scaleNow=1,userZoom=1,menuScale=1,nativeWidgetAutoImport=false;
 const HISTORY_LIMIT=50;
 let undoHistory=[],redoHistory=[],historyRestoring=false,historyBusy=false,lastHistoryCoalesceKey='',lastHistoryCoalesceAt=0;
 let pageW=595,pageH=842;
 let pendingPlacement=null;
+let suppressPlacementClickUntil=0;
 const stage=document.getElementById('stage'),status=document.getElementById('status');
 const horizontalScrollbar=document.getElementById('horizontalScrollbar'),horizontalScrollbarInner=document.getElementById('horizontalScrollbarInner');
 let syncingHorizontalScroll=false;
@@ -309,8 +312,8 @@ const SNAP_GUARD_BUILD='2026-09-04a'; // internal build marker; public version r
 console.log('PDF Field Helper snap-guard build',SNAP_GUARD_BUILD);
 let uiLanguage=localStorage.getItem('pdfFieldHelperLanguage')||'en';
 const UI_TEXT={
-  en:{language:'Language',document:'Document',open:'Open',close:'Close',reset:'Reset',undo:'Undo',redo:'Redo',save:'Save',saveOverlay:'Save overlay',loadOverlay:'Load overlay',clear:'Clear values',generate:'Generate PDF',view:'View',hideFrames:'Hide frames',showFrames:'Show frames',zoom:'Zoom',pages:'Pages',page:'Page',menu:'Menu',layerMode:'Overlay creation mode',editMode:'Edit mode',addText:'+ Text',addCheck:'+ Checkbox',addImage:'+ Image',addMask:'+ Mask',delete:'Delete',alignFields:'Align fields:',alignV:'Vertical axis',alignH:'Horizontal axis',alignLeft:'Left edges',alignRight:'Right edges',autoDetection:'Automatic detection',autoSize:'Automatic width / height',checkbox:'Checkbox',delimited:'Delimited text area',verticalAlign:'Vertical alignment',font:'Font',size:'Size',color:'Color',entire:'Entire document',alignment:'Alignment:',height:'Text baseline:',messages:'Messages / Debug',ready:'Ready.',empty:'Open a PDF document to begin.'},
-  fr:{language:'Langue',document:'Document',open:'Ouvrir',close:'Fermer',reset:'Réinitialiser',undo:'Annuler',redo:'Rétablir',save:'Enregistrer',saveOverlay:'Enregistrer calque',loadOverlay:'Charger calque',clear:'Effacer valeurs',generate:'Générer PDF',view:'Affichage',hideFrames:'Masquer cadres',showFrames:'Afficher cadres',zoom:'Zoom',pages:'Pages',page:'Page',menu:'Menu',layerMode:'Mode création calque',editMode:'Mode édition',addText:'+ Texte',addCheck:'+ Case',addImage:'+ Image',addMask:'+ Masque',delete:'Supprimer',alignFields:'Aligner les champs :',alignV:'Axe vertical',alignH:'Axe horizontal',alignLeft:'Bords gauches',alignRight:'Bords droits',autoDetection:'Détection automatique',autoSize:'Largeur / hauteur automatique',checkbox:'Case à cocher',delimited:'Zone texte avec délimitation',verticalAlign:'Alignement vertical',font:'Police',size:'Taille',color:'Couleur',entire:'Tout le document',alignment:'Alignement :',height:'Ligne de base du texte :',messages:'Messages / Debug',ready:'Prêt.',empty:'Ouvrir un document PDF pour commencer.'}
+  en:{language:'Language',document:'Document',open:'Open',close:'Close',reset:'Reset',undo:'Undo',redo:'Redo',save:'Save',saveOverlay:'Save overlay',loadOverlay:'Load overlay',clear:'Clear values',generate:'Generate PDF',view:'View',hideFrames:'Hide frames',showFrames:'Show frames',zoom:'Zoom',pages:'Pages',page:'Page',menu:'Menu',layerMode:'Overlay creation mode',editMode:'Edit mode',addText:'+ Text',addCheck:'+ Checkbox',addImage:'+ Image',addMask:'+ Mask',delete:'Delete',alignFields:'Align fields:',alignV:'Vertical axis',alignH:'Horizontal axis',alignLeft:'Left edges',alignRight:'Right edges',autoDetection:'Automatic detection',autoSize:'Automatic width / height',checkbox:'Checkbox',delimited:'Delimited text area',verticalAlign:'Vertical alignment',font:'Font',size:'Size',bold:'Bold',boldShort:'B',typographyAllTitle:'Apply font, size, bold and color to all text areas in the document',color:'Color',entire:'Entire document',alignment:'Alignment:',height:'Text baseline:',messages:'Messages / Debug',ready:'Ready.',empty:'Open a PDF document to begin.'},
+  fr:{language:'Langue',document:'Document',open:'Ouvrir',close:'Fermer',reset:'Réinitialiser',undo:'Annuler',redo:'Rétablir',save:'Enregistrer',saveOverlay:'Enregistrer calque',loadOverlay:'Charger calque',clear:'Effacer valeurs',generate:'Générer PDF',view:'Affichage',hideFrames:'Masquer cadres',showFrames:'Afficher cadres',zoom:'Zoom',pages:'Pages',page:'Page',menu:'Menu',layerMode:'Mode création calque',editMode:'Mode édition',addText:'+ Texte',addCheck:'+ Case',addImage:'+ Image',addMask:'+ Masque',delete:'Supprimer',alignFields:'Aligner les champs :',alignV:'Axe vertical',alignH:'Axe horizontal',alignLeft:'Bords gauches',alignRight:'Bords droits',autoDetection:'Détection automatique',autoSize:'Largeur / hauteur automatique',checkbox:'Case à cocher',delimited:'Zone texte avec délimitation',verticalAlign:'Alignement vertical',font:'Police',size:'Taille',bold:'Gras',boldShort:'G',typographyAllTitle:'Appliquer la police, la taille, le gras et la couleur à toutes les zones de texte du document',color:'Couleur',entire:'Tout le document',alignment:'Alignement :',height:'Ligne de base du texte :',messages:'Messages / Debug',ready:'Prêt.',empty:'Ouvrir un document PDF pour commencer.'}
 };
 function t(k){return (UI_TEXT[uiLanguage]&&UI_TEXT[uiLanguage][k])||UI_TEXT.en[k]||k;}
 function updateWindowTitle(){document.title='PDF Field Helper'+(docName?' — '+docName:'');}
@@ -330,6 +333,8 @@ function applyLanguage(lang){
   if(q('automaticDetectionLabel'))q('automaticDetectionLabel').textContent=t('autoDetection');
   if(q('autoTextSizeLabel'))q('autoTextSizeLabel').textContent=t('autoSize'); if(q('autoCheckDetectLabel'))q('autoCheckDetectLabel').textContent=t('checkbox'); if(q('autoBoxDetectLabel'))q('autoBoxDetectLabel').textContent=t('delimited'); if(q('autoLineEnabledLabel'))q('autoLineEnabledLabel').textContent=t('verticalAlign');
   if(q('fontLabel'))q('fontLabel').textContent=t('font'); if(q('sizeLabel'))q('sizeLabel').textContent=t('size'); if(q('colorLabel'))q('colorLabel').textContent=t('color'); if(q('alignmentLabel'))q('alignmentLabel').textContent=t('alignment'); if(q('heightLabel'))q('heightLabel').textContent=t('height');
+  if(q('fontBold')){q('fontBold').title=t('bold');q('fontBold').setAttribute('aria-label',t('bold'));}if(q('fontBoldText'))q('fontBoldText').textContent=t('boldShort');
+  if(q('fontAllDocument')?.closest('label'))q('fontAllDocument').closest('label').title=t('typographyAllTitle');
   document.querySelectorAll('.entireDocumentLabel').forEach(e=>e.textContent=t('entire'));
   if(q('messagesLabel'))q('messagesLabel').textContent=t('messages');
   if(status && (status.textContent==='Ready.' || status.textContent==='Prêt.')) status.textContent=t('ready');
@@ -337,7 +342,7 @@ function applyLanguage(lang){
   updateOpenPdfButton(); updateWindowTitle();
 }
 
-const fontFamily=document.getElementById('fontFamily'),fontSize=document.getElementById('fontSize'),textColor=document.getElementById('textColor'),fontAllDocument=document.getElementById('fontAllDocument');
+const fontFamily=document.getElementById('fontFamily'),fontSize=document.getElementById('fontSize'),fontBold=document.getElementById('fontBold'),textColor=document.getElementById('textColor'),fontAllDocument=document.getElementById('fontAllDocument');
 const autoYValue=document.getElementById('autoYValue'),autoYAllDocument=document.getElementById('autoYAllDocument');const autoLineEnabled=document.getElementById('autoLineEnabled'),autoCheckDetect=document.getElementById('autoCheckDetect'),autoBoxDetect=document.getElementById('autoBoxDetect'),autoTextSize=document.getElementById('autoTextSize');let autoYOffset=0;let autoLineOn=true,autoCheckDetectOn=true,autoBoxDetectOn=true,autoTextSizeOn=true;let placementAutoTimer=null,placementAutoSeq=0;
 const tabLayerButton=document.getElementById('tabLayerButton'),tabEditButton=document.getElementById('tabEditButton'),tabLayer=document.getElementById('tabLayer'),tabEdit=document.getElementById('tabEdit');
 function setEditTab(which){
@@ -366,6 +371,19 @@ function blankPageState(){return {fields:[],checks:[],images:[],masks:[]};}
 function getPageState(n){if(!pageStates[n])pageStates[n]=blankPageState();return pageStates[n];}
 function cssFont(n){return n==='TimesRoman'?'Times New Roman, Times, serif':n==='Courier'?'Courier New, Courier, monospace':'Arial, Helvetica, sans-serif';}
 function fs(){return Math.max(5,Math.min(48,parseFloat(fontSize.value)||8));}
+function normalizeFontWeight(value){return value===true||value==='bold'||value==='700'||Number(value)>=600?'bold':'normal';}
+function fontWeightValue(){return fontBold?.getAttribute('aria-pressed')==='true'?'bold':'normal';}
+function setFontWeightControl(value){const state=value==='mixed'?'mixed':(normalizeFontWeight(value)==='bold'?'true':'false');if(fontBold){fontBold.setAttribute('aria-pressed',state);fontBold.classList.toggle('active',state==='true');fontBold.classList.toggle('mixed',state==='mixed');}return state==='true'?'bold':state==='mixed'?'mixed':'normal';}
+function syncFontWeightControl(){
+  if(!fontBold)return;
+  const local=fontAllDocument?.checked!==true,activeField=!!selected?.classList?.contains('field');
+  fontBold.disabled=local&&!activeField;
+  if(local){if(activeField)setFontWeightControl(fieldFontWeight(selected));return;}
+  if(pdfProxy)collectCurrentPage();
+  const weights=[];for(const st of Object.values(pageStates))for(const f of st.fields||[])weights.push(normalizeFontWeight(f.fontWeight));
+  if(!weights.length)return;
+  const hasBold=weights.includes('bold'),hasNormal=weights.includes('normal');setFontWeightControl(hasBold&&hasNormal?'mixed':hasBold?'bold':'normal');
+}
 function clampTextYOffset(v){return Math.max(-30,Math.min(30,Math.round((Number(v)||0)*2)/2));}
 function fieldYOffset(e){const n=parseFloat(e?.dataset?.yOffset);return Number.isFinite(n)?clampTextYOffset(n):clampTextYOffset(autoYOffset);}
 function stateFieldYOffset(f,defaultValue=autoYOffset){const n=parseFloat(f?.yOffset);return Number.isFinite(n)?clampTextYOffset(n):clampTextYOffset(defaultValue);}
@@ -427,10 +445,33 @@ function adjustTextYOffset(delta){
   setStatus(`Vertical adjustment: ${n.toFixed(1)} px`);
 }
 function setAutoLineEnabled(v){autoLineOn=!!v;if(autoLineEnabled)autoLineEnabled.checked=autoLineOn;document.querySelectorAll('.field').forEach(e=>{if(autoLineOn)scheduleTextRecognition(e,false);else clearFieldLine(e);});applyFont();collectCurrentPage();historyCheckpoint('Vertical detection');}
-function setAutoCheckDetect(v){autoCheckDetectOn=!!v;if(autoCheckDetect)autoCheckDetect.checked=autoCheckDetectOn;document.querySelectorAll('.check-zone').forEach(e=>{if(autoCheckDetectOn)scheduleCheckDetection(e,false);else setCheckDetected(e,false);});collectCurrentPage();historyCheckpoint('Checkbox detection');}
+function setAutoCheckDetect(v){autoCheckDetectOn=!!v;if(autoCheckDetect)autoCheckDetect.checked=autoCheckDetectOn;document.querySelectorAll('.check-zone').forEach(e=>{if(autoCheckDetectOn)scheduleCheckDetection(e,false);else setCheckDetected(e,false);});if(pendingPlacement?.type==='check'&&!autoCheckDetectOn){pendingPlacement.checkDetected=false;pendingPlacement.autoFitted=false;applyPlacementGhost();}collectCurrentPage();historyCheckpoint('Checkbox detection');}
 function setAutoBoxDetect(v){autoBoxDetectOn=!!v;if(autoBoxDetect)autoBoxDetect.checked=autoBoxDetectOn;document.querySelectorAll('.field').forEach(e=>{if(autoBoxDetectOn)scheduleTextRecognition(e,false);else{setFieldBoxData(e,[]);if(autoLineOn)detectTextLineUnderField(e,false);}});collectCurrentPage();historyCheckpoint('Delimited text detection');}
 function setAutoTextSize(v){autoTextSizeOn=!!v;if(autoTextSize)autoTextSize.checked=autoTextSizeOn;historyCheckpoint('Automatic field sizing');}
 function hexToRgb01(hex){const h=(hex||'#000000').replace('#','').padEnd(6,'0').slice(0,6);return {r:parseInt(h.slice(0,2),16)/255,g:parseInt(h.slice(2,4),16)/255,b:parseInt(h.slice(4,6),16)/255};}
+function optionalFiniteNumber(value){
+  if(value===null||value===undefined||value==='')return null;
+  const number=Number(value);
+  return Number.isFinite(number)?number:null;
+}
+function validFieldLineY(data){
+  const lineY=optionalFiniteNumber(data?.lineY);
+  if(lineY==null)return null;
+  const y=optionalFiniteNumber(data?.y),h=optionalFiniteNumber(data?.h);
+  // A baseline belongs to the field it describes. This also repairs layouts
+  // produced by the old null -> 0 coercion bug.
+  if(y!=null&&h!=null&&(lineY<y-2||lineY>y+h+4))return null;
+  return lineY;
+}
+function sanitizePageStateLineYs(){
+  for(const state of Object.values(pageStates||{})){
+    for(const field of state?.fields||[]){
+      const lineY=validFieldLineY(field);
+      if(lineY==null)delete field.lineY;
+      else field.lineY=lineY;
+    }
+  }
+}
 function uid(prefix){return prefix+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);}
 function setStatus(s){
   const msg=String(s??'');
@@ -448,7 +489,7 @@ console.log=(...a)=>{_consoleLog(...a);debugToPanel('DEBUG',a);};
 console.warn=(...a)=>{_consoleWarn(...a);debugToPanel('WARN',a);};
 console.error=(...a)=>{_consoleError(...a);debugToPanel('ERREUR',a);};
 
-function select(el,additive=false){if(!additive){for(const x of selectedItems)x.classList.remove('selected');selectedItems.clear();}if(!el){selected=null;updateAutoYValue();return;}if(additive&&selectedItems.has(el)){el.classList.remove('selected');selectedItems.delete(el);selected=[...selectedItems].at(-1)||null;updateAutoYValue();return;}selectedItems.add(el);el.classList.add('selected');selected=el;if(el.classList.contains('field')){fontFamily.value=fieldFontFamily(el);fontSize.value=fieldFontSize(el);textColor.value=fieldTextColor(el);}updateAutoYValue();}
+function select(el,additive=false){if(!additive){for(const x of selectedItems)x.classList.remove('selected');selectedItems.clear();}if(!el){selected=null;updateAutoYValue();syncFontWeightControl();return;}if(additive&&selectedItems.has(el)){el.classList.remove('selected');selectedItems.delete(el);selected=[...selectedItems].at(-1)||null;if(selected?.classList?.contains('field')){fontFamily.value=fieldFontFamily(selected);fontSize.value=fieldFontSize(selected);textColor.value=fieldTextColor(selected);}updateAutoYValue();syncFontWeightControl();return;}selectedItems.add(el);el.classList.add('selected');selected=el;if(el.classList.contains('field')){fontFamily.value=fieldFontFamily(el);fontSize.value=fieldFontSize(el);textColor.value=fieldTextColor(el);}updateAutoYValue();syncFontWeightControl();}
 function selectFromEvent(ev,el){select(el,!!(ev.ctrlKey||ev.metaKey));}
 function enterAdjust(){setEditTab('layer');}
 function cancelPlacement(announce=false){
@@ -462,11 +503,11 @@ function beginPlacement(type,opts={}){
   if(!pdfProxy)return;
   cancelPlacement(false);
   enterAdjust();
-  let w=210,h=type==='text'?typographyFieldHeight(fontFamily.value,fs()):16;
+  let w=210,h=type==='text'?typographyFieldHeight(fontFamily.value,fs(),fontWeightValue()):16;
   if(type==='check'){w=h=12;}
   else if(type==='mask'){w=Math.min(220,pageW*.4);h=30;}
   else if(type==='image'){w=opts.w||Math.min(190,pageW*.35);h=opts.h||120;}
-  pendingPlacement={type,w,h,baseW:w,baseH:h,opts,x:0,y:0,visible:false,autoFitted:false,lastPX:null,lastPY:null,stage:'hover',anchorX:null,anchorY:null,detectedWidth:false};
+  pendingPlacement={type,w,h,baseW:w,baseH:h,opts,x:0,y:0,visible:false,autoFitted:false,lastPX:null,lastPY:null,stage:'hover',anchorX:null,anchorY:null,manualY:null,manualH:null,manualPlacement:false,detectedWidth:false,detectedLineY:null,detectedBoxes:[],checkDetected:false};
   const o=document.getElementById('overlay');
   if(o){const g=document.createElement('div');g.id='placementGhost';g.className='placement-ghost '+type;g.style.width=w+'px';g.style.height=h+'px';o.appendChild(g);}
   setStatus((type==='text'?'Text area':type==='check'?'Checkbox':type==='image'?'Image':'Mask')+(type==='text'?' : 1st click = area start, 2nd click = width / confirm':' : move the mouse over the page, then left-click to place'));
@@ -486,8 +527,34 @@ function placementCoords(ev){
 }
 function applyPlacementGhost(){
   const g=document.getElementById('placementGhost');if(!pendingPlacement||!g)return;
+  const detected=pendingPlacement.type==='text'
+    ?!!(pendingPlacement.autoFitted||pendingPlacement.detectedWidth)
+    :pendingPlacement.type==='check'&&!!pendingPlacement.checkDetected;
+  g.classList.toggle('detected',detected);
   g.style.left=pendingPlacement.x+'px';g.style.top=pendingPlacement.y+'px';
   g.style.width=pendingPlacement.w+'px';g.style.height=pendingPlacement.h+'px';g.style.display='block';
+}
+function placementCandidateFromDetectedLine(line,textBoxes,anchorX){
+  if(!line||!Number.isFinite(+line.y))return null;
+  const start=Math.max(0,Math.max(Number(anchorX)||0,Number(line.x)||0));
+  const end=Math.min(pageW,(Number(line.x)||0)+(Number(line.w)||0));
+  if(end-start<18)return null;
+  const h=detectedPlacementHeight(line,textBoxes,start,end);
+  const rawY=line.boxedGroup&&Number.isFinite(+line.boxTop)
+    ?Math.max(+line.boxTop,+line.y-h+2)
+    :Math.max(0,+line.y-h+2);
+  const raw={x:start,y:Math.max(0,Math.min(pageH-h,rawY)),w:end-start,h};
+  const fitted=line.boxedGroup?raw:(fitDetectedLineSegment(raw,textBoxes,start+2,2)||raw);
+  const x=Math.max(start,fitted.x),right=Math.min(pageW,fitted.x+fitted.w),w=right-x;
+  if(w<18)return null;
+  const boxes=(line.boxes||[]).filter(b=>b.x+b.w>x+.5&&b.x<right-.5).map(b=>({...b}));
+  return {x,y:fitted.y,w,h:fitted.h,lineY:+line.y,boxes:boxes.length>=2?boxes:[]};
+}
+function applyDetectedPlacementCandidate(pp,candidate){
+  if(!pp||!candidate||pp.manualPlacement)return false;
+  pp.x=candidate.x;pp.y=candidate.y;pp.w=candidate.w;pp.h=candidate.h;
+  pp.detectedLineY=candidate.lineY;pp.detectedBoxes=(candidate.boxes||[]).map(b=>({...b}));
+  pp.detectedWidth=true;pp.autoFitted=true;applyPlacementGhost();return true;
 }
 function schedulePlacementTextAutoSize(px,py){
   if(!pendingPlacement||pendingPlacement.type!=='text'||!autoTextSizeOn)return;
@@ -500,44 +567,116 @@ function schedulePlacementTextAutoSize(px,py){
       const textBoxes=await getPagePrintedTextBoxes();
       if(!pendingPlacement||seq!==placementAutoSeq)return;
       const {ctx,q}=ac,W=ac.canvas.width,H=ac.canvas.height;
-      const local=detectLocalHorizontalAtPoint(ctx,W,H,q,px,py,textBoxes);
+      const local=detectBestHorizontalAtPoint(ctx,W,H,q,px,py,textBoxes);
       if(local){
-        const hh=normalizedEditableHeight(local.y,textBoxes,16);
-        const raw={x:local.x,y:Math.max(0,local.y-hh+2),w:local.w,h:hh};
-        const fitted=fitDetectedLineSegment(raw,textBoxes,px,2)||raw;
-        const minX=Math.min(pageW-4,px);
-        const endX=Math.min(pageW,fitted.x+fitted.w);
-        const fx=Math.max(minX,fitted.x);
-        const fw=endX-fx;
-        if(fw>=18){
-          const candidate={x:fx,y:Math.max(0,Math.min(pageH-fitted.h,fitted.y)),w:fw,h:Math.max(9,fitted.h)};
-          if(!placementSnapConflictsExisting(candidate,5)){
-            pendingPlacement.x=candidate.x;
-            pendingPlacement.y=candidate.y;
-            pendingPlacement.w=candidate.w;pendingPlacement.h=candidate.h;pendingPlacement.autoFitted=true;
-            applyPlacementGhost();return;
-          }
-        }
+        const candidate=placementCandidateFromDetectedLine(local,textBoxes,Math.min(pageW-4,px));
+        if(candidate&&!placementSnapConflictsExisting(candidate,5)){applyDetectedPlacementCandidate(pendingPlacement,candidate);return;}
       }
-      // Aucune ligne nette : hauteur adaptée à la ligne courante et largeur libre à droite du pointeur.
-      const hh=normalizedEditableHeight(py,textBoxes,16);
-      const startX=Math.min(pageW-18,px);
-      const raw={x:startX,y:Math.max(0,Math.min(pageH-hh,py-hh/2)),w:Math.min(pendingPlacement.baseW||210,pageW-startX),h:hh};
-      const fitted=fitDetectedLineSegment(raw,textBoxes,startX+2,2);
-      if(fitted){
-        const fx=Math.max(startX,fitted.x),endX=Math.min(pageW,fitted.x+fitted.w),fw=endX-fx;
-        if(fw>=18){const candidate={x:fx,y:fitted.y,w:fw,h:fitted.h};if(!placementSnapConflictsExisting(candidate,5)){Object.assign(pendingPlacement,{...candidate,autoFitted:true});applyPlacementGhost();}}
-      }
+      // Une simple zone blanche n'est pas une reconnaissance. Le fantôme reste
+      // manuel et ne devient vert que lorsqu'une vraie ligne a été trouvée.
+      pendingPlacement.autoFitted=false;pendingPlacement.detectedWidth=false;
+      pendingPlacement.detectedLineY=null;pendingPlacement.detectedBoxes=[];applyPlacementGhost();
     }catch(_e){}
+  },65);
+}
+function schedulePlacementCheckAutoFit(){
+  if(!pendingPlacement||pendingPlacement.type!=='check'||!autoCheckDetectOn)return;
+  if(placementAutoTimer)clearTimeout(placementAutoTimer);
+  const seq=++placementAutoSeq;
+  placementAutoTimer=setTimeout(()=>{
+    placementAutoTimer=null;
+    const pp=pendingPlacement,g=document.getElementById('placementGhost');
+    if(!pp||pp.type!=='check'||seq!==placementAutoSeq||!autoCheckDetectOn||!g)return;
+    const found=detectCheckboxUnderZone(g,false);
+    // Les classes persistantes appartiennent aux cases validées, pas au fantôme.
+    g.classList.remove('check-detected','checked');delete g.dataset.detected;
+    if(found){
+      pp.x=parseFloat(g.style.left);pp.y=parseFloat(g.style.top);
+      pp.w=parseFloat(g.style.width);pp.h=parseFloat(g.style.height);
+      pp.checkDetected=true;pp.autoFitted=true;
+    }else{pp.checkDetected=false;pp.autoFitted=false;}
+    applyPlacementGhost();
   },65);
 }
 function placementEventHitsExistingOverlay(ev){
   const target=ev?.target;
   return !!target?.closest?.('.field,.check-zone,.image-zone,.mask-zone,.text-resize,.check-resize,.image-resize,.mask-resize');
 }
+function suppressPlacementClick(ms=420){suppressPlacementClickUntil=Math.max(suppressPlacementClickUntil,performance.now()+ms);}
+function setDraggedManualTextPlacement(pp,px){
+  if(!pp||pp.type!=='text'||!pp.pointerStart)return false;
+  const startX=pp.pointerStart.x,left=Math.max(0,Math.min(startX,px)),right=Math.min(pageW,Math.max(startX,px));
+  pp.anchorX=left;pp.anchorY=pp.pointerStart.y;pp.x=left;pp.y=pp.manualY;pp.w=Math.max(18,right-left);pp.h=pp.manualH;
+  pp.detectedWidth=false;pp.autoFitted=false;pp.detectedLineY=null;pp.detectedBoxes=[];pp.manualPlacement=true;pp.visible=true;
+  applyPlacementGhost();return true;
+}
+function handlePlacementPointerDown(ev){
+  const pp=pendingPlacement;
+  if(!pp||pp.type!=='text'||pp.stage!=='hover'||ev.button!==0||placementEventHitsExistingOverlay(ev))return;
+  const pos=placementCoords(ev);if(!pos)return;
+  pp.pointerStart={x:pos.px,y:pos.py,id:ev.pointerId};pp.pointerDragging=false;
+  pp.manualH=Math.max(9,pp.baseH||16);pp.manualY=Math.max(0,Math.min(pageH-pp.manualH,pos.py-pp.manualH/2));
+  document.getElementById('pageSurface')?.setPointerCapture?.(ev.pointerId);
+}
+function handlePlacementPointerUp(ev){
+  const pp=pendingPlacement,start=pp?.pointerStart;
+  if(!pp||pp.type!=='text'||!start||start.id!==ev.pointerId)return;
+  const dragging=!!pp.pointerDragging;
+  if(dragging){
+    const surface=document.getElementById('pageSurface'),r=surface?.getBoundingClientRect();
+    if(r)setDraggedManualTextPlacement(pp,Math.max(0,Math.min(pageW,(ev.clientX-r.left)/Math.max(.01,scaleNow))));
+    suppressPlacementClick();ev.preventDefault();ev.stopPropagation();ev.stopImmediatePropagation();
+    pp.stage='finalizing';delete pp.pointerStart;delete pp.pointerDragging;finalizePlacement(pp);
+  }else{delete pp.pointerStart;delete pp.pointerDragging;}
+  try{document.getElementById('pageSurface')?.releasePointerCapture?.(ev.pointerId);}catch(_e){}
+}
+function handlePlacementPointerCancel(ev){
+  const pp=pendingPlacement;if(!pp||pp.pointerStart?.id!==ev.pointerId)return;
+  delete pp.pointerStart;delete pp.pointerDragging;
+}
+function switchTextPlacementToManual(pp,px){
+  if(!pp||pp.type!=='text'||!Number.isFinite(pp.anchorX))return false;
+  pp.detectedWidth=false;pp.autoFitted=false;pp.detectedLineY=null;pp.detectedBoxes=[];pp.manualPlacement=true;pp.confirmWhenReady=false;
+  pp.x=pp.anchorX;
+  if(Number.isFinite(pp.manualY))pp.y=pp.manualY;
+  if(Number.isFinite(pp.manualH))pp.h=pp.manualH;
+  pp.w=Math.max(18,Math.min(pageW-pp.anchorX,px-pp.anchorX));
+  applyPlacementGhost();
+  return true;
+}
 function handlePlacementPointerMove(ev){
-  if(!pendingPlacement||placementEventHitsExistingOverlay(ev))return;
+  if(!pendingPlacement)return;
   const pp=pendingPlacement,g=document.getElementById('placementGhost');if(!g)return;
+  // Le geste manuel naturel est aussi pris en charge : appuyer au bord gauche,
+  // tirer jusqu'au bord droit, puis relâcher. Avant cette correction, le relâchement
+  // devenait le "premier clic" et créait ensuite des zones supplémentaires.
+  if(pp.type==='text'&&pp.pointerStart&&pp.pointerStart.id===ev.pointerId&&(ev.buttons&1)){
+    const surface=document.getElementById('pageSurface');if(!surface)return;
+    const r=surface.getBoundingClientRect(),px=Math.max(0,Math.min(pageW,(ev.clientX-r.left)/Math.max(.01,scaleNow))),py=(ev.clientY-r.top)/Math.max(.01,scaleNow);
+    const moved=Math.hypot(px-pp.pointerStart.x,py-pp.pointerStart.y);
+    if(!pp.pointerDragging&&moved>=4){
+      if(placementAutoTimer){clearTimeout(placementAutoTimer);placementAutoTimer=null;}placementAutoSeq++;
+      pp.pointerDragging=true;pp.stage='dragging';setStatus('Manual area: release at the desired right edge');
+    }
+    if(pp.pointerDragging)setDraggedManualTextPlacement(pp,px);
+    return;
+  }
+  if(placementEventHitsExistingOverlay(ev))return;
+  // Entre les deux clics, un mouvement franc signifie que l'utilisateur reprend
+  // la main. L'ancienne logique ignorait tout mouvement pendant l'analyse async :
+  // en l'absence de vert (ou avec un vert trop court), le clic au bord droit ne
+  // pouvait donc jamais terminer proprement la zone manuelle.
+  if(pp.type==='text'&&pp.stage==='detecting'){
+    const surface=document.getElementById('pageSurface');if(!surface)return;
+    const r=surface.getBoundingClientRect(),px=(ev.clientX-r.left)/Math.max(.01,scaleNow),py=(ev.clientY-r.top)/Math.max(.01,scaleNow);
+    if(px<0||py<0||px>pageW||py>pageH)return;
+    const movedX=Math.abs(px-pp.anchorX),movedY=Math.abs(py-pp.anchorY);
+    if(movedX>=18||movedY>=10){
+      placementAutoSeq++;pp.stage='anchored';pp.lastPX=px;pp.lastPY=py;
+      switchTextPlacementToManual(pp,px);setStatus('Manual takeover: click at the desired right edge');
+    }
+    return;
+  }
   if(pp.type==='text'&&pp.stage==='anchored'){
     const surface=document.getElementById('pageSurface');if(!surface)return;
     const r=surface.getBoundingClientRect();
@@ -547,26 +686,23 @@ function handlePlacementPointerMove(ev){
     // Le détecteur peut proposer une largeur au 1er clic, mais le fantôme ne doit
     // jamais rester figé. Dès que la souris s'écarte réellement du point de départ,
     // on repasse en réglage manuel de largeur, exactement comme pour un champ normal.
-    const movedX=Math.abs(px-pp.anchorX);
+    const movedX=Math.abs(px-pp.anchorX),movedY=Math.abs(py-pp.anchorY);
     // Hystérésis : lorsqu'une largeur a été détectée automatiquement, on la
     // conserve malgré les petits mouvements involontaires de la souris.
     // Il faut s'écarter franchement du point de départ avant de repasser en
     // réglage manuel de largeur.
-    const detectedWidthReleasePx=40;
-    if(!pp.detectedWidth || movedX>=detectedWidthReleasePx){
-      if(pp.detectedWidth && movedX>=detectedWidthReleasePx){pp.detectedWidth=false;pp.autoFitted=false;}
-      const minW=18;
-      pp.w=Math.max(minW,Math.min(pageW-pp.anchorX,px-pp.anchorX));
-      pp.x=pp.anchorX;
-      applyPlacementGhost();
+    const detectedWidthReleasePx=18;
+    if(!pp.detectedWidth || movedX>=detectedWidthReleasePx || movedY>=10){
+      switchTextPlacementToManual(pp,px);
       setStatus('Start set: adjust the width with the mouse, then click again');
     }
     return;
   }
   const pos=placementCoords(ev);if(!pos)return;
-  pp.x=pos.x;pp.y=pos.y;if(Number.isFinite(pos.w))pp.w=pos.w;pp.visible=true;pp.autoFitted=false;pp.lastPX=pos.px;pp.lastPY=pos.py;
+  pp.x=pos.x;pp.y=pos.y;if(Number.isFinite(pos.w))pp.w=pos.w;pp.visible=true;pp.autoFitted=false;pp.checkDetected=false;pp.detectedWidth=false;pp.detectedLineY=null;pp.detectedBoxes=[];pp.lastPX=pos.px;pp.lastPY=pos.py;
   applyPlacementGhost();
   if(pp.type==='text'&&autoTextSizeOn)schedulePlacementTextAutoSize(pos.px,pos.py);
+  else if(pp.type==='check'&&autoCheckDetectOn)schedulePlacementCheckAutoFit();
 }
 function findRowPeerForPlacement(anchorX, anchorY, h){
   // Une zone existante ne doit jamais attirer une nouvelle zone qui est posée
@@ -596,10 +732,22 @@ function findRowPeerForPlacement(anchorX, anchorY, h){
 }
 async function anchorTextPlacement(pos){
   const pp=pendingPlacement;if(!pp||pp.type!=='text')return;
-  pp.stage='anchored';pp.anchorX=pos.x;pp.anchorY=pos.py;pp.x=pos.x;pp.y=pos.y;pp.detectedWidth=false;pp.autoFitted=false;pp.anchoredAt=performance.now();
+  if(placementAutoTimer){clearTimeout(placementAutoTimer);placementAutoTimer=null;}
+  placementAutoSeq++;
+  // Si le fantôme est déjà vert, le premier clic verrouille son bord gauche sans
+  // perdre la largeur reconnue. Le second clic pourra alors valider le bord droit.
+  const keepDetected=!!pp.autoFitted&&Number.isFinite(pp.lastPX)&&Number.isFinite(pp.lastPY)&&Math.abs(pos.px-pp.lastPX)<=18&&Math.abs(pos.py-pp.lastPY)<=18;
+  const detectedRight=pp.x+pp.w,detectedY=pp.y,detectedH=pp.h;
+  const detectedLineY=pp.detectedLineY,detectedBoxes=(pp.detectedBoxes||[]).map(b=>({...b}));
+  pp.stage=keepDetected?'anchored':'detecting';pp.anchorX=pos.x;pp.anchorY=pos.py;pp.manualH=Math.max(9,pp.baseH||16);pp.manualY=Math.max(0,Math.min(pageH-pp.manualH,pos.py-pp.manualH/2));pp.manualPlacement=false;pp.x=pos.x;pp.y=pos.y;pp.detectedWidth=false;pp.autoFitted=false;pp.detectedLineY=null;pp.detectedBoxes=[];pp.confirmWhenReady=false;pp.anchoredAt=performance.now();
   // Les zones déjà créées ne servent jamais de cible d'aimantation.
   // L'auto-placement doit uniquement se baser sur la géométrie du PDF.
   pp.peerAligned=false;
+  if(keepDetected&&detectedRight-pos.x>=18){
+    pp.y=detectedY;pp.w=Math.min(pageW-pp.x,detectedRight-pp.x);pp.h=detectedH;pp.detectedLineY=detectedLineY;
+    pp.detectedBoxes=detectedBoxes.filter(b=>b.x+b.w>pp.x+.5&&b.x<pp.x+pp.w-.5);pp.detectedWidth=true;pp.autoFitted=true;
+    applyPlacementGhost();setStatus('Left edge locked: width detected — click again without moving to confirm the right edge');return;
+  }
   // Largeur courte par défaut pendant l'attente du second clic.
   pp.w=Math.max(18,Math.min(70,pageW-pp.x));
   applyPlacementGhost();
@@ -607,21 +755,17 @@ async function anchorTextPlacement(pos){
     try{
       const ac=makeAnalysisCanvas();if(ac){
         const textBoxes=await getPagePrintedTextBoxes();
-        if(!pendingPlacement||pendingPlacement!==pp||pp.stage!=='anchored')return;
+        if(!pendingPlacement||pendingPlacement!==pp||pp.stage!=='detecting')return;
         const {ctx,q}=ac,W=ac.canvas.width,H=ac.canvas.height;
         const local=detectBestHorizontalAtPoint(ctx,W,H,q,pos.px,pos.py,textBoxes);
         if(local){
-          const hh=normalizedEditableHeight(local.y,textBoxes,16);
-          const raw={x:Math.max(pp.anchorX,local.x),y:Math.max(0,local.y-hh+2),w:Math.max(0,local.x+local.w-Math.max(pp.anchorX,local.x)),h:hh};
-          const fitted=local.boxedGroup?raw:(fitDetectedLineSegment(raw,textBoxes,pp.anchorX+2,2)||raw);
-          const fx=Math.max(pp.anchorX,fitted.x),endX=Math.min(pageW,fitted.x+fitted.w),fw=endX-fx;
-          if(fw>=18){
-            const candidate={x:fx,y:fitted.y,w:fw,h:Math.max(9,fitted.h)};
+          const candidate=placementCandidateFromDetectedLine(local,textBoxes,pp.anchorX);
+          if(candidate){
             if(!placementSnapConflictsExisting(candidate,5)){
-              pp.x=candidate.x;pp.y=candidate.y;pp.w=candidate.w;pp.h=candidate.h;pp.detectedWidth=true;pp.autoFitted=true;applyPlacementGhost();
+              applyDetectedPlacementCandidate(pp,candidate);
             }else{
               // Keep the user's click as the anchor instead of snapping onto the previous field.
-              pp.x=pp.anchorX;pp.y=pos.y;pp.w=Math.max(18,Math.min(70,pageW-pp.x));pp.h=Math.max(9,pp.h||16);pp.detectedWidth=false;pp.autoFitted=false;applyPlacementGhost();
+              pp.x=pp.anchorX;pp.y=pos.y;pp.w=Math.max(18,Math.min(70,pageW-pp.x));pp.h=Math.max(9,pp.h||16);pp.detectedWidth=false;pp.autoFitted=false;pp.detectedLineY=null;pp.detectedBoxes=[];applyPlacementGhost();
               setStatus('Automatic snap ignored because that position is already occupied');
             }
           }
@@ -629,20 +773,52 @@ async function anchorTextPlacement(pos){
       }
     }catch(_e){}
   }
+  if(!pendingPlacement||pendingPlacement!==pp||pp.stage!=='detecting')return;
+  pp.stage='anchored';
+  if(!pp.detectedWidth)pp.manualPlacement=true;
   if(!status.textContent.includes('already occupied'))setStatus(pp.detectedWidth?'Start set: width detected — click again to confirm':'Start set: move the mouse to adjust the width, then click again');
+  // Un double-clic rapide est accepté, mais sa validation attend désormais la fin
+  // complète de l'analyse. Une courte pause rend aussi le contour vert perceptible.
+  if(pp.confirmWhenReady&&pp.detectedWidth){
+    setTimeout(()=>{if(pendingPlacement===pp&&pp.stage==='anchored'&&pp.confirmWhenReady&&pp.detectedWidth&&!pp.manualPlacement){pp.stage='finalizing';finalizePlacement(pp);}},120);
+  }else if(pp.confirmWhenReady&&!pp.detectedWidth){
+    setStatus('No line detected: move the mouse to set the width, then click again');
+  }
 }
 function finalizePlacement(pp){
   collectCurrentPage();const st=getPageState(currentPage);let el=null;
   if(pp.type==='text'){
-    const d={id:uid('text'),x:pp.x,y:pp.y,w:pp.w,h:pp.h,value:''};st.fields.push(d);createTextDom(d);el=document.querySelector(`.field[data-id="${d.id}"]`);applyFont();setStatus('Text area placed');
+    const d={id:uid('text'),x:pp.x,y:pp.y,w:pp.w,h:pp.h,value:'',fontWeight:fontWeightValue()};
+    if(pp.manualPlacement)d.manualPlacement=true;
+    const detectedLineY=optionalFiniteNumber(pp.detectedLineY);if(detectedLineY!=null)d.lineY=detectedLineY;
+    if((pp.detectedBoxes||[]).length>=2)d.boxes=pp.detectedBoxes.map(b=>({...b}));
+    st.fields.push(d);createTextDom(d);el=document.querySelector(`.field[data-id="${d.id}"]`);
+    let placedBoxes=0;
+    // Une largeur reprise manuellement pendant la création doit être réanalysée
+    // sur sa géométrie finale. Auparavant, switchTextPlacementToManual effaçait
+    // detectedBoxes puis le champ manuel n'était plus jamais rescanné : le texte
+    // redevenait donc continu même lorsque les 8 cases étaient bien sous la zone.
+    if(el&&pp.manualPlacement&&autoBoxDetectOn){
+      const exact={x:parseFloat(el.style.left),y:parseFloat(el.style.top),w:parseFloat(el.style.width),h:parseFloat(el.style.height)};
+      const scanned=detectBoxesUnderField(el,false,{commit:false,snap:false});
+      const pageBoxes=detectPageBoxesForExactTextRect(exact);
+      const boxes=mergeDetectedBoxesForRect([], [...scanned,...pageBoxes],exact);
+      if(boxesCoverExactTextGeometry(el,boxes,exact)){
+        setFieldBoxData(el,boxes);applyBoxBaseline(el,boxes,false);placedBoxes=boxes.length;
+      }
+    }else if(el&&d.lineY!=null&&!d.boxes?.length&&autoBoxDetectOn)scheduleBoxDetection(el,false);
+    applyFont();setStatus(placedBoxes?`Text area placed — ${placedBoxes} boxes detected`:'Text area placed');
   }else if(pp.type==='check'){
-    const d={id:uid('check'),x:pp.x,y:pp.y,w:pp.w,h:pp.h,checked:false,detected:false};st.checks.push(d);createCheckDom(d);el=document.querySelector(`.check-zone[data-id="${d.id}"]`);if(el)scheduleCheckDetection(el,true);setStatus('Checkbox placed');
+    const d={id:uid('check'),x:pp.x,y:pp.y,w:pp.w,h:pp.h,checked:false,detected:!!pp.checkDetected};st.checks.push(d);createCheckDom(d);el=document.querySelector(`.check-zone[data-id="${d.id}"]`);if(el&&!d.detected)scheduleCheckDetection(el,true);setStatus('Checkbox placed');
   }else if(pp.type==='mask'){
     const d={id:uid('mask'),x:pp.x,y:pp.y,w:pp.w,h:pp.h};st.masks.push(d);createMaskDom(d);el=document.querySelector(`.mask-zone[data-id="${d.id}"]`);setStatus('Mask placed');
   }else if(pp.type==='image'){
     const d={id:uid('img'),x:pp.x,y:pp.y,w:pp.w,h:pp.h,aspect:pp.opts.aspect||1,src:pp.opts.src};st.images.push(d);createImageDom(d);el=document.querySelector(`.image-zone[data-id="${d.id}"]`);setStatus('Image placed');
   }
-  const repeatType=(pp.type==='text'||pp.type==='check')?pp.type:null;
+  // Une pose manuelle se termine au relâchement / second clic. Ne pas réarmer
+  // automatiquement + Texte : le clic suivant pouvait créer une seconde zone
+  // parasite alors que l'utilisateur voulait simplement corriger la première.
+  const repeatType=(pp.type==='text'&&pp.manualPlacement)?null:((pp.type==='text'||pp.type==='check')?pp.type:null);
   cancelPlacement(false);collectCurrentPage();if(el)select(el);
   historyCheckpoint(pp.type==='text'?'Add text area':pp.type==='check'?'Add checkbox':pp.type==='image'?'Add image':'Add mask');
   // IMPORTANT : ne jamais recréer le prochain placement pendant le même événement click.
@@ -665,11 +841,30 @@ function handlePlacementClick(ev){
   // The placement tool must never consume that click; otherwise a tiny resize may
   // anchor/finalize a new text field, while a larger drag appears to work because
   // browsers suppress the click after sufficient movement.
+  if(performance.now()<suppressPlacementClickUntil){ev.preventDefault();ev.stopPropagation();ev.stopImmediatePropagation();return;}
   if(!pendingPlacement||ev.button!==0||placementEventHitsExistingOverlay(ev))return;
   const pp=pendingPlacement;
+  if(pp.type==='text'&&pp.stage==='detecting'){
+    const pos=placementCoords(ev);
+    ev.preventDefault();ev.stopPropagation();ev.stopImmediatePropagation();
+    const closeEnough=!!pos&&Math.abs(pos.px-pp.anchorX)<=40&&Math.abs(pos.py-pp.anchorY)<=24;
+    if(closeEnough){pp.confirmWhenReady=true;setStatus('Line analysis in progress — the second click will be applied when it is complete');}
+    else if(pos){
+      // Le clic éloigné EST le bord droit demandé. Il annule l'analyse en cours au
+      // lieu d'obliger l'utilisateur à attendre un vert qui peut ne jamais venir.
+      placementAutoSeq++;pp.stage='anchored';switchTextPlacementToManual(pp,pos.px);
+      pp.stage='finalizing';finalizePlacement(pp);
+    }
+    return;
+  }
   // + Texte : 1er clic = point de départ, 2e clic = confirmation / largeur.
   if(pp.type==='text'&&pp.stage==='anchored'){
+    const pos=placementCoords(ev);
     ev.preventDefault();ev.stopPropagation();ev.stopImmediatePropagation();
+    // Un déplacement franc après le premier clic signifie que l'utilisateur refuse
+    // la proposition automatique. Restaurer aussi la hauteur et la ligne manuelles :
+    // ne libérer que la largeur laissait auparavant le texte collé au mauvais trait.
+    if(pos&&(Math.abs(pos.px-pp.anchorX)>=18||Math.abs(pos.py-pp.anchorY)>=10))switchTextPlacementToManual(pp,pos.px);
     // Le second clic valide immédiatement le field, y compris lorsqu'une largeur
     // automatique vient d'être reconnue. Un vrai double-clic doit donc suffire :
     // 1er clic = ancrage/détection, 2e clic = validation.
@@ -681,6 +876,11 @@ function handlePlacementClick(ev){
   const pos=placementCoords(ev);if(!pos)return;
   ev.preventDefault();ev.stopPropagation();ev.stopImmediatePropagation();
   if(pp.type==='text'){anchorTextPlacement(pos);return;}
+  if(pp.type==='check'){
+    const keepDetected=pp.checkDetected&&Number.isFinite(pp.lastPX)&&Number.isFinite(pp.lastPY)&&Math.abs(pos.px-pp.lastPX)<=18&&Math.abs(pos.py-pp.lastPY)<=18;
+    if(!keepDetected){pp.w=pp.baseW;pp.h=pp.baseH;pp.x=pos.px;pp.y=Math.max(0,Math.min(pageH-pp.h,pos.py-pp.h/2));pp.checkDetected=false;pp.autoFitted=false;}
+    finalizePlacement(pp);return;
+  }
   pp.x=pos.x;pp.y=pos.y;finalizePlacement(pp);
 }
 function visibleInsertY(itemH=20){
@@ -720,19 +920,102 @@ function updateOpenPdfButton(){
   else{b.textContent=t('open');b.title=uiLanguage==='fr'?'Ouvrir un PDF':'Open a PDF';}
 }
 
+function nativeWidgetRect(annotation,viewport){
+  if(!annotation?.rect||annotation.rect.length<4||!viewport?.convertToViewportRectangle)return null;
+  const vr=viewport.convertToViewportRectangle(annotation.rect),x=Math.min(vr[0],vr[2]),y=Math.min(vr[1],vr[3]),right=Math.max(vr[0],vr[2]),bottom=Math.max(vr[1],vr[3]);
+  const w=right-x,h=bottom-y;
+  if(![x,y,w,h].every(Number.isFinite)||w<3||h<3)return null;
+  return {x:+x.toFixed(2),y:+y.toFixed(2),w:+w.toFixed(2),h:+h.toFixed(2)};
+}
+function nativeWidgetValue(annotation){
+  const value=annotation?.fieldValue;
+  if(Array.isArray(value))return value.join(' ');
+  return value==null?'':String(value);
+}
+function nativeWidgetFont(annotation,rect){
+  const da=annotation?.defaultAppearanceData||{},name=String(da.fontName||annotation?.fontName||'').toLowerCase();
+  const fontFamily=name.includes('courier')?'Courier':name.includes('times')?'TimesRoman':'Helvetica';
+  const requested=Number(da.fontSize),fontSize=Number.isFinite(requested)&&requested>=5?Math.min(48,requested):Math.max(5,Math.min(fs(),rect.h*.72));
+  return {fontFamily,fontSize:+fontSize.toFixed(2)};
+}
+function nativeCombBoxes(annotation,rect,lineY){
+  const count=Math.floor(Number(annotation?.maxLen)||0);
+  if(!annotation?.comb||count<2||count>200)return [];
+  const cellW=rect.w/count,boxes=[];
+  for(let i=0;i<count;i++)boxes.push({x:+(rect.x+i*cellW).toFixed(2),w:+cellW.toFixed(2),lineY:+lineY.toFixed(2)});
+  return boxes;
+}
+function nativeRectOverlapsPrintedText(rect,textBoxes){
+  for(const t of textBoxes||[]){
+    if(t.isGuide)continue;
+    const ox=Math.max(0,Math.min(rect.x+rect.w,t.x+t.w)-Math.max(rect.x,t.x)),oy=Math.max(0,Math.min(rect.y+rect.h,t.y+t.h)-Math.max(rect.y,t.y));
+    if(ox>=Math.min(8,t.w*.28)&&oy>=Math.min(2.5,t.h*.32))return true;
+  }
+  return false;
+}
+function nativeTextVisualLine(rect,ctx,W,H,q,textBoxes){
+  if(nativeRectOverlapsPrintedText(rect,textBoxes))return null;
+  const probes=[rect.x+Math.min(8,rect.w*.12),rect.x+rect.w*.5],targetY=rect.y+rect.h-1;
+  let best=null;
+  for(const probeX of probes){
+    const line=detectLocalHorizontalAtPoint(ctx,W,H,q,probeX,targetY,textBoxes);if(!line)continue;
+    const right=rect.x+rect.w,lineRight=line.x+line.w,overlap=Math.max(0,Math.min(right,lineRight)-Math.max(rect.x,line.x));
+    const verticalError=Math.abs(line.y-targetY),leftError=Math.abs(line.x-rect.x),rightError=Math.abs(lineRight-right);
+    if(overlap<Math.max(12,rect.w*.62)||verticalError>Math.max(4,rect.h*.34)||leftError>Math.max(10,rect.w*.08)||rightError>Math.max(12,rect.w*.10))continue;
+    const score=verticalError+leftError*.15+rightError*.08;
+    if(!best||score<best.score)best={line,score};
+  }
+  return best?.line||null;
+}
+async function importNativePdfWidgets(pg,viewport,pageNumber){
+  const st=getPageState(pageNumber);
+  if(!nativeWidgetAutoImport||st.nativeWidgetsChecked)return {textCount:0,checkCount:0,rejectedCount:0};
+  st.nativeWidgetsChecked=true;
+  const annotations=await pg.getAnnotations({intent:'display'}),ac=makeAnalysisCanvas();
+  if(!ac)return {textCount:0,checkCount:0,rejectedCount:(annotations||[]).length};
+  const textBoxes=await getPagePrintedTextBoxes(),{ctx,q}=ac,W=ac.canvas.width,H=ac.canvas.height;
+  const checkSquares=autoCheckDetectOn?detectPageCheckboxSquares(ctx,W,H,q,textBoxes):[];
+  let textCount=0,checkCount=0,rejectedCount=0;
+  for(const annotation of annotations||[]){
+    if(annotation?.subtype!=='Widget'||annotation.hidden||annotation.noView)continue;
+    const rect=nativeWidgetRect(annotation,viewport);if(!rect){rejectedCount++;continue;}
+    if(annotation.fieldType==='Tx'||annotation.fieldType==='Ch'){
+      const line=nativeTextVisualLine(rect,ctx,W,H,q,textBoxes);if(!line){rejectedCount++;continue;}
+      const lineY=line.y,{fontFamily,fontSize}=nativeWidgetFont(annotation,rect),boxes=nativeCombBoxes(annotation,rect,lineY);
+      const y=Math.max(0,Math.min(pageH-rect.h,lineY-rect.h+1));
+      st.fields.push({id:uid('native_text'),x:rect.x,y:+y.toFixed(2),w:rect.w,h:rect.h,value:nativeWidgetValue(annotation),fontFamily,fontSize,fontWeight:'normal',textColor:'#000000',textAlign:annotation.textAlignment===1?'center':annotation.textAlignment===2?'right':'left',yOffset:autoYOffset,boxes,lineY:annotation.multiLine?null:+lineY.toFixed(2)});
+      textCount++;
+    }else if(annotation.fieldType==='Btn'&&annotation.checkBox){
+      const cx=rect.x+rect.w/2,cy=rect.y+rect.h/2,match=checkSquares.map(square=>({square,dist:Math.hypot(cx-(square.x+square.w/2),cy-(square.y+square.h/2))})).filter(v=>v.dist<=Math.max(5,Math.max(rect.w,rect.h)*.55)).sort((a,b)=>a.dist-b.dist)[0]?.square;
+      if(!match){rejectedCount++;continue;}
+      const value=nativeWidgetValue(annotation),checked=!!value&&value!=='Off'&&value!=='/Off';
+      st.checks.push({id:uid('native_check'),x:+match.x.toFixed(2),y:+match.y.toFixed(2),w:+match.w.toFixed(2),h:+match.h.toFixed(2),checked,detected:true});
+      checkCount++;
+    }
+  }
+  return {textCount,checkCount,rejectedCount};
+}
+
 async function loadPdf(data,name,savedState=null){
+  const loadSeq=++pdfLoadSeq;
   try{
     setStatus('Loading…');
-    pdfBytes=data instanceof Uint8Array?new Uint8Array(data):new Uint8Array(data);
-    const task=pdfjsLib.getDocument({data:new Uint8Array(pdfBytes)});pdfProxy=await task.promise;
+    const incomingBytes=data instanceof Uint8Array?new Uint8Array(data):new Uint8Array(data);
+    const task=pdfjsLib.getDocument({data:new Uint8Array(incomingBytes)}),incomingProxy=await task.promise;
+    if(loadSeq!==pdfLoadSeq){incomingProxy.destroy();return;}
+    // Le DOM contient encore les champs du document précédent. Il faut le vider
+    // AVANT d'installer le nouvel état, sinon renderPage()/collectCurrentPage()
+    // recopie ces anciens champs dans le nouveau PDF.
+    cancelPlacement(false);select(null);stage.innerHTML='';
+    pdfBytes=incomingBytes;pdfProxy=incomingProxy;
     docKey=(pdfProxy.fingerprints&&pdfProxy.fingerprints[0])||('doc_'+pdfBytes.length+'_'+name);
     docName=name||'document.pdf';updateOpenPdfButton();updateWindowTitle();
-    pageStates=(savedState&&savedState.pageStates)||{};
+    pageStates=(savedState&&savedState.pageStates)||{};nativeWidgetAutoImport=!savedState;
     if(autoYAllDocument)autoYAllDocument.checked=true;
-    if(savedState){fontFamily.value=savedState.fontFamily||'Helvetica';fontSize.value=savedState.fontSize||8;textColor.value=savedState.textColor||'#000000';autoYOffset=Number.isFinite(+savedState.autoYOffset)?+savedState.autoYOffset:0;autoLineOn=savedState.autoLineOn!==false;autoCheckDetectOn=savedState.autoCheckDetectOn!==false;autoBoxDetectOn=savedState.autoBoxDetectOn!==false;autoTextSizeOn=savedState.autoTextSizeOn!==false;if(autoLineEnabled)autoLineEnabled.checked=autoLineOn;if(autoCheckDetect)autoCheckDetect.checked=autoCheckDetectOn;if(autoBoxDetect)autoBoxDetect.checked=autoBoxDetectOn;if(autoTextSize)autoTextSize.checked=autoTextSizeOn;if(document.getElementById('clickDetect'))document.getElementById('clickDetect').checked=savedState.clickDetectOn!==false;updateAutoYValue();userZoom=savedState.userZoom||1;menuScale=1;applyMenuScale();currentPage=Math.min(Math.max(1,savedState.currentPage||1),pdfProxy.numPages);}else{currentPage=1;userZoom=1;menuScale=1;autoYOffset=0;autoLineOn=true;autoCheckDetectOn=true;autoBoxDetectOn=true;autoTextSizeOn=true;if(autoYAllDocument)autoYAllDocument.checked=true;if(autoLineEnabled)autoLineEnabled.checked=true;if(autoCheckDetect)autoCheckDetect.checked=true;if(autoBoxDetect)autoBoxDetect.checked=true;if(autoTextSize)autoTextSize.checked=true;updateAutoYValue();applyMenuScale();}updateZoomLabel();
+    if(savedState){fontFamily.value=savedState.fontFamily||'Helvetica';fontSize.value=savedState.fontSize||8;setFontWeightControl(savedState.fontWeight);textColor.value=savedState.textColor||'#000000';autoYOffset=Number.isFinite(+savedState.autoYOffset)?+savedState.autoYOffset:0;autoLineOn=savedState.autoLineOn!==false;autoCheckDetectOn=savedState.autoCheckDetectOn!==false;autoBoxDetectOn=savedState.autoBoxDetectOn!==false;autoTextSizeOn=savedState.autoTextSizeOn!==false;if(autoLineEnabled)autoLineEnabled.checked=autoLineOn;if(autoCheckDetect)autoCheckDetect.checked=autoCheckDetectOn;if(autoBoxDetect)autoBoxDetect.checked=autoBoxDetectOn;if(autoTextSize)autoTextSize.checked=autoTextSizeOn;if(document.getElementById('clickDetect'))document.getElementById('clickDetect').checked=savedState.clickDetectOn!==false;updateAutoYValue();userZoom=savedState.userZoom||1;menuScale=1;applyMenuScale();currentPage=Math.min(Math.max(1,savedState.currentPage||1),pdfProxy.numPages);}else{currentPage=1;userZoom=1;menuScale=1;autoYOffset=0;autoLineOn=true;autoCheckDetectOn=true;autoBoxDetectOn=true;autoTextSizeOn=true;if(autoYAllDocument)autoYAllDocument.checked=true;if(autoLineEnabled)autoLineEnabled.checked=true;if(autoCheckDetect)autoCheckDetect.checked=true;if(autoBoxDetect)autoBoxDetect.checked=true;if(autoTextSize)autoTextSize.checked=true;updateAutoYValue();applyMenuScale();}updateZoomLabel();
     document.getElementById('pageCount').textContent=pdfProxy.numPages;setNavigationEnabled(true);
     localStorage.setItem(LAST_KEY,docKey);
-    await renderPage(currentPage);resetHistory();setStatus(savedState?'Document and state restored':'PDF loaded');
+    const nativeCounts=await renderPage(currentPage);if(loadSeq!==pdfLoadSeq)return;resetHistory();setStatus(savedState?'Document and state restored':nativeCounts&&(nativeCounts.textCount||nativeCounts.checkCount)?`PDF loaded — ${nativeCounts.textCount} visually confirmed native text field(s), ${nativeCounts.checkCount} native checkbox(es) imported${nativeCounts.rejectedCount?`, ${nativeCounts.rejectedCount} unreliable widget(s) ignored`:''}`:'PDF loaded — no reliable native field imported');
   }catch(err){console.error(err);setStatus('PDF error: '+err.message);}
 }
 
@@ -757,12 +1040,17 @@ async function renderPage(n){cancelPlacement(false);
   canvas.width=Math.ceil(rv.width);canvas.height=Math.ceil(rv.height);
   canvas.style.width=pageW+'px';canvas.style.height=pageH+'px';
   const ctx=canvas.getContext('2d',{alpha:false});
-  await pg.render({canvasContext:ctx,viewport:rv}).promise;if(token!==renderToken)return;
+  await pg.render({canvasContext:ctx,viewport:rv,annotationMode:pdfjsLib.AnnotationMode.DISABLE}).promise;if(token!==renderToken)return;
+  const nativeCounts=await importNativePdfWidgets(pg,vp,currentPage);if(token!==renderToken)return;
   buildOverlays();
+  surface.addEventListener('pointerdown',handlePlacementPointerDown);
   surface.addEventListener('pointermove',handlePlacementPointerMove);
+  surface.addEventListener('pointerup',handlePlacementPointerUp);
+  surface.addEventListener('pointercancel',handlePlacementPointerCancel);
   surface.addEventListener('click',handlePlacementClick,true);
   // Ancien ajout/détection au clic conservé pour réactivation :
   // surface.addEventListener('click',detectFieldAtClick);
+  return nativeCounts;
 }
 function updateZoomLabel(){const e=document.getElementById('zoomPercent');if(e)e.textContent=Math.round(userZoom*100)+'%';}
 function resizeView(){const surface=document.getElementById('pageSurface'),viewport=document.getElementById('viewport');if(!surface||!viewport)return;const avail=Math.max(300,window.innerWidth-36),baseScale=avail/pageW;scaleNow=Math.max(.15,Math.min(4,baseScale*userZoom));surface.style.transform=`scale(${scaleNow})`;viewport.style.width=(pageW*scaleNow)+'px';viewport.style.height=(pageH*scaleNow)+'px';updateZoomLabel();requestAnimationFrame(updateHorizontalScrollbar);}
@@ -779,7 +1067,7 @@ async function rerenderPdfCanvasOnly(){
     canvas.width=Math.ceil(rv.width);canvas.height=Math.ceil(rv.height);
     canvas.style.width=pageW+'px';canvas.style.height=pageH+'px';
     const ctx=canvas.getContext('2d',{alpha:false});
-    await pg.render({canvasContext:ctx,viewport:rv}).promise;
+    await pg.render({canvasContext:ctx,viewport:rv,annotationMode:pdfjsLib.AnnotationMode.DISABLE}).promise;
   }catch(err){console.warn('PDF canvas zoom render',err);}
 }
 function setZoom(z){
@@ -810,11 +1098,11 @@ function handleCtrlWheelZoom(e){
   if(wheelZoomRenderTimer)clearTimeout(wheelZoomRenderTimer);
   wheelZoomRenderTimer=setTimeout(()=>{wheelZoomRenderTimer=null;rerenderPdfCanvasOnly();},120);
 }
-function closeDocument(){collectCurrentPage();pdfBytes=null;pdfProxy=null;docKey=null;docName='';updateOpenPdfButton();currentPage=1;pageStates={};selected=null;selectedItems.clear();clipboardItem=null;clearHistory();setNavigationEnabled(false);document.getElementById('pageCount').textContent='0';document.getElementById('pageNumber').value='1';updateWindowTitle();stage.innerHTML='<div class="empty">'+t('empty')+'</div>';updateHorizontalScrollbar();localStorage.removeItem(LAST_KEY);setStatus('Document closed');}
+function closeDocument(){pdfLoadSeq++;collectCurrentPage();pdfBytes=null;pdfProxy=null;docKey=null;docName='';updateOpenPdfButton();currentPage=1;pageStates={};nativeWidgetAutoImport=false;selected=null;selectedItems.clear();clipboardItem=null;clearHistory();setNavigationEnabled(false);document.getElementById('pageCount').textContent='0';document.getElementById('pageNumber').value='1';updateWindowTitle();stage.innerHTML='<div class="empty">'+t('empty')+'</div>';updateHorizontalScrollbar();localStorage.removeItem(LAST_KEY);setStatus('Document closed');}
 async function resetDocument(){if(!pdfProxy)return;cancelPlacement(false);selected=null;selectedItems.clear();clipboardItem=null;pageStates={};autoYOffset=0;autoLineOn=true;autoCheckDetectOn=true;autoBoxDetectOn=true;autoTextSizeOn=true;if(autoYAllDocument)autoYAllDocument.checked=true;if(autoLineEnabled)autoLineEnabled.checked=true;if(autoCheckDetect)autoCheckDetect.checked=true;if(autoBoxDetect)autoBoxDetect.checked=true;if(autoTextSize)autoTextSize.checked=true;if(document.getElementById('clickDetect'))document.getElementById('clickDetect').checked=true;updateAutoYValue();try{if(docKey)await dbDelete(docKey);}catch(_e){}// Important : vider l'ancien overlay avant renderPage, sinon collectCurrentPage() le réinjecte dans pageStates.
-stage.innerHTML='';await renderPage(currentPage);historyCheckpoint('Reset document');setStatus('Document reset');}
+stage.innerHTML='';nativeWidgetAutoImport=true;const nativeCounts=await renderPage(currentPage);historyCheckpoint('Reset document');setStatus(nativeCounts&&(nativeCounts.textCount||nativeCounts.checkCount)?`Document reset — ${nativeCounts.textCount} visually confirmed native text field(s), ${nativeCounts.checkCount} native checkbox(es) imported${nativeCounts.rejectedCount?`, ${nativeCounts.rejectedCount} unreliable widget(s) ignored`:''}`:'Document reset — no reliable native field imported');}
 
-function buildOverlays(){const o=document.getElementById('overlay');if(!o)return;const st=getPageState(currentPage);st.fields.forEach(createTextDom);(st.checks||[]).forEach(createCheckDom);st.images.forEach(createImageDom);st.masks.forEach(createMaskDom);refreshEditorTextColors();}
+function buildOverlays(){const o=document.getElementById('overlay');if(!o)return;const st=getPageState(currentPage);st.fields.forEach(createTextDom);(st.checks||[]).forEach(createCheckDom);st.images.forEach(createImageDom);st.masks.forEach(createMaskDom);refreshEditorTextColors();syncFontWeightControl();}
 function lockEditorTextColor(el,color,transparent=false){
   if(!el)return;
   // Le verrou est limité aux zones de saisie : Dark Reader peut continuer
@@ -827,17 +1115,18 @@ function lockEditorTextColor(el,color,transparent=false){
 }
 function fieldFontFamily(e){return e?.dataset?.fontFamily||'Helvetica';}
 function fieldFontSize(e){const n=parseFloat(e?.dataset?.fontSize);return Number.isFinite(n)?Math.max(5,Math.min(48,n)):8;}
+function fieldFontWeight(e){return normalizeFontWeight(e?.dataset?.fontWeight);}
 function fieldTextColor(e){return e?.dataset?.textColor||'#000000';}
-function typographyFieldHeight(fontFamilyName,size){
+function typographyFieldHeight(fontFamilyName,size,fontWeight='normal'){
   const px=Math.max(5,Math.min(48,Number(size)||8));
-  const fm=browserBoxTextMetrics(fontFamilyName||'Helvetica',px);
+  const fm=browserBoxTextMetrics(fontFamilyName||'Helvetica',px,fontWeight);
   // L'espace supplémentaire conserve une marge confortable autour des glyphes,
   // tout en faisant réellement grandir la zone avec la taille de police.
   return Math.max(16,Math.ceil(fm.lineHeight+Math.max(6,px*.25)));
 }
 function resizeFieldStateToTypography(f){
   if(!f)return;
-  const oldH=Math.max(1,Number(f.h)||16),newH=typographyFieldHeight(f.fontFamily,f.fontSize);
+  const oldH=Math.max(1,Number(f.h)||16),newH=typographyFieldHeight(f.fontFamily,f.fontSize,f.fontWeight);
   if(Math.abs(oldH-newH)<.01)return;
   const oldY=Number(f.y)||0,lineY=parseFloat(f.lineY);
   // Une ligne détectée reste immobile : la zone grandit vers le haut. Sans ligne,
@@ -848,7 +1137,7 @@ function resizeFieldStateToTypography(f){
 function resizeFieldDomToTypography(e){
   if(!e)return;
   const oldH=Math.max(1,parseFloat(e.style.height)||16),oldY=parseFloat(e.style.top)||0;
-  const newH=typographyFieldHeight(fieldFontFamily(e),fieldFontSize(e));
+  const newH=typographyFieldHeight(fieldFontFamily(e),fieldFontSize(e),fieldFontWeight(e));
   if(Math.abs(oldH-newH)<.01)return;
   const lineY=fieldLineData(e),nextY=lineY!=null?lineY+(oldY+oldH-lineY)-newH:oldY+(oldH-newH)/2;
   const boundedH=Math.min(pageH||newH,newH),boundedY=Math.max(0,Math.min(Math.max(0,(pageH||Infinity)-boundedH),nextY));
@@ -860,9 +1149,11 @@ function applyFieldTypography(e,prop,value){
   if(!e)return;
   if(prop==='fontFamily')e.dataset.fontFamily=value||'Helvetica';
   else if(prop==='fontSize')e.dataset.fontSize=String(value);
+  else if(prop==='fontWeight')e.dataset.fontWeight=normalizeFontWeight(value);
   else if(prop==='textColor')e.dataset.textColor=value||'#000000';
   e.style.fontFamily=cssFont(fieldFontFamily(e));
   e.style.fontSize=fieldFontSize(e)+'px';
+  e.style.fontWeight=fieldFontWeight(e);
   if(prop==='fontFamily'||prop==='fontSize')resizeFieldDomToTypography(e);
   // Tant qu'un calque miroir affiche le texte, le textarea natif doit rester invisible.
   // Sinon Dark Reader / le changement de taille peut faire apparaître les deux rendus
@@ -898,6 +1189,7 @@ function applyTypographyChange(prop,value,label,coalesceKey=''){
     // Resynchroniser la page visible sans écraser les autres pages.
     collectCurrentPage();
     historyCheckpoint(label,coalesceKey);
+    syncFontWeightControl();
     setStatus(`${label} applied to ${count} text area(s) in the document`);
     return;
   }
@@ -905,10 +1197,15 @@ function applyTypographyChange(prop,value,label,coalesceKey=''){
   applyFieldTypography(selected,prop,value);
   collectCurrentPage();
   historyCheckpoint(label,coalesceKey);
+  syncFontWeightControl();
   setStatus(`${label} applied to the active area`);
 }
 function applyFontFamily(){applyTypographyChange('fontFamily',fontFamily.value||'Helvetica','Font');}
 function applyFontSize(){applyTypographyChange('fontSize',fs(),'Size');}
+function toggleFontWeight(){
+  if(fontAllDocument?.checked!==true&&(!selected||!selected.classList.contains('field'))){setStatus('Select an active text area');return;}
+  const next=fontBold?.getAttribute('aria-pressed')==='true'?'normal':'bold';setFontWeightControl(next);applyTypographyChange('fontWeight',next,next==='bold'?'Bold':'Regular');
+}
 function stepFontSize(delta){
   const next=Math.max(5,Math.min(48,Math.round((fs()+(Number(delta)||0))*2)/2));
   if(next===fs())return;
@@ -924,7 +1221,7 @@ function updateBoxCharLayer(e){
   const boxes=fieldBoxData(e);if(!boxes.length)return;
   const o=document.getElementById('overlay');if(!o)return;
   const layer=document.createElement('div');layer.className='box-char-layer';layer.dataset.forId=e.dataset.id;
-  const fsz=fieldFontSize(e);Object.assign(layer.style,{left:e.style.left,top:e.style.top,width:e.style.width,height:e.style.height,fontFamily:cssFont(fieldFontFamily(e)),fontSize:fsz+'px'});lockEditorTextColor(layer,fieldTextColor(e),false);
+  const fsz=fieldFontSize(e);Object.assign(layer.style,{left:e.style.left,top:e.style.top,width:e.style.width,height:e.style.height,fontFamily:cssFont(fieldFontFamily(e)),fontSize:fsz+'px',fontWeight:fieldFontWeight(e)});lockEditorTextColor(layer,fieldTextColor(e),false);
   const baseX=parseFloat(e.style.left),baseY=parseFloat(e.style.top),lineY=fieldLineData(e),chars=Array.from((e.value||'').replace(/\r?\n/g,''));
   // Position de référence homogène. Si une vraie ligne a été détectée on l'utilise ;
   // sinon on centre verticalement les caractères dans la zone. Dans les deux cas,
@@ -933,7 +1230,7 @@ function updateBoxCharLayer(e){
   // Aligner par une vraie baseline typographique, pas par un coefficient du type
   // fontSize*1.10. Avec une grosse police ce coefficient faisait dériver le texte
   // de plusieurs pixels par rapport à la ligne basse des cases.
-  const fm=browserBoxTextMetrics(fieldFontFamily(e),fsz);
+  const fm=browserBoxTextMetrics(fieldFontFamily(e),fsz,fieldFontWeight(e));
   const baselineGap=1.5; // distance visuelle fixe au-dessus de la ligne basse imprimée
   const charTop=(lineY!=null&&autoLineOn)
     ?((lineY-baseY)-baselineGap-fm.baseline+fieldYOffset(e))
@@ -973,13 +1270,18 @@ function updateFieldBlueGeometry(e){
   }
   e.style.setProperty('--blue-top',topPct.toFixed(2)+'%');
   e.style.setProperty('--blue-bottom',bottomPct.toFixed(2)+'%');
+  // La reconnaissance de ligne est asynchrone : le handle a déjà été placé une
+  // première fois quand lineY n'existait pas encore. Le remettre immédiatement
+  // sur la bande visible évite qu'il reste figé au bas de l'ancien textarea.
+  const handle=document.querySelector(`.text-resize[data-for-id="${e.dataset.id}"]`);
+  if(handle)updateTextHandle(e,handle);
 }
 function removeLineGuide(id){document.querySelectorAll(`.line-guide-layer[data-for-id="${id}"]`).forEach(n=>n.remove());}
 function clearFieldLine(e){if(!e)return;delete e.dataset.lineY;e.classList.remove('line-detected');e.style.paddingTop='1px';updateFieldBlueGeometry(e);removeLineGuide(e.dataset.id);}
 function removeFieldTextLayer(id){document.querySelectorAll(`.field-text-layer[data-for-id="${id}"]`).forEach(n=>n.remove());}
 function classicFieldTextGeometry(e){
   const y=parseFloat(e.style.top)||0,h=parseFloat(e.style.height)||16,ly=fieldLineData(e),fsz=fieldFontSize(e);
-  const fm=browserBoxTextMetrics(fieldFontFamily(e),fsz),baselineGap=1.5;
+  const fm=browserBoxTextMetrics(fieldFontFamily(e),fsz,fieldFontWeight(e)),baselineGap=1.5;
   // Une vraie baseline fixe évite les oscillations d'un demi-pixel lorsque la taille
   // de police change. Le glyphe grandit vers le haut, mais sa baseline reste au même endroit.
   const top=(ly!=null&&autoLineOn)
@@ -998,7 +1300,7 @@ function updateFieldTextLayer(e){
   const x=parseFloat(e.style.left)||0,y=parseFloat(e.style.top)||0,w=parseFloat(e.style.width)||40,h=parseFloat(e.style.height)||16;
   const fsz=fieldFontSize(e),geom=classicFieldTextGeometry(e);
   const l=document.createElement('div');l.className='field-text-layer';l.dataset.forId=e.dataset.id;l.textContent=e.value||'';
-  Object.assign(l.style,{left:(x+2)+'px',top:(y+geom.top)+'px',width:Math.max(1,w-4)+'px',minHeight:Math.max(h,geom.lineHeight)+'px',fontFamily:cssFont(fieldFontFamily(e)),fontSize:fsz+'px',lineHeight:'1',textAlign:e.style.textAlign||'left'});lockEditorTextColor(l,fieldTextColor(e),false);
+  Object.assign(l.style,{left:(x+2)+'px',top:(y+geom.top)+'px',width:Math.max(1,w-4)+'px',minHeight:Math.max(h,geom.lineHeight)+'px',fontFamily:cssFont(fieldFontFamily(e)),fontSize:fsz+'px',fontWeight:fieldFontWeight(e),lineHeight:'1',textAlign:e.style.textAlign||'left'});lockEditorTextColor(l,fieldTextColor(e),false);
   o.appendChild(l);e.classList.add('mirrored');lockEditorTextColor(e,fieldTextColor(e),true);
 }
 function updateLineGuide(e){
@@ -1074,8 +1376,9 @@ function scheduleTextRecognition(e,announce=false){clearTimeout(e._textDetectTim
   updateBoxCharLayer(e);
   if(announce){if(boxes.length>=2&&line!=null)setStatus(`Boxes + baseline detected: ${boxes.length} characters`);else if(boxes.length>=2)setStatus(`Box mode detected: ${boxes.length} characters`);else if(line!=null)setStatus('Input baseline detected: text aligned automatically');}
 },80);}
-function detectBoxesUnderField(e,announce=false){
-  if(!autoBoxDetectOn){setFieldBoxData(e,[]);return [];}
+function detectBoxesUnderField(e,announce=false,options={}){
+  const commit=options.commit!==false,snap=options.snap!==false;
+  if(!autoBoxDetectOn){if(commit)setFieldBoxData(e,[]);return [];}
   const canvas=document.getElementById('pdfCanvas');
   if(!canvas||!e||!e.isConnected)return [];
   const x=parseFloat(e.style.left),y=parseFloat(e.style.top),w=parseFloat(e.style.width),h=parseFloat(e.style.height);
@@ -1108,7 +1411,7 @@ function detectBoxesUnderField(e,announce=false){
     let j=i+1;while(j<vert.length&&vert[j]<=vert[j-1]+1)j++;
     centers.push((vert[i]+vert[j-1])/2);i=j;
   }
-  if(centers.length<3){setFieldBoxData(e,[]);return [];}
+  if(centers.length<3){if(commit)setFieldBoxData(e,[]);return [];}
 
   // Construit les cellules ayant une vraie ligne horizontale en partie basse.
   const candidates=[];
@@ -1137,16 +1440,27 @@ function detectBoxesUnderField(e,announce=false){
     candidates.push({x:+cellX.toFixed(2),w:+cellW.toFixed(2),lineY:+(y+bestY/sy).toFixed(2)});
   }
 
-  // Evite de considérer l'espace entre deux groupes (ex. JJ  MM  AAAA)
-  // comme une cellule. C'était ce qui pouvait centrer un caractère entre 2 cases.
-  let boxes=candidates;
-  if(candidates.length>=3){
-    const widths=candidates.map(b=>b.w).sort((a,b)=>a-b);
-    const mid=Math.floor(widths.length/2);
+  // Filtre chaque suite contiguë séparément. Les groupes JJ, MM et AAAA peuvent
+  // avoir des largeurs différentes : une médiane globale supprimait alors tout
+  // le dernier groupe. Un intervalle sans ligne basse crée naturellement une
+  // coupure et n'est jamais transformé en cellule.
+  const runs=[];
+  for(const box of candidates){
+    const run=runs[runs.length-1],prev=run?.[run.length-1];
+    const gap=prev?box.x-(prev.x+prev.w):Infinity;
+    const joinTol=prev?Math.max(2.5,Math.min(prev.w,box.w)*.25):0;
+    const lineTol=Math.max(2.5,Math.min(5,h*.22));
+    if(!prev||gap>joinTol||Math.abs(box.lineY-prev.lineY)>lineTol)runs.push([box]);
+    else run.push(box);
+  }
+  const boxes=[];
+  for(const run of runs){
+    if(run.length<2)continue;
+    if(run.length<3){boxes.push(...run);continue;}
+    const widths=run.map(b=>b.w).sort((a,b)=>a-b),mid=Math.floor(widths.length/2);
     const median=widths.length%2?widths[mid]:(widths[mid-1]+widths[mid])/2;
-    const lo=median*.68,hi=median*1.34;
-    const filtered=candidates.filter(b=>b.w>=lo&&b.w<=hi);
-    if(filtered.length>=2)boxes=filtered;
+    const filtered=run.filter(b=>b.w>=median*.68&&b.w<=median*1.34);
+    if(filtered.length>=2)boxes.push(...filtered);
   }
 
   if(boxes.length>=2){
@@ -1158,15 +1472,15 @@ function detectBoxesUnderField(e,announce=false){
     let newX=x,newRight=oldRight;
     if(x>firstX&&x-firstX<=snapTol)newX=firstX;
     if(lastX>oldRight&&lastX-oldRight<=snapTol)newRight=lastX;
-    if(newX!==x||newRight!==oldRight){
+    if(snap&&(newX!==x||newRight!==oldRight)){
       e.style.left=+newX.toFixed(2)+'px';
       e.style.width=+Math.max(4,newRight-newX).toFixed(2)+'px';
       const handle=document.querySelector(`.text-resize[data-for-id="${e.dataset.id}"]`);
       if(handle)updateTextHandle(e,handle);
     }
-    setFieldBoxData(e,boxes);
+    if(commit)setFieldBoxData(e,boxes);
     if(announce)setStatus(`Box mode detected: ${boxes.length} characters`);
-  }else setFieldBoxData(e,[]);
+  }else if(commit)setFieldBoxData(e,[]);
   return boxes;
 }
 function scheduleBoxDetection(e,announce=false){clearTimeout(e._boxDetectTimer);e._boxDetectTimer=setTimeout(()=>detectBoxesUnderField(e,announce),80);}
@@ -1192,8 +1506,10 @@ async function getPagePrintedTextBoxes(){
     for(const it of tc.items||[]){
       if(!it.str||!it.str.trim())continue;
       const m=pdfjsLib.Util.transform(vp.transform,it.transform),h=Math.max(3,Math.hypot(m[2],m[3])),w=Math.max(1,Math.abs(it.width||0)),str=it.str;
-      const wholeGuide=/^[\s._·•-]{6,}$/.test(str)&&/[._·•-]/.test(str);
-      out.push({x:m[4],y:m[5]-h,w,h:h*1.08,text:str,isGuide:wholeGuide});
+      // Certains formulaires dessinent les cases de date avec des « I » entourant
+      // de courts soulignés (I__I__I). C'est un guide de saisie, pas du texte à masquer.
+      const wholeGuide=/^[\sI|l._·•-]{6,}$/.test(str)&&/[._·•-]/.test(str);
+      out.push({x:m[4],y:m[5]-h,w,h:h*1.08,text:str,isGuide:wholeGuide,baseline:m[5]});
 
       // Beaucoup de PDF n'ont PAS un item texte séparé pour la ligne pointillée :
       // le libellé + les points peuvent être dans le même item PDF.js. On extrait
@@ -1207,10 +1523,38 @@ async function getPagePrintedTextBoxes(){
           // absence totale de champ et sera ensuite affinée par le détecteur de ligne.
           const total=Math.max(1,str.length),start=before.length/total,end=(before.length+run.length)/total;
           const gx=m[4]+w*start,gw=Math.max(18,w*(end-start));
-          out.push({x:gx,y:m[5]-h,w:gw,h:h*1.08,text:run,isGuide:true,embeddedGuide:true});
+          out.push({x:gx,y:m[5]-h,w:gw,h:h*1.08,text:run,isGuide:true,embeddedGuide:true,baseline:m[5]});
         }
       }
     }
+    // PDF.js découpe parfois I__I__I en une succession de très petits items
+    // ("I__", "I", "__", ...). Pris séparément, ils sont trop courts pour être
+    // reconnus et sont ensuite masqués comme du texte. On ne les regroupe que
+    // lorsqu'ils sont contigus sur la même baseline et forment une vraie série.
+    const fragments=out.filter(t=>!t.isGuide&&/^[I|l._·•-]+$/.test((t.text||'').trim()))
+      .sort((a,b)=>(a.baseline-b.baseline)||a.x-b.x);
+    let group=[];
+    const flushGuideGroup=()=>{
+      if(group.length>=3){
+        const text=group.map(t=>(t.text||'').trim()).join('');
+        const marks=(text.match(/[._·•-]/g)||[]).length;
+        const x=Math.min(...group.map(t=>t.x)),right=Math.max(...group.map(t=>t.x+t.w));
+        if(marks>=4&&right-x>=24){
+          const y=Math.min(...group.map(t=>t.y)),bottom=Math.max(...group.map(t=>t.y+t.h));
+          const baseline=group.reduce((sum,t)=>sum+t.baseline,0)/group.length;
+          group.forEach(t=>{t.isGuide=true;});
+          out.push({x,y,w:right-x,h:bottom-y,text,isGuide:true,groupedGuide:true,baseline});
+        }
+      }
+      group=[];
+    };
+    for(const t of fragments){
+      if(!group.length){group=[t];continue;}
+      const last=group[group.length-1],baseline=group.reduce((sum,z)=>sum+z.baseline,0)/group.length,gap=t.x-(last.x+last.w);
+      if(Math.abs(t.baseline-baseline)<=1.5&&gap>=-1.5&&gap<=2.5)group.push(t);
+      else{flushGuideGroup();group=[t];}
+    }
+    flushGuideGroup();
     return out;
   }catch(_){return [];}
 }
@@ -1266,12 +1610,12 @@ function lineTouchesPrintedText(ln,textBoxes){
   }
   return false;
 }
-function buildPrintedTextMask(W,H,q,textBoxes,padCss=1.5){
+function buildPrintedTextMask(W,H,q,textBoxes,padCss=1.5,tightTop=false){
   const mask=new Uint8Array(W*H),pad=Math.max(1,Math.round(padCss*q));
   for(const t of textBoxes){
     // Les pointillés / soulignés sont eux-mêmes des zones de saisie : ne surtout pas les masquer.
     if(t.isGuide)continue;
-    const x0=Math.max(0,Math.floor(t.x*q)-pad),y0=Math.max(0,Math.floor(t.y*q)-pad),x1=Math.min(W-1,Math.ceil((t.x+t.w)*q)+pad),y1=Math.min(H-1,Math.ceil((t.y+t.h)*q)+pad);
+    const x0=Math.max(0,Math.floor(t.x*q)-pad),y0=Math.max(0,tightTop?Math.ceil(t.y*q):Math.floor(t.y*q)-pad),x1=Math.min(W-1,Math.ceil((t.x+t.w)*q)+pad),y1=Math.min(H-1,Math.ceil((t.y+t.h)*q)+pad);
     for(let y=y0;y<=y1;y++)mask.fill(1,y*W+x0,y*W+x1+1);
   }
   return mask;
@@ -1598,10 +1942,35 @@ function detectedEditableHeight(lineY,textBoxes,defaultH=18){
   return Math.max(9,Math.min(22,h));
 }
 function normalizedEditableHeight(lineY,textBoxes,defaultH=16){
-  return typographyFieldHeight(fontFamily.value,fs());
+  return typographyFieldHeight(fontFamily.value,fs(),fontWeightValue());
 }
 function normalizedBoxGroupHeight(g,textBoxes){
-  return typographyFieldHeight(fontFamily.value,fs());
+  const base=typographyFieldHeight(fontFamily.value,fs(),fontWeightValue());
+  const ownLineY=optionalFiniteNumber(g?.lineY),groupY=optionalFiniteNumber(g?.y);
+  const lineY=ownLineY!=null?ownLineY:(g?.boxedGroup?groupY:null);
+  const top=Number.isFinite(+g?.boxTop)?+g.boxTop:(!g?.boxedGroup&&Number.isFinite(+g?.y)?+g.y:null);
+  const geometric=Number.isFinite(lineY)&&Number.isFinite(top)?lineY+2-top:Number(g?.boxHeight??g?.h);
+  return Number.isFinite(geometric)?Math.max(8,Math.min(base,geometric)):base;
+}
+function detectedPlacementHeight(line,textBoxes,startX,endX){
+  const base=typographyFieldHeight(fontFamily.value,fs(),fontWeightValue());
+  let h=line.boxedGroup?normalizedBoxGroupHeight(line,textBoxes):base;
+  // La hauteur libre se mesure uniquement autour du point visé. Un libellé situé
+  // ailleurs sur la page (ou dans le champ voisin) ne doit jamais écraser la zone.
+  const lineX=Number(line.x)||0,lineRight=lineX+(Number(line.w)||0);
+  const probeX0=Math.max(lineX,startX-40),probeX1=Math.min(lineRight,endX,startX+140);
+  if(probeX1-probeX0>=8){
+    let topBound=-Infinity;
+    for(const t of textBoxes||[]){
+      if(t.isGuide)continue;
+      const overlap=Math.max(0,Math.min(probeX1,t.x+t.w)-Math.max(probeX0,t.x));
+      if(overlap<Math.min(2,Math.max(.8,t.w*.12)))continue;
+      const bottom=t.y+t.h,gap=Number(line.y)-bottom;
+      if(gap>=.5&&gap<=18)topBound=Math.max(topBound,bottom);
+    }
+    if(Number.isFinite(topBound))h=Math.min(h,Number(line.y)+2-(topBound+.8));
+  }
+  return Math.max(8,Math.min(base,h));
 }
 
 function pointRectDistance(px,py,r){
@@ -1609,11 +1978,70 @@ function pointRectDistance(px,py,r){
   const dy=py<r.y?r.y-py:(py>r.y+r.h?py-(r.y+r.h):0);
   return Math.hypot(dx,dy);
 }
+function lineSpansPageFrame(line){
+  const x=Number(line?.x)||0,w=Number(line?.w)||0,right=x+w;
+  return pageW>0&&w>=pageW*.82&&x<=pageW*.07&&right>=pageW*.93;
+}
+function lineLooksLikeColoredFrameEdge(data,W,H,q,line){
+  const lx=Math.max(1,Math.round((Number(line?.x)||0)*q)),rx=Math.min(W-2,Math.round(((Number(line?.x)||0)+(Number(line?.w)||0))*q));
+  const ly=Math.max(1,Math.min(H-2,Math.round((Number(line?.y)||0)*q))),span=rx-lx;
+  // Un trait coloré court peut être une vraie zone de saisie. Le faux positif qui
+  // nous intéresse est un long bord continu de cadre, raccordé à un montant vertical.
+  if(span<Math.max(90*q,pageW*q*.18))return false;
+  const sampleStep=Math.max(1,Math.round(q*.55));let samples=0,ink=0,colored=0;
+  const pixel=(x,y)=>{const k=(y*W+x)*4,r=data[k],g=data[k+1],b=data[k+2],lum=r*.2126+g*.7152+b*.0722,chroma=Math.max(r,g,b)-Math.min(r,g,b);return {ink:lum<220,colored:lum<225&&chroma>38};};
+  for(let x=lx;x<=rx;x+=sampleStep){samples++;let hasInk=false,hasColor=false;for(let y=ly-1;y<=ly+1;y++){const p=pixel(x,y);hasInk||=p.ink;hasColor||=p.colored;}if(hasInk)ink++;if(hasColor)colored++;}
+  if(!samples||ink/samples<.48||colored/Math.max(1,ink)<.58)return false;
+  const verticalRunAt=edge=>{
+    let best=0;
+    for(let x=Math.max(1,edge-Math.round(2*q));x<=Math.min(W-2,edge+Math.round(2*q));x++){
+      let run=0,gap=0;
+      for(let y=ly-1;y>=Math.max(1,ly-Math.round(22*q));y--){const p=pixel(x,y);if(p.colored){run+=1+gap;gap=0;}else if(run&&gap<Math.max(1,Math.round(q)))gap++;else if(run)break;}
+      best=Math.max(best,run);
+    }
+    return best/q;
+  };
+  return Math.max(verticalRunAt(lx),verticalRunAt(rx))>=7;
+}
+function lineHasOpenInputBand(ctx,W,H,q,line,textBoxes=[],anchorX=null){
+  // Une vraie zone de saisie est claire de part et d'autre de sa ligne basse.
+  // Les bandeaux de section, logos et rectangles pleins ont au contraire une
+  // forte occupation sombre sur au moins un côté : ils ne doivent jamais verdir.
+  const lx=Number(line.x)||0,right=lx+(Number(line.w)||0),start=Math.max(lx,Number.isFinite(anchorX)?anchorX:lx);
+  const span=right-start;if(span<12)return true;
+  const trim=span*.10,x0=Math.max(0,Math.floor((start+trim)*q)),x1=Math.min(W,Math.ceil((right-trim)*q));
+  if(x1-x0<8)return true;
+  const occupancy=(uy0,uy1)=>{
+    const y0=Math.max(0,Math.floor(uy0*q)),y1=Math.min(H,Math.ceil(uy1*q));
+    if(y1<=y0)return 0;
+    const img=ctx.getImageData(x0,y0,x1-x0,y1-y0),d=img.data,w=img.width,h=img.height,skip=new Uint8Array(w*h);
+    for(const t of textBoxes||[]){
+      if(t.isGuide)continue;
+      const tx0=Math.max(0,Math.floor(t.x*q)-x0),tx1=Math.min(w,Math.ceil((t.x+t.w)*q)-x0);
+      const ty0=Math.max(0,Math.floor(t.y*q)-y0),ty1=Math.min(h,Math.ceil((t.y+t.h)*q)-y0);
+      for(let yy=ty0;yy<ty1;yy++)skip.fill(1,yy*w+tx0,yy*w+tx1);
+    }
+    let dark=0,n=0;
+    for(let i=0;i<w*h;i++){
+      if(skip[i])continue;n++;
+      const k=i*4,r=d[k],g=d[k+1],b=d[k+2],lum=r*.2126+g*.7152+b*.0722,chroma=Math.max(r,g,b)-Math.min(r,g,b);
+      if(lum<175||(chroma>45&&lum<215))dark++;
+    }
+    return n?dark/n:0;
+  };
+  const above=occupancy(Number(line.y)-12,Number(line.y)-2),below=occupancy(Number(line.y)+2,Number(line.y)+8);
+  // Seuls les aplats francs sont rejetés. Les libellés serrés et les traits
+  // ordinaires restent acceptés, même sur une petite zone.
+  const limit=.45;
+  return Math.max(above,below)<=limit;
+}
 function detectLocalHorizontalAtPoint(ctx,W,H,q,ux,uy,textBoxes=[]){
   // Recherche volontairement locale et plus permissive que l'analyse globale.
   // Le clic fournit le contexte : on peut accepter une ligne chargée sans analyser
   // toute la page comme s'il s'agissait d'un champ potentiel.
-  const img=ctx.getImageData(0,0,W,H),d=img.data,mask=buildPrintedTextMask(W,H,q,textBoxes,.8);
+  const img=ctx.getImageData(0,0,W,H),d=img.data;
+  const normalMask=buildPrintedTextMask(W,H,q,textBoxes,.8);
+  let mask=normalMask;
   const px=Math.round(ux*q),py=Math.round(uy*q);
   const rx=Math.round(280*q),ry=Math.round(28*q),x0=Math.max(1,px-rx),x1=Math.min(W-2,px+rx),y0=Math.max(1,py-ry),y1=Math.min(H-2,py+ry);
   // Le texte imprimé (notamment les libellés placés juste sous les champs) ne doit
@@ -1621,73 +2049,210 @@ function detectLocalHorizontalAtPoint(ctx,W,H,q,ux,uy,textBoxes=[]){
   const dark=(x,y)=>{if(x<0||y<0||x>=W||y>=H||mask[y*W+x])return false;const k=(y*W+x)*4;return d[k]<205&&d[k+1]<205&&d[k+2]<205;};
   const maxGap=Math.max(4,Math.round(9*q)),minSpan=Math.max(22,Math.round(24*q));
   let best=null;
-  for(let y=y0;y<=y1;y++){
-    let first=-1,last=-1,hits=0,gap=0;
-    const test=()=>{
-      if(first<0)return;
-      const span=last-first+1,density=hits/Math.max(1,span);
-      if(span>=minSpan&&density>=.045){
-        const ux1=first/q,uw=span/q,uyLine=y/q;
-        const dx=ux<ux1?ux1-ux:(ux>ux1+uw?ux-(ux1+uw):0),dy=Math.abs(uy-uyLine);
-        // Aimantation strictement locale : une ligne ne peut être retenue que si
-        // elle passe réellement sous le pointeur (ou à quelques pixels seulement).
-        // Cela évite qu'un grand trait voisin "capture" tous les placements.
-        const horizontalSnap=12, verticalSnap=14;
-        if(dx<=horizontalSnap&&dy<=verticalSnap){
-          const score=dy*3.2+dx*2.2-Math.min(uw,180)*.018-density*6;
-          if(!best||score<best.score)best={x:ux1,y:uyLine,w:uw,h:1,score};
+  const scan=(gapLimit=maxGap)=>{
+    best=null;
+    for(let y=y0;y<=y1;y++){
+      let first=-1,last=-1,hits=0,gap=0;
+      const test=()=>{
+        if(first<0)return;
+        const span=last-first+1,density=hits/Math.max(1,span);
+        if(span>=minSpan&&density>=.045){
+          // Une rangée de petits traits verticaux peut ressembler à des pointillés
+          // quand le pointeur est au milieu des cases. Si le même motif persiste
+          // nettement plusieurs pixels au-dessus ou au-dessous, ce n'est pas la
+          // baseline : laisser la vraie ligne basse gagner.
+          let verticalPattern=false;
+          if(density<.5){
+            const off=Math.max(3,Math.round(3*q));let samples=0,up=0,down=0;
+            for(let xx=first;xx<=last;xx++){
+              const on=dark(xx,y)||dark(xx,y-1)||dark(xx,y+1);if(!on)continue;samples++;
+              if(dark(xx,y-off)||dark(xx-1,y-off)||dark(xx+1,y-off))up++;
+              if(dark(xx,y+off)||dark(xx-1,y+off)||dark(xx+1,y+off))down++;
+            }
+            verticalPattern=samples>=3&&Math.max(up,down)/samples>.55;
+          }
+          const ux1=first/q,uw=span/q,uyLine=y/q;
+          const dx=ux<ux1?ux1-ux:(ux>ux1+uw?ux-(ux1+uw):0),dy=Math.abs(uy-uyLine);
+          // Aimantation strictement locale : une ligne ne peut être retenue que si
+          // elle passe réellement sous le pointeur (ou à quelques pixels seulement).
+          // Cela évite qu'un grand trait voisin "capture" tous les placements.
+          const horizontalSnap=12, verticalSnap=14;
+          if(!verticalPattern&&dx<=horizontalSnap&&dy<=verticalSnap){
+            const score=dy*3.2+dx*2.2-Math.min(uw,180)*.018-density*6;
+            if(!best||score<best.score)best={x:ux1,y:uyLine,w:uw,h:1,score,density};
+          }
         }
+        first=last=-1;hits=gap=0;
+      };
+      for(let x=x0;x<=x1;x++){
+        const on=dark(x,y)||dark(x,y-1)||dark(x,y+1);
+        if(on){if(first<0)first=x;last=x;hits++;gap=0;}
+        else if(first>=0){gap++;if(gap>gapLimit)test();}
       }
-      first=last=-1;hits=gap=0;
-    };
-    for(let x=x0;x<=x1;x++){
-      const on=dark(x,y)||dark(x,y-1)||dark(x,y+1);
-      if(on){if(first<0)first=x;last=x;hits++;gap=0;}
-      else if(first>=0){gap++;if(gap>maxGap)test();}
+      test();
     }
-    test();
+  };
+  scan();
+  const normalBest=best?{...best}:null;
+  // Certains libellés commencent à moins d'un pixel sous la baseline. Même si le
+  // premier masque laisse un petit fragment, on compare donc toujours la lecture
+  // sans marge haute, puis on ne la retient que si elle prolonge la même ligne.
+  const tightMask=buildPrintedTextMask(W,H,q,textBoxes,.8,true);
+  mask=tightMask;scan();
+  const tightBest=best?{...best}:null;
+  let usedTight=false;
+  if(!normalBest){best=tightBest;usedTight=!!tightBest;}
+  else{
+    const sameLine=tightBest&&Math.abs(tightBest.y-normalBest.y)<=2.25;
+    const contains=tightBest&&tightBest.x<=normalBest.x+2.5&&tightBest.x+tightBest.w>=normalBest.x+normalBest.w-2.5;
+    const extendsLine=tightBest&&tightBest.w>=normalBest.w+8;
+    if(sameLine&&contains&&extendsLine){best=tightBest;usedTight=true;}
+    else{best=normalBest;mask=normalMask;}
   }
   if(!best)return null;
+  let lineY=Math.round(best.y*q),solidRecut=false;
+  // Le masque serré peut relier deux champs séparés par un espace modéré. Pour une
+  // baseline dense, on repart du pointeur avec une coupure locale. PDF.js 3 peut
+  // rasteriser les blancs de 2,5 pt entre Jour / Mois / Année comme presque 4 pt ;
+  // l'ancienne limite de 3 pt supprimait alors tout le groupe Année. Une tolérance
+  // de 5,5 pt garde ces sous-groupes liés tout en s'arrêtant largement avant le
+  // champ Commune, séparé de la date par plus de 8 pt.
+  if(usedTight&&best.density>=.62){
+    const solidGap=Math.max(4,Math.round(5.5*q));
+    const onLine=x=>dark(x,lineY)||dark(x,lineY-1)||dark(x,lineY+1);
+    const lo=Math.max(1,Math.round(best.x*q)),hi=Math.min(W-2,Math.round((best.x+best.w)*q)-1);
+    let seed=Math.max(lo,Math.min(hi,px));
+    if(!onLine(seed)){
+      let found=null;
+      for(let d=1;d<=solidGap&&!Number.isFinite(found);d++){
+        if(seed-d>=lo&&onLine(seed-d))found=seed-d;
+        else if(seed+d<=hi&&onLine(seed+d))found=seed+d;
+      }
+      if(Number.isFinite(found))seed=found;
+    }
+    if(onLine(seed)){
+      let left=seed,right=seed,gap=0;
+      for(let x=seed-1;x>=1;x--){if(onLine(x)){left=x;gap=0;}else if(++gap>solidGap)break;}
+      gap=0;for(let x=seed+1;x<W-1;x++){if(onLine(x)){right=x;gap=0;}else if(++gap>solidGap)break;}
+      if(right-left+1>=minSpan){best.x=left/q;best.w=(right-left+1)/q;solidRecut=true;}
+    }
+  }
+  // Conserver les petits espaces entre cellules successives : une date, un SIRET
+  // ou un code découpé visuellement doit redevenir une seule zone de texte.
+  const currentEndPx=Math.round((best.x+best.w)*q)-1;
+  let continuationGap=Math.max(0,x1-currentEndPx),continuedEnd=currentEndPx;
+  if(!solidRecut&&x1<W-2&&continuationGap<=maxGap){
+    for(let x=x1+1;x<W-1;x++){
+      const on=dark(x,lineY)||dark(x,lineY-1)||dark(x,lineY+1);
+      if(on){continuedEnd=x;continuationGap=0;}
+      else if(++continuationGap>maxGap)break;
+    }
+    if(continuedEnd>currentEndPx)best.w=(continuedEnd+1)/q-best.x;
+  }
+  // Le bord inférieur d'un grand cadre de formulaire n'est jamais une zone de
+  // saisie, même si le pointeur se trouve juste au-dessus de lui.
+  if(lineSpansPageFrame(best)||lineLooksLikeColoredFrameEdge(d,W,H,q,best))return null;
   // Sur les tableaux et les champs en L, la ligne basse peut continuer dans la
   // cellule voisine. Les vrais traits verticaux deviennent alors les limites.
-  const linePy=Math.round(best.y*q),scanTop=Math.max(1,linePy-Math.round(24*q)),scanBottom=Math.min(H-2,linePy+Math.round(4*q));
+  const linePy=Math.round(best.y*q),scanTop=Math.max(1,linePy-Math.round(24*q));
   const bx0=Math.max(1,Math.round(best.x*q)),bx1=Math.min(W-2,Math.round((best.x+best.w)*q));
-  const minVerticalRun=Math.max(6,Math.round(6*q)),verticalColumns=[];
+  const minVerticalRun=Math.max(5,Math.round(4.25*q)),verticalColumns=[];
   for(let x=bx0;x<=bx1;x++){
-    let run=0,longest=0,gap=0;
-    for(let y=scanTop;y<=scanBottom;y++){
-      // Ignorer la bande horizontale elle-même : elle ne doit pas transformer
-      // chaque pixel de la ligne en faux séparateur vertical.
-      if(Math.abs(y-linePy)<=2){gap=0;continue;}
+    let run=0,gap=0,initialGap=0;
+    // Ne compter qu'un trait réellement raccordé à la baseline. Un morceau de
+    // lettre ou un trait d'une autre ligne n'est donc jamais une butée.
+    for(let y=linePy-2;y>=scanTop;y--){
       const on=dark(x,y)||dark(x-1,y)||dark(x+1,y);
-      if(on){run+=1+gap;gap=0;longest=Math.max(longest,run);}
-      else if(run&&gap<1)gap++;else{run=0;gap=0;}
+      if(on){run+=1+gap;gap=0;initialGap=0;}
+      else if(!run&&initialGap<2)initialGap++;
+      else if(run&&gap<1)gap++;
+      else break;
     }
-    if(longest>=minVerticalRun)verticalColumns.push(x);
+    if(run>=minVerticalRun)verticalColumns.push({x,run});
   }
   const boundaries=[];
-  for(let i=0;i<verticalColumns.length;){let j=i+1;while(j<verticalColumns.length&&verticalColumns[j]<=verticalColumns[j-1]+1)j++;boundaries.push((verticalColumns[i]+verticalColumns[j-1])/(2*q));i=j;}
-  let sx=best.x,ex=best.x+best.w;
-  const left=boundaries.filter(x=>x<=ux+2&&x>=sx-2).at(-1),right=boundaries.find(x=>x>=ux+8&&x<=ex+2);
-  if(Number.isFinite(left))sx=Math.max(sx,left+.75);
-  if(Number.isFinite(right))ex=Math.min(ex,right-.75);
-  if(ex-sx>=18){best.x=sx;best.w=ex-sx;}
+  for(let i=0;i<verticalColumns.length;){
+    let j=i+1,maxRun=verticalColumns[i].run;
+    while(j<verticalColumns.length&&verticalColumns[j].x<=verticalColumns[j-1].x+1){maxRun=Math.max(maxRun,verticalColumns[j].run);j++;}
+    boundaries.push({x:(verticalColumns[i].x+verticalColumns[j-1].x)/(2*q),run:maxRun/q});i=j;
+  }
+  // Trois butées régulières ou plus forment une vraie suite de cases. On la garde
+  // entière au lieu de l'arrêter sur le premier séparateur intérieur.
+  const boundaryRuns=[];let run=[];
+  const flushRun=()=>{if(run.length>=3)boundaryRuns.push(run);run=[];};
+  for(const b of boundaries){
+    if(!run.length){run=[b];continue;}
+    const gap=b.x-run[run.length-1].x;
+    // Un intervalle inférieur à 4 pt sépare souvent deux sous-groupes sémantiques
+    // (Jour / Mois / Année) : ce n'est pas une cellule supplémentaire.
+    if(gap>=4&&gap<=32)run.push(b);else{flushRun();run=[b];}
+  }
+  flushRun();
+  const runInfo=boundaryRuns.map(r=>{
+    const gaps=r.slice(1).map((b,i)=>b.x-r[i].x),sorted=[...gaps].sort((a,b)=>a-b),med=sorted[Math.floor(sorted.length/2)]||0;
+    const good=gaps.filter(g=>med&&g>=med*.55&&g<=med*1.65).length;
+    const walls=r.map(b=>b.run).sort((a,b)=>a-b),wall=walls[Math.floor(walls.length/2)]||0;
+    return {r,good,pitch:med,wall};
+  }).filter(v=>v.good>=Math.max(2,Math.ceil((v.r.length-1)*.55)));
+  // Réunit les sous-groupes réguliers de même pas séparés par une petite coupure,
+  // tout en conservant leurs cellules propres. Les espaces entre eux ne deviennent
+  // donc jamais des cellules artificielles.
+  const runClusters=[];
+  for(const info of runInfo){
+    const c=runClusters[runClusters.length-1],prev=c?.runs?.at(-1);
+    const bridge=prev?info.r[0].x-prev.r[prev.r.length-1].x:Infinity;
+    const pitchRatio=prev&&Math.min(prev.pitch,info.pitch)>0?Math.max(prev.pitch,info.pitch)/Math.min(prev.pitch,info.pitch):Infinity;
+    const wallRatio=prev&&Math.min(prev.wall,info.wall)>0?Math.max(prev.wall,info.wall)/Math.min(prev.wall,info.wall):Infinity;
+    // Deux sous-groupes d'une même valeur (JJ / MM / AAAA, blocs d'un SIRET,
+    // etc.) sont souvent séparés par presque une demi-case. Une limite fixe à
+    // 4,25 pt coupait donc la date avant l'année sur les formulaires agrandis.
+    // La coupure admissible suit maintenant le pas réel des cases, avec un plafond
+    // prudent pour ne pas réunir deux champs sémantiques voisins.
+    const bridgeLimit=prev?Math.min(14,Math.max(4.25,Math.min(prev.pitch,info.pitch)*.62)):4.25;
+    if(c&&bridge>=1.5&&bridge<=bridgeLimit&&pitchRatio<=1.33&&wallRatio<=1.34){c.runs.push(info);c.good+=info.good;}
+    else runClusters.push({runs:[info],good:info.good});
+  }
+  const boxCluster=runClusters.filter(c=>{
+    const first=c.runs[0].r[0].x,lastRun=c.runs[c.runs.length-1].r,last=lastRun[lastRun.length-1].x;
+    return ux>=first-3&&ux<=last+3;
+  }).map(c=>{
+    const first=c.runs[0].r[0].x,lastRun=c.runs[c.runs.length-1].r,last=lastRun[lastRun.length-1].x;
+    return {c,dist:Math.abs(ux-(first+last)/2)};
+  }).sort((a,b)=>b.c.good-a.c.good||a.dist-b.dist)[0]?.c;
+  if(boxCluster){
+    const boxRuns=boxCluster.runs.map(v=>v.r),bounds=boxRuns.flat(),start=boxRuns[0][0].x,lastRun=boxRuns[boxRuns.length-1],end=lastRun[lastRun.length-1].x;
+    const wall=bounds.map(b=>b.run).sort((a,b)=>a-b),wallRun=wall[Math.floor(wall.length/2)]||5;
+    best.x=start;best.w=end-start;best.boxedGroup=true;best.boxTop=best.y-wallRun-3;best.boxHeight=best.y+2-best.boxTop;
+    best.boxes=boxRuns.flatMap(r=>r.slice(0,-1).map((b,i)=>({x:+b.x.toFixed(2),w:+(r[i+1].x-b.x).toFixed(2),lineY:+best.y.toFixed(2)})));
+  }else{
+    let sx=best.x,ex=best.x+best.w;
+    const left=boundaries.filter(b=>b.x<=ux+2&&b.x>=sx-2).at(-1)?.x,right=boundaries.find(b=>b.x>=ux+8&&b.x<=ex+2)?.x;
+    if(Number.isFinite(left))sx=Math.max(sx,left+.75);
+    if(Number.isFinite(right))ex=Math.min(ex,right-.75);
+    if(ex-sx>=18){best.x=sx;best.w=ex-sx;}
+  }
+  if(!lineHasOpenInputBand(ctx,W,H,q,best,textBoxes,ux))return null;
   return best;
 }
 function detectBestHorizontalAtPoint(ctx,W,H,q,ux,uy,textBoxes=[]){
+  // Le même choix local sert au survol et au clic. Il est autoritaire : attendre
+  // le vert ou cliquer rapidement doit produire strictement la même géométrie.
+  const local=detectLocalHorizontalAtPoint(ctx,W,H,q,ux,uy,textBoxes);
+  if(local)return local;
   const candidates=[];
   const add=(line,kind='line')=>{
     if(!line)return;
+    if(lineSpansPageFrame(line))return;
     const dx=ux<line.x?line.x-ux:(ux>line.x+line.w?ux-(line.x+line.w):0),dy=Math.abs(uy-line.y);
     if(dx>12||dy>18||line.w<18)return;
+    if(!lineHasOpenInputBand(ctx,W,H,q,line,textBoxes,ux))return;
     const priority=kind==='boxes'?-18:line.fromTextGuide?-7:0;
     candidates.push({line,score:dy*3.2+dx*2.4-Math.min(line.w,240)*.012+priority});
   };
-  add(detectLocalHorizontalAtPoint(ctx,W,H,q,ux,uy,textBoxes),'local');
   // Les suites de cellules ont une longueur géométrique beaucoup plus fiable que
-  // le trait raster : elles sont prioritaires lorsque le clic tombe sur leur ligne.
+  // le trait global : elles restent prioritaires lorsque le raster local a échoué.
   if(autoBoxDetectOn){
-    for(const g of detectPageBoxGroups(ctx,W,H,q,textBoxes))add({x:g.x,y:g.lineY,w:g.w,h:1,boxedGroup:true},'boxes');
+    for(const g of detectPageBoxGroups(ctx,W,H,q,textBoxes))add({x:g.x,y:g.lineY,w:g.w,h:1,boxedGroup:true,boxTop:g.y,boxHeight:g.lineY+2-g.y,boxes:(g.boxes||[]).map(b=>({...b}))},'boxes');
   }
   // Les guides PDF (pointillés sous forme de texte) et les longues lignes vectorielles
   // complètent la recherche locale, notamment quand l'antialiasing coupe le raster.
@@ -1775,7 +2340,7 @@ async function detectEditableFieldsOnPage(){
     for(const g of groups){
       const r={x:g.x,y:g.y,w:g.w,h:g.h};
       if(existing.some(e=>rectOverlap(r,e,0)))continue;
-      const nh=normalizedBoxGroupHeight(g,textBoxes),ny=g.y+(g.h-nh)/2;const d={id:uid('text'),x:+g.x.toFixed(2),y:+ny.toFixed(2),w:+g.w.toFixed(2),h:+nh.toFixed(2),value:'',lineY:+g.lineY.toFixed(2),boxes:g.boxes};
+      const nh=normalizedBoxGroupHeight(g,textBoxes),ny=g.y+(g.h-nh)/2;const d={id:uid('text'),x:+g.x.toFixed(2),y:+ny.toFixed(2),w:+g.w.toFixed(2),h:+nh.toFixed(2),value:'',fontWeight:fontWeightValue(),lineY:+g.lineY.toFixed(2),boxes:g.boxes};
       st.fields.push(d);createTextDom(d);existing.push(r);addTexts++;
     }
   }
@@ -1785,22 +2350,88 @@ async function detectEditableFieldsOnPage(){
     if(chosen.some(o=>Math.abs(o.y-ln.y)<3&&Math.abs(o.x-ln.x)<8&&Math.abs(o.w-ln.w)<12))continue;
     const h=normalizedEditableHeight(ln.y,textBoxes,16),y=Math.max(0,ln.y-h+2),r={x:Math.max(0,ln.x),y,w:Math.min(pageW-ln.x,ln.w),h};
     if(r.w<38||existing.some(e=>rectOverlap(r,e,0)))continue;
-    chosen.push(ln);const d={id:uid('text'),x:+r.x.toFixed(2),y:+r.y.toFixed(2),w:+r.w.toFixed(2),h:r.h,value:'',lineY:+ln.y.toFixed(2)};
+    chosen.push(ln);const d={id:uid('text'),x:+r.x.toFixed(2),y:+r.y.toFixed(2),w:+r.w.toFixed(2),h:r.h,value:'',fontWeight:fontWeightValue(),lineY:+ln.y.toFixed(2)};
     st.fields.push(d);createTextDom(d);const el=document.querySelector(`.field[data-id="${d.id}"]`);if(el)scheduleTextRecognition(el,false);existing.push(r);addTexts++;
   }
   applyFont();collectCurrentPage();setStatus(`Page detection: ${addTexts} text area(s), ${addChecks} checkbox(es)`);
 }
 
 function addText(){beginPlacement('text');}
-function createTextDom(d){const o=document.getElementById('overlay');if(!o)return;const e=document.createElement('textarea');e.className='field';e.dataset.id=d.id;e.value=d.value||'';e.spellcheck=false;if(d.boxes&&d.boxes.length)e.dataset.boxes=JSON.stringify(d.boxes);if(Number.isFinite(+d.lineY))e.dataset.lineY=(+d.lineY).toFixed(2);e.dataset.fontFamily=d.fontFamily||fontFamily.value||'Helvetica';e.dataset.fontSize=String(Number.isFinite(+d.fontSize)?+d.fontSize:fs());e.dataset.textColor=d.textColor||textColor.value||'#000000';e.dataset.yOffset=clampTextYOffset(Number.isFinite(+d.yOffset)?+d.yOffset:autoYOffset).toFixed(1);Object.assign(e.style,{left:d.x+'px',top:d.y+'px',width:d.w+'px',height:d.h+'px',textAlign:(d.textAlign==='center'||d.textAlign==='right')?d.textAlign:'left',fontFamily:cssFont(e.dataset.fontFamily),fontSize:fieldFontSize(e)+'px'});o.appendChild(e);lockEditorTextColor(e,fieldTextColor(e),!!(d.boxes&&d.boxes.length));const h=document.createElement('div');h.className='text-resize';h.dataset.forId=d.id;o.appendChild(h);updateTextHandle(e,h);enableTextDrag(e,h);enableTextResize(e,h);e.addEventListener('pointerdown',ev=>selectFromEvent(ev,e));e.addEventListener('focus',()=>{if(!selectedItems.has(e))select(e);removeFieldTextLayer(e.dataset.id);e.classList.remove('mirrored');lockEditorTextColor(e,fieldTextColor(e),e.classList.contains('box-detected'));if(!fieldBoxData(e).length&&fieldLineData(e)!=null)updateLineGuide(e);else scheduleTextRecognition(e,true);updateBoxCharLayer(e);});e.addEventListener('blur',()=>{updateBoxCharLayer(e);updateFieldTextLayer(e);});e.addEventListener('input',()=>{updateBoxCharLayer(e);updateLineGuide(e);updateFieldTextLayer(e);collectCurrentPage();historyCheckpoint('Edit text','text:'+e.dataset.id);});e.addEventListener('click',()=>{if(e.classList.contains('box-detected'))updateBoxCharLayer(e);});e.addEventListener('keyup',()=>{if(e.classList.contains('box-detected'))updateBoxCharLayer(e);});e.addEventListener('select',()=>{if(e.classList.contains('box-detected'))updateBoxCharLayer(e);});if(d.boxes&&d.boxes.length){e.classList.add('box-detected');updateBoxCharLayer(e);}else if(Number.isFinite(+d.lineY)){e.classList.add('line-detected');updateLineGuide(e);}else scheduleTextRecognition(e,false);updateFieldTextLayer(e);}
-function updateTextHandle(e,h){const x=parseFloat(e.style.left),y=parseFloat(e.style.top),w=parseFloat(e.style.width),hh=parseFloat(e.style.height);h.style.left=(x+w-5)+'px';h.style.top=(y+hh-5)+'px';}
+function createTextDom(d){const o=document.getElementById('overlay');if(!o)return;const storedLineY=validFieldLineY(d),e=document.createElement('textarea');e.className='field';e.dataset.id=d.id;e.value=d.value||'';e.spellcheck=false;if(d.manualPlacement)e.dataset.manualPlacement='1';if(d.boxes&&d.boxes.length)e.dataset.boxes=JSON.stringify(d.boxes);if(storedLineY!=null)e.dataset.lineY=storedLineY.toFixed(2);e.dataset.fontFamily=d.fontFamily||fontFamily.value||'Helvetica';e.dataset.fontSize=String(Number.isFinite(+d.fontSize)?+d.fontSize:fs());e.dataset.fontWeight=normalizeFontWeight(d.fontWeight);e.dataset.textColor=d.textColor||textColor.value||'#000000';e.dataset.yOffset=clampTextYOffset(Number.isFinite(+d.yOffset)?+d.yOffset:autoYOffset).toFixed(1);Object.assign(e.style,{left:d.x+'px',top:d.y+'px',width:d.w+'px',height:d.h+'px',textAlign:(d.textAlign==='center'||d.textAlign==='right')?d.textAlign:'left',fontFamily:cssFont(e.dataset.fontFamily),fontSize:fieldFontSize(e)+'px',fontWeight:fieldFontWeight(e)});o.appendChild(e);lockEditorTextColor(e,fieldTextColor(e),!!(d.boxes&&d.boxes.length));const h=document.createElement('div');h.className='text-resize';h.dataset.forId=d.id;o.appendChild(h);updateTextHandle(e,h);enableTextDrag(e,h);enableTextResize(e,h);e.addEventListener('pointerdown',ev=>selectFromEvent(ev,e));e.addEventListener('focus',()=>{if(!selectedItems.has(e))select(e);removeFieldTextLayer(e.dataset.id);e.classList.remove('mirrored');lockEditorTextColor(e,fieldTextColor(e),e.classList.contains('box-detected'));if(!fieldBoxData(e).length&&fieldLineData(e)!=null)updateLineGuide(e);else if(e.dataset.manualPlacement!=='1')scheduleTextRecognition(e,true);updateBoxCharLayer(e);});e.addEventListener('blur',()=>{updateBoxCharLayer(e);updateFieldTextLayer(e);});e.addEventListener('input',()=>{updateBoxCharLayer(e);updateLineGuide(e);updateFieldTextLayer(e);collectCurrentPage();historyCheckpoint('Edit text','text:'+e.dataset.id);});e.addEventListener('click',()=>{if(e.classList.contains('box-detected'))updateBoxCharLayer(e);});e.addEventListener('keyup',()=>{if(e.classList.contains('box-detected'))updateBoxCharLayer(e);});e.addEventListener('select',()=>{if(e.classList.contains('box-detected'))updateBoxCharLayer(e);});if(d.boxes&&d.boxes.length){e.classList.add('box-detected');updateBoxCharLayer(e);}else if(storedLineY!=null){e.classList.add('line-detected');updateLineGuide(e);}else if(!d.manualPlacement)scheduleTextRecognition(e,false);updateFieldTextLayer(e);}
+function updateTextHandle(e,h){
+  const x=parseFloat(e.style.left),y=parseFloat(e.style.top),w=parseFloat(e.style.width),hh=parseFloat(e.style.height),lineY=fieldLineData(e);
+  h.style.left=(x+w-5)+'px';
+  // La poignée doit rester sur le ruban réellement visible. Pour une baseline
+  // détectée, le ruban peut n'occuper que le haut du textarea ; placer la poignée
+  // au bas du textarea la faisait apparaître plusieurs centimètres plus bas au zoom.
+  const visibleBottom=lineY==null?y+hh:Math.max(y+3,Math.min(y+hh,lineY+1));
+  h.style.top=(visibleBottom-5)+'px';
+}
 function applyBoxBaseline(e,boxes,announce=false){
   if(!boxes||boxes.length<2)return false;
   const ys=boxes.map(b=>+b.lineY).filter(Number.isFinite).sort((a,b)=>a-b);
   if(ys.length){const m=Math.floor(ys.length/2),line=ys.length%2?ys[m]:(ys[m-1]+ys[m])/2;e.dataset.lineY=(+line).toFixed(2);e.classList.add('line-detected');updateLineGuide(e);}
   updateBoxCharLayer(e);collectCurrentPage();if(announce)setStatus(`Boxes + baseline detected: ${boxes.length} characters`);return true;
 }
-function enableTextDrag(e,h){let sx,sy,ox,oy,drag=false,wasBoxed=false,startLineY=null;e.addEventListener('pointerdown',ev=>{if(!document.body.classList.contains('adjust'))return;drag=true;wasBoxed=fieldBoxData(e).length>0;startLineY=fieldLineData(e);clearTimeout(e._textDetectTimer);e.classList.add('dragging');sx=ev.clientX;sy=ev.clientY;ox=parseFloat(e.style.left);oy=parseFloat(e.style.top);e.setPointerCapture(ev.pointerId);ev.preventDefault();});e.addEventListener('pointermove',ev=>{if(!drag)return;const w=parseFloat(e.style.width),hh=parseFloat(e.style.height);e.style.left=Math.max(0,Math.min(pageW-w,ox+(ev.clientX-sx)/scaleNow))+'px';e.style.top=Math.max(0,Math.min(pageH-hh,oy+(ev.clientY-sy)/scaleNow))+'px';updateTextHandle(e,h);syncBoxLayerGeometry(e);});e.addEventListener('pointerup',()=>{if(!drag)return;drag=false;e.classList.remove('dragging');
+function detectPageBoxesForExactTextRect(rect){
+  if(!rect||rect.w<12||rect.h<6||!autoBoxDetectOn)return [];
+  const ac=makeAnalysisCanvas();if(!ac)return [];
+  // Le détecteur pleine page exige normalement un libellé imprimé proche pour
+  // valider une rangée. Ici la zone manuelle est elle-même l'indice fiable : on
+  // fournit un petit repère hors du champ, qui ne masque aucune de ses cases.
+  const hintW=Math.min(12,Math.max(5,rect.x)),hintX=Math.max(0,rect.x-hintW-4);
+  const hint=[{x:hintX,y:Math.max(0,rect.y-2),w:hintW,h:Math.max(8,rect.h+4),text:'manual field',isGuide:false}];
+  const groups=detectPageBoxGroups(ac.ctx,ac.canvas.width,ac.canvas.height,ac.q,hint);
+  const right=rect.x+rect.w,pad=Math.max(3,Math.min(9,rect.h*.55));let best=null;
+  for(const group of groups){
+    if(group.lineY<rect.y-pad||group.lineY>rect.y+rect.h+pad)continue;
+    const boxes=(group.boxes||[]).filter(box=>{
+      const x=+box.x,w=+box.w;if(!Number.isFinite(x)||!Number.isFinite(w))return false;
+      const overlap=Math.max(0,Math.min(x+w,right+1)-Math.max(x,rect.x-1));
+      return overlap>=Math.min(3,w*.28);
+    });
+    if(boxes.length<2)continue;
+    const first=Math.min(...boxes.map(b=>+b.x)),last=Math.max(...boxes.map(b=>+b.x+(+b.w||0)));
+    const envelope=Math.max(0,Math.min(last,right)-Math.max(first,rect.x));
+    const score=boxes.length*8+(envelope/Math.max(1,rect.w))*12-Math.abs(group.lineY-(rect.y+rect.h*.82));
+    if(!best||score>best.score)best={boxes,score};
+  }
+  return best?best.boxes.map(b=>({...b})):[];
+}
+function mergeDetectedBoxesForRect(oldBoxes,scannedBoxes,rect){
+  if(!rect)return [];
+  const old=Array.isArray(oldBoxes)?oldBoxes:[],scanned=Array.isArray(scannedBoxes)?scannedBoxes:[];
+  const oldYs=old.map(b=>+b.lineY).filter(Number.isFinite).sort((a,b)=>a-b);
+  const scanYs=scanned.map(b=>+b.lineY).filter(Number.isFinite).sort((a,b)=>a-b);
+  const ys=oldYs.length?oldYs:scanYs,mid=Math.floor(ys.length/2);
+  const referenceY=ys.length?(ys.length%2?ys[mid]:(ys[mid-1]+ys[mid])/2):null;
+  const lineTol=Math.max(2.5,Math.min(5,rect.h*.22)),right=rect.x+rect.w,pad=2.5,merged=[];
+  // Les résultats du nouveau scan passent en premier : en cas de doublon ils
+  // remplacent implicitement les coordonnées plus anciennes.
+  for(const raw of [...scanned,...old]){
+    const x=+raw.x,w=+raw.w,lineY=+raw.lineY;
+    if(!Number.isFinite(x)||!Number.isFinite(w)||w<3||x+w<rect.x-pad||x>right+pad)continue;
+    if(referenceY!=null&&Number.isFinite(lineY)&&Math.abs(lineY-referenceY)>lineTol)continue;
+    const box={x:+x.toFixed(2),w:+w.toFixed(2)};
+    if(Number.isFinite(lineY))box.lineY=+lineY.toFixed(2);
+    const duplicate=merged.some(b=>{
+      const overlap=Math.max(0,Math.min(b.x+b.w,box.x+box.w)-Math.max(b.x,box.x));
+      return overlap>=Math.min(b.w,box.w)*.72||(Math.abs(b.x-box.x)<=1.5&&Math.abs((b.x+b.w)-(box.x+box.w))<=2.5);
+    });
+    if(!duplicate)merged.push(box);
+  }
+  return merged.sort((a,b)=>a.x-b.x);
+}
+function boxesCoverExactTextGeometry(e,boxes,rect){
+  if(!boxes||boxes.length<2||!rect||rect.w<4)return false;
+  const valid=boxes.filter(b=>Number.isFinite(+b.x)&&Number.isFinite(+b.w)&&+b.w>=3);
+  if(valid.length<2)return false;
+  const first=valid.reduce((a,b)=>+b.x<a.x?b:a,valid[0]),last=valid.reduce((a,b)=>(+b.x+(+b.w))>(+a.x+(+a.w))?b:a,valid[0]);
+  const widths=valid.map(b=>+b.w).sort((a,b)=>a-b),medianW=widths[Math.floor(widths.length/2)]||0;
+  const tolerance=Math.max(3,Math.min(14,Math.max(rect.h*.55,medianW*.65))),right=rect.x+rect.w;
+  return first.x<=rect.x+tolerance&&first.x+first.w>=rect.x-tolerance&&last.x<=right+tolerance&&last.x+last.w>=right-tolerance;
+}
+function enableTextDrag(e,h){let sx,sy,ox,oy,drag=false,wasBoxed=false,startLineY=null;e.addEventListener('pointerdown',ev=>{if(!document.body.classList.contains('adjust'))return;drag=true;wasBoxed=fieldBoxData(e).length>0;startLineY=fieldLineData(e);clearTimeout(e._textDetectTimer);e.classList.add('dragging');sx=ev.clientX;sy=ev.clientY;ox=parseFloat(e.style.left);oy=parseFloat(e.style.top);e.setPointerCapture(ev.pointerId);ev.preventDefault();});e.addEventListener('pointermove',ev=>{if(!drag)return;const w=parseFloat(e.style.width),hh=parseFloat(e.style.height);e.style.left=Math.max(0,Math.min(pageW-w,ox+(ev.clientX-sx)/scaleNow))+'px';e.style.top=Math.max(0,Math.min(pageH-hh,oy+(ev.clientY-sy)/scaleNow))+'px';updateTextHandle(e,h);syncBoxLayerGeometry(e);});e.addEventListener('pointerup',()=>{if(!drag)return;drag=false;suppressPlacementClick();e.classList.remove('dragging');
   // Une zone déjà à cases conserve exactement l'ancien comportement très agressif :
   // après déplacement on réanalyse et elle se recale sur les cases imprimées.
   if(wasBoxed){collectCurrentPage();historyCheckpoint('Move text area');scheduleTextRecognition(e,true);return;}
@@ -1812,11 +2443,29 @@ function enableTextDrag(e,h){let sx,sy,ox,oy,drag=false,wasBoxed=false,startLine
   const newY=parseFloat(e.style.top),dy=newY-oy;
   if(Number.isFinite(startLineY)){e.dataset.lineY=(startLineY+dy).toFixed(2);e.classList.add('line-detected');updateLineGuide(e);}else{updateFieldBlueGeometry(e);updateFieldTextLayer(e);}collectCurrentPage();historyCheckpoint('Move text area');
 });e.addEventListener('pointercancel',()=>{drag=false;e.classList.remove('dragging');});}
-function enableTextResize(e,h){let sx,sy,ow,oh,on=false,wasBoxed=false;h.addEventListener('pointerdown',ev=>{if(!document.body.classList.contains('adjust'))return;select(e);on=true;wasBoxed=fieldBoxData(e).length>0;sx=ev.clientX;sy=ev.clientY;ow=parseFloat(e.style.width);oh=parseFloat(e.style.height);h.setPointerCapture(ev.pointerId);ev.preventDefault();ev.stopPropagation();});h.addEventListener('pointermove',ev=>{if(!on)return;const x=parseFloat(e.style.left),y=parseFloat(e.style.top);e.style.width=Math.max(4,Math.min(pageW-x,ow+(ev.clientX-sx)/scaleNow))+'px';e.style.height=Math.max(4,Math.min(pageH-y,oh+(ev.clientY-sy)/scaleNow))+'px';updateTextHandle(e,h);syncBoxLayerGeometry(e);});h.addEventListener('pointerup',()=>{if(!on)return;on=false;
-  // Les zones à cases gardent le comportement historique : le resize relance leur
-  // détection complète afin qu'elles se remettent précisément sur les séparateurs.
-  if(wasBoxed){collectCurrentPage();historyCheckpoint('Resize text area');scheduleTextRecognition(e,true);return;}
-  const classicBaseline=fieldLineData(e)!=null;if(classicBaseline)updateLineGuide(e);else scheduleTextRecognition(e,true);collectCurrentPage();historyCheckpoint('Resize text area');
+function enableTextResize(e,h){let sx,sy,ow,oh,on=false,startBoxes=[];h.addEventListener('pointerdown',ev=>{if(!document.body.classList.contains('adjust'))return;select(e);on=true;clearTimeout(e._textDetectTimer);clearTimeout(e._boxDetectTimer);startBoxes=fieldBoxData(e);sx=ev.clientX;sy=ev.clientY;ow=parseFloat(e.style.width);oh=parseFloat(e.style.height);h.setPointerCapture(ev.pointerId);ev.preventDefault();ev.stopPropagation();});h.addEventListener('pointermove',ev=>{if(!on)return;const x=parseFloat(e.style.left),y=parseFloat(e.style.top),dx=(ev.clientX-sx)/scaleNow,dy=(ev.clientY-sy)/scaleNow;
+  e.style.width=Math.max(4,Math.min(pageW-x,ow+dx))+'px';
+  // Sur une longue ligne, quelques pixels de dérive verticale faisaient gonfler
+  // le champ sur plusieurs lignes. La hauteur ne change que si le geste est
+  // réellement vertical ; un étirement principalement horizontal reste horizontal.
+  const verticalIntent=Math.abs(dy)>Math.max(8,Math.abs(dx)*.45);
+  e.style.height=(verticalIntent?Math.max(4,Math.min(pageH-y,oh+dy)):oh)+'px';
+  updateTextHandle(e,h);syncBoxLayerGeometry(e);});h.addEventListener('pointerup',()=>{if(!on)return;on=false;suppressPlacementClick();
+  // La poignée rouge exprime une décision manuelle : aucune détection ultérieure
+  // n'a le droit de raccourcir ou déplacer cette géométrie. On peut conserver le
+  // mode cases uniquement si les cases retrouvées couvrent réellement toute la
+  // largeur choisie ; une reconnaissance partielle (JJ + MM sans AAAA) est rejetée.
+  const exact={x:parseFloat(e.style.left),y:parseFloat(e.style.top),w:parseFloat(e.style.width),h:parseFloat(e.style.height)};
+  e.dataset.manualPlacement='1';
+  const scanned=autoBoxDetectOn?detectBoxesUnderField(e,false,{commit:false,snap:false}):[];
+  const pageBoxes=autoBoxDetectOn?detectPageBoxesForExactTextRect(exact):[];
+  const boxes=autoBoxDetectOn?mergeDetectedBoxesForRect(startBoxes,[...scanned,...pageBoxes],exact):[];
+  e.style.left=exact.x+'px';e.style.top=exact.y+'px';e.style.width=exact.w+'px';e.style.height=exact.h+'px';
+  const complete=boxesCoverExactTextGeometry(e,boxes,exact);
+  if(complete){setFieldBoxData(e,boxes);applyBoxBaseline(e,boxes,false);}
+  else{setFieldBoxData(e,[]);clearFieldLine(e);updateFieldTextLayer(e);}
+  updateTextHandle(e,h);syncBoxLayerGeometry(e);collectCurrentPage();historyCheckpoint('Resize text area');
+  setStatus(complete?`Manual size preserved — ${boxes.length} boxes detected over the full width`:'Manual size preserved — partial recognition ignored');
 });}
 
 function addCheck(){beginPlacement('check');}
@@ -1889,10 +2538,10 @@ function createMaskDom(d){const o=document.getElementById('overlay');if(!o)retur
 function enableBoxDrag(b,h){let sx,sy,ox,oy,on=false;b.addEventListener('pointerdown',ev=>{if(!document.body.classList.contains('adjust')||ev.target===h)return;on=true;sx=ev.clientX;sy=ev.clientY;ox=parseFloat(b.style.left);oy=parseFloat(b.style.top);b.setPointerCapture(ev.pointerId);ev.preventDefault();});b.addEventListener('pointermove',ev=>{if(!on)return;const w=parseFloat(b.style.width),hh=parseFloat(b.style.height);b.style.left=Math.max(0,Math.min(pageW-w,ox+(ev.clientX-sx)/scaleNow))+'px';b.style.top=Math.max(0,Math.min(pageH-hh,oy+(ev.clientY-sy)/scaleNow))+'px';});b.addEventListener('pointerup',()=>{if(!on)return;on=false;collectCurrentPage();historyCheckpoint(b.classList.contains('image-zone')?'Move image':'Move mask');});}
 function enableBoxResize(b,h){let sx,sy,ow,oh,on=false;h.addEventListener('pointerdown',ev=>{if(!document.body.classList.contains('adjust'))return;select(b);on=true;sx=ev.clientX;sy=ev.clientY;ow=parseFloat(b.style.width);oh=parseFloat(b.style.height);h.setPointerCapture(ev.pointerId);ev.preventDefault();ev.stopPropagation();});h.addEventListener('pointermove',ev=>{if(!on)return;const x=parseFloat(b.style.left),y=parseFloat(b.style.top);b.style.width=Math.max(10,Math.min(pageW-x,ow+(ev.clientX-sx)/scaleNow))+'px';b.style.height=Math.max(10,Math.min(pageH-y,oh+(ev.clientY-sy)/scaleNow))+'px';});h.addEventListener('pointerup',()=>{if(!on)return;on=false;collectCurrentPage();historyCheckpoint('Resize mask');});}
 
-function collectCurrentPage(){const o=document.getElementById('overlay');if(!o||!pdfProxy)return;const st=getPageState(currentPage);st.fields=[...o.querySelectorAll('.field')].map(e=>({id:e.dataset.id,x:+parseFloat(e.style.left).toFixed(2),y:+parseFloat(e.style.top).toFixed(2),w:+parseFloat(e.style.width).toFixed(2),h:+parseFloat(e.style.height).toFixed(2),value:e.value,fontFamily:fieldFontFamily(e),fontSize:fieldFontSize(e),textColor:fieldTextColor(e),textAlign:(e.style.textAlign==='center'||e.style.textAlign==='right')?e.style.textAlign:'left',yOffset:fieldYOffset(e),boxes:fieldBoxData(e),lineY:fieldLineData(e)}));st.checks=[...o.querySelectorAll('.check-zone')].map(e=>({id:e.dataset.id,x:+parseFloat(e.style.left).toFixed(2),y:+parseFloat(e.style.top).toFixed(2),w:+parseFloat(e.style.width).toFixed(2),h:+parseFloat(e.style.height).toFixed(2),checked:e.querySelector('input').checked,detected:e.dataset.detected==='1'}));st.images=[...o.querySelectorAll('.image-zone')].map(e=>({id:e.dataset.id,x:+parseFloat(e.style.left).toFixed(2),y:+parseFloat(e.style.top).toFixed(2),w:+parseFloat(e.style.width).toFixed(2),h:+parseFloat(e.style.height).toFixed(2),aspect:parseFloat(e.dataset.aspect)||1,src:e.querySelector('img').src}));st.masks=[...o.querySelectorAll('.mask-zone')].map(e=>({id:e.dataset.id,x:+parseFloat(e.style.left).toFixed(2),y:+parseFloat(e.style.top).toFixed(2),w:+parseFloat(e.style.width).toFixed(2),h:+parseFloat(e.style.height).toFixed(2)}));}
+function collectCurrentPage(){const o=document.getElementById('overlay');if(!o||!pdfProxy)return;const st=getPageState(currentPage);st.fields=[...o.querySelectorAll('.field')].map(e=>({id:e.dataset.id,x:+parseFloat(e.style.left).toFixed(2),y:+parseFloat(e.style.top).toFixed(2),w:+parseFloat(e.style.width).toFixed(2),h:+parseFloat(e.style.height).toFixed(2),value:e.value,fontFamily:fieldFontFamily(e),fontSize:fieldFontSize(e),fontWeight:fieldFontWeight(e),textColor:fieldTextColor(e),textAlign:(e.style.textAlign==='center'||e.style.textAlign==='right')?e.style.textAlign:'left',yOffset:fieldYOffset(e),manualPlacement:e.dataset.manualPlacement==='1',boxes:fieldBoxData(e),lineY:fieldLineData(e)}));st.checks=[...o.querySelectorAll('.check-zone')].map(e=>({id:e.dataset.id,x:+parseFloat(e.style.left).toFixed(2),y:+parseFloat(e.style.top).toFixed(2),w:+parseFloat(e.style.width).toFixed(2),h:+parseFloat(e.style.height).toFixed(2),checked:e.querySelector('input').checked,detected:e.dataset.detected==='1'}));st.images=[...o.querySelectorAll('.image-zone')].map(e=>({id:e.dataset.id,x:+parseFloat(e.style.left).toFixed(2),y:+parseFloat(e.style.top).toFixed(2),w:+parseFloat(e.style.width).toFixed(2),h:+parseFloat(e.style.height).toFixed(2),aspect:parseFloat(e.dataset.aspect)||1,src:e.querySelector('img').src}));st.masks=[...o.querySelectorAll('.mask-zone')].map(e=>({id:e.dataset.id,x:+parseFloat(e.style.left).toFixed(2),y:+parseFloat(e.style.top).toFixed(2),w:+parseFloat(e.style.width).toFixed(2),h:+parseFloat(e.style.height).toFixed(2)}));}
 function historyStateData(){
   collectCurrentPage();
-  return JSON.stringify({pageStates,fontFamily:fontFamily.value||'Helvetica',fontSize:fs(),textColor:textColor.value||'#000000',autoYOffset,autoLineOn,autoCheckDetectOn,autoBoxDetectOn,autoTextSizeOn});
+  return JSON.stringify({pageStates,fontFamily:fontFamily.value||'Helvetica',fontSize:fs(),fontWeight:fontWeightValue(),textColor:textColor.value||'#000000',autoYOffset,autoLineOn,autoCheckDetectOn,autoBoxDetectOn,autoTextSizeOn});
 }
 function updateHistoryButtons(){
   const undoButton=document.getElementById('undoAction'),redoButton=document.getElementById('redoAction');
@@ -1923,7 +2572,7 @@ async function restoreHistoryEntry(entry,message){
   try{
     const state=JSON.parse(entry.data);
     pageStates=state.pageStates||{};
-    fontFamily.value=state.fontFamily||'Helvetica';fontSize.value=String(state.fontSize||8);textColor.value=state.textColor||'#000000';
+    fontFamily.value=state.fontFamily||'Helvetica';fontSize.value=String(state.fontSize||8);setFontWeightControl(state.fontWeight);textColor.value=state.textColor||'#000000';
     autoYOffset=Number.isFinite(+state.autoYOffset)?+state.autoYOffset:0;
     autoLineOn=state.autoLineOn!==false;autoCheckDetectOn=state.autoCheckDetectOn!==false;autoBoxDetectOn=state.autoBoxDetectOn!==false;autoTextSizeOn=state.autoTextSizeOn!==false;
     if(autoLineEnabled)autoLineEnabled.checked=autoLineOn;if(autoCheckDetect)autoCheckDetect.checked=autoCheckDetectOn;if(autoBoxDetect)autoBoxDetect.checked=autoBoxDetectOn;if(autoTextSize)autoTextSize.checked=autoTextSizeOn;
@@ -1940,7 +2589,7 @@ async function redoAction(){
   const next=redoHistory.pop();undoHistory.push(next);await restoreHistoryEntry(next,(uiLanguage==='fr'?'Rétabli : ':'Redone: ')+next.label);
 }
 function deleteSelected(){const items=[...selectedItems];if(!items.length){setStatus('Select an area');return;}for(const el of items){if(el.classList.contains('field')){const id=el.dataset.id;clearTimeout(el._textDetectTimer);clearTimeout(el._boxDetectTimer);const h=document.querySelector(`.text-resize[data-for-id="${id}"]`);if(h)h.remove();removeBoxCharLayer(id);removeLineGuide(id);removeFieldTextLayer(id);}el.remove();}selectedItems.clear();selected=null;collectCurrentPage();historyCheckpoint(items.length>1?'Delete areas':'Delete area');setStatus(items.length>1?items.length+' areas deleted':'Area deleted');}
-function selectedData(){if(!selected)return null;const base={x:parseFloat(selected.style.left)||0,y:parseFloat(selected.style.top)||0,w:parseFloat(selected.style.width)||18,h:parseFloat(selected.style.height)||18};if(selected.classList.contains('field'))return {...base,type:'field',value:selected.value||'',fontFamily:fieldFontFamily(selected),fontSize:fieldFontSize(selected),textColor:fieldTextColor(selected),textAlign:(selected.style.textAlign==='center'||selected.style.textAlign==='right')?selected.style.textAlign:'left',yOffset:fieldYOffset(selected),boxes:fieldBoxData(selected),lineY:fieldLineData(selected)};if(selected.classList.contains('check-zone'))return {...base,type:'check',checked:!!selected.querySelector('input')?.checked,detected:selected.dataset.detected==='1'};if(selected.classList.contains('image-zone'))return {...base,type:'image',aspect:parseFloat(selected.dataset.aspect)||1,src:selected.querySelector('img')?.src||''};if(selected.classList.contains('mask-zone'))return {...base,type:'mask'};return null;}
+function selectedData(){if(!selected)return null;const base={x:parseFloat(selected.style.left)||0,y:parseFloat(selected.style.top)||0,w:parseFloat(selected.style.width)||18,h:parseFloat(selected.style.height)||18};if(selected.classList.contains('field'))return {...base,type:'field',value:selected.value||'',fontFamily:fieldFontFamily(selected),fontSize:fieldFontSize(selected),fontWeight:fieldFontWeight(selected),textColor:fieldTextColor(selected),textAlign:(selected.style.textAlign==='center'||selected.style.textAlign==='right')?selected.style.textAlign:'left',yOffset:fieldYOffset(selected),manualPlacement:selected.dataset.manualPlacement==='1',boxes:fieldBoxData(selected),lineY:fieldLineData(selected)};if(selected.classList.contains('check-zone'))return {...base,type:'check',checked:!!selected.querySelector('input')?.checked,detected:selected.dataset.detected==='1'};if(selected.classList.contains('image-zone'))return {...base,type:'image',aspect:parseFloat(selected.dataset.aspect)||1,src:selected.querySelector('img')?.src||''};if(selected.classList.contains('mask-zone'))return {...base,type:'mask'};return null;}
 function copySelected(){const d=selectedData();if(!d){setStatus('Select an area');return;}clipboardItem=JSON.parse(JSON.stringify(d));setStatus('Area copied');}
 function pasteSelected(){if(!pdfProxy||!clipboardItem){setStatus('Nothing to paste');return;}collectCurrentPage();const d=JSON.parse(JSON.stringify(clipboardItem)),off=12,oldX=d.x||0;d.x=Math.max(0,Math.min(pageW-d.w,oldX+off));d.y=Math.max(0,Math.min(pageH-d.h,(d.y||0)+off));if(d.type==='field'){const dx=d.x-oldX,dy=d.y-(clipboardItem.y||0);if(d.boxes?.length)d.boxes=d.boxes.map(b=>({...b,x:+(b.x+dx).toFixed(2)}));if(Number.isFinite(+d.lineY))d.lineY=+(+d.lineY+dy).toFixed(2);}let el=null;if(d.type==='field'){d.id=uid('text');getPageState(currentPage).fields.push(d);createTextDom(d);applyFont();el=document.querySelector(`.field[data-id="${d.id}"]`);}else if(d.type==='check'){d.id=uid('check');d.detected=false;getPageState(currentPage).checks.push(d);createCheckDom(d);el=document.querySelector(`.check-zone[data-id="${d.id}"]`);if(el)scheduleCheckDetection(el,false);}else if(d.type==='image'){d.id=uid('img');getPageState(currentPage).images.push(d);createImageDom(d);el=document.querySelector(`.image-zone[data-id="${d.id}"]`);}else if(d.type==='mask'){d.id=uid('mask');getPageState(currentPage).masks.push(d);createMaskDom(d);el=document.querySelector(`.mask-zone[data-id="${d.id}"]`);}if(el){select(el);clipboardItem={...clipboardItem,x:d.x,y:d.y};enterAdjust();collectCurrentPage();historyCheckpoint('Paste area');setStatus('Area pasted');}}
 
@@ -1984,7 +2633,7 @@ function applyMenuScale(){menuScale=Math.max(.65,Math.min(1.5,menuScale||1));doc
 function setMenuScale(v){menuScale=v;applyMenuScale();}
 
 
-function layoutSnapshot(){collectCurrentPage();const clean={};for(const [page,st] of Object.entries(pageStates)){clean[page]={fields:(st.fields||[]).map(f=>({id:f.id,x:f.x,y:f.y,w:f.w,h:f.h,value:'',fontFamily:f.fontFamily||'Helvetica',fontSize:Number.isFinite(+f.fontSize)?+f.fontSize:8,textColor:f.textColor||'#000000',textAlign:(f.textAlign==='center'||f.textAlign==='right')?f.textAlign:'left',yOffset:stateFieldYOffset(f),boxes:f.boxes||[],lineY:Number.isFinite(+f.lineY)?+f.lineY:null})),checks:(st.checks||[]).map(c=>({id:c.id,x:c.x,y:c.y,w:c.w,h:c.h,checked:false,detected:!!c.detected})),images:(st.images||[]).map(i=>({...i})),masks:(st.masks||[]).map(m=>({...m}))};}return {format:'generic-pdf-mask-layout',version:1,fontFamily:fontFamily.value,fontSize:fs(),textColor:textColor.value,autoYOffset,autoLineOn,autoCheckDetectOn,autoBoxDetectOn,autoTextSizeOn,clickDetectOn:document.getElementById('clickDetect')?.checked!==false,pageStates:clean};}
+function layoutSnapshot(){collectCurrentPage();const clean={};for(const [page,st] of Object.entries(pageStates)){clean[page]={fields:(st.fields||[]).map(f=>({id:f.id,x:f.x,y:f.y,w:f.w,h:f.h,value:'',fontFamily:f.fontFamily||'Helvetica',fontSize:Number.isFinite(+f.fontSize)?+f.fontSize:8,fontWeight:normalizeFontWeight(f.fontWeight),textColor:f.textColor||'#000000',textAlign:(f.textAlign==='center'||f.textAlign==='right')?f.textAlign:'left',yOffset:stateFieldYOffset(f),manualPlacement:!!f.manualPlacement,boxes:f.boxes||[],lineY:Number.isFinite(+f.lineY)?+f.lineY:null})),checks:(st.checks||[]).map(c=>({id:c.id,x:c.x,y:c.y,w:c.w,h:c.h,checked:false,detected:!!c.detected})),images:(st.images||[]).map(i=>({...i})),masks:(st.masks||[]).map(m=>({...m}))};}return {format:'generic-pdf-mask-layout',version:1,fontFamily:fontFamily.value,fontSize:fs(),fontWeight:fontWeightValue(),textColor:textColor.value,autoYOffset,autoLineOn,autoCheckDetectOn,autoBoxDetectOn,autoTextSizeOn,clickDetectOn:document.getElementById('clickDetect')?.checked!==false,pageStates:clean};}
 
 function flashSaveSuccess(buttonId,label){
   const b=document.getElementById(buttonId);if(!b)return;
@@ -1992,25 +2641,25 @@ function flashSaveSuccess(buttonId,label){
   clearTimeout(b._saveTimer);b._saveTimer=setTimeout(()=>{b.textContent=b.dataset.normalLabel||old;b.classList.remove('save-ok');},1800);
 }
 function exportLayout(){if(!pdfProxy)return;try{const blob=new Blob([JSON.stringify(layoutSnapshot(),null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='overlay.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);setStatus('Overlay saved');flashSaveSuccess('exportLayout','Overlay saved');}catch(err){console.error(err);setStatus('Overlay error: '+err.message);}}
-async function applyLayout(layout){if(!layout||layout.format!=='generic-pdf-mask-layout')throw new Error('Unrecognized overlay file');collectCurrentPage();fontFamily.value=layout.fontFamily||'Helvetica';fontSize.value=layout.fontSize||8;textColor.value=layout.textColor||'#000000';autoYOffset=Number.isFinite(+layout.autoYOffset)?+layout.autoYOffset:0;autoLineOn=layout.autoLineOn!==false;autoCheckDetectOn=layout.autoCheckDetectOn!==false;autoBoxDetectOn=layout.autoBoxDetectOn!==false;autoTextSizeOn=layout.autoTextSizeOn!==false;if(autoLineEnabled)autoLineEnabled.checked=autoLineOn;if(autoCheckDetect)autoCheckDetect.checked=autoCheckDetectOn;if(autoBoxDetect)autoBoxDetect.checked=autoBoxDetectOn;if(autoTextSize)autoTextSize.checked=autoTextSizeOn;updateAutoYValue();const vals={};for(const [p,st] of Object.entries(pageStates)){vals[p]={};for(const f of st.fields||[])vals[p][f.id]=f.value||'';}pageStates={};for(const [p,st] of Object.entries(layout.pageStates||{})){pageStates[p]={fields:(st.fields||[]).map(f=>({...f,value:(vals[p]&&vals[p][f.id])||''})),checks:(st.checks||[]).map(c=>({...c,checked:false})),images:(st.images||[]).map(i=>({...i})),masks:(st.masks||[]).map(m=>({...m}))};}stage.innerHTML='';await renderPage(currentPage);historyCheckpoint('Load overlay');setStatus('Overlay loaded');}
+async function applyLayout(layout){if(!layout||layout.format!=='generic-pdf-mask-layout')throw new Error('Unrecognized overlay file');collectCurrentPage();fontFamily.value=layout.fontFamily||'Helvetica';fontSize.value=layout.fontSize||8;setFontWeightControl(layout.fontWeight);textColor.value=layout.textColor||'#000000';autoYOffset=Number.isFinite(+layout.autoYOffset)?+layout.autoYOffset:0;autoLineOn=layout.autoLineOn!==false;autoCheckDetectOn=layout.autoCheckDetectOn!==false;autoBoxDetectOn=layout.autoBoxDetectOn!==false;autoTextSizeOn=layout.autoTextSizeOn!==false;if(autoLineEnabled)autoLineEnabled.checked=autoLineOn;if(autoCheckDetect)autoCheckDetect.checked=autoCheckDetectOn;if(autoBoxDetect)autoBoxDetect.checked=autoBoxDetectOn;if(autoTextSize)autoTextSize.checked=autoTextSizeOn;updateAutoYValue();const vals={};for(const [p,st] of Object.entries(pageStates)){vals[p]={};for(const f of st.fields||[])vals[p][f.id]=f.value||'';}pageStates={};for(const [p,st] of Object.entries(layout.pageStates||{})){pageStates[p]={fields:(st.fields||[]).map(f=>({...f,fontWeight:normalizeFontWeight(f.fontWeight),value:(vals[p]&&vals[p][f.id])||''})),checks:(st.checks||[]).map(c=>({...c,checked:false})),images:(st.images||[]).map(i=>({...i})),masks:(st.masks||[]).map(m=>({...m}))};}stage.innerHTML='';await renderPage(currentPage);historyCheckpoint('Load overlay');setStatus('Overlay loaded');}
 function importLayoutFile(file){if(!file)return;const r=new FileReader();r.onload=async()=>{try{await applyLayout(JSON.parse(r.result));}catch(err){console.error(err);setStatus('Overlay error: '+err.message);}};r.readAsText(file);}
 
-async function saveProject(){if(!pdfProxy)return;collectCurrentPage();try{const state={fontFamily:fontFamily.value,fontSize:fs(),textColor:textColor.value,autoYOffset,autoLineOn,autoCheckDetectOn,autoBoxDetectOn,autoTextSizeOn,clickDetectOn:document.getElementById('clickDetect')?.checked!==false,currentPage,userZoom,menuScale,pageStates};await dbPut({key:docKey,name:docName,pdfData:new Uint8Array(pdfBytes),state,updated:Date.now()});localStorage.setItem(LAST_KEY,docKey);setStatus('State saved');flashSaveSuccess('save','Saved');}catch(err){console.error(err);setStatus('Unable to save');}}
+async function saveProject(){if(!pdfProxy)return;collectCurrentPage();try{const state={fontFamily:fontFamily.value,fontSize:fs(),fontWeight:fontWeightValue(),textColor:textColor.value,autoYOffset,autoLineOn,autoCheckDetectOn,autoBoxDetectOn,autoTextSizeOn,clickDetectOn:document.getElementById('clickDetect')?.checked!==false,currentPage,userZoom,menuScale,pageStates};await dbPut({key:docKey,name:docName,pdfData:new Uint8Array(pdfBytes),state,updated:Date.now()});localStorage.setItem(LAST_KEY,docKey);setStatus('State saved');flashSaveSuccess('save','Saved');}catch(err){console.error(err);setStatus('Unable to save');}}
 async function restoreLast(){const key=localStorage.getItem(LAST_KEY);if(!key)return;try{const rec=await dbGet(key);if(rec)await loadPdf(rec.pdfData,rec.name,rec.state);}catch(err){console.warn(err);}}
 function clearValues(){collectCurrentPage();Object.values(pageStates).forEach(st=>{st.fields.forEach(f=>f.value='');(st.checks||[]).forEach(c=>c.checked=false);});document.querySelectorAll('.field').forEach(e=>{e.value='';updateBoxCharLayer(e);updateFieldTextLayer(e);});document.querySelectorAll('.check-zone input').forEach(e=>{e.checked=false;e.closest('.check-zone')?.classList.remove('checked');});collectCurrentPage();historyCheckpoint('Clear values');setStatus('Values cleared (not saved)');}
 
-function browserBoxTextMetrics(fontFamilyName,size){
+function browserBoxTextMetrics(fontFamilyName,size,fontWeight='normal'){
   // Mesure la baseline CSS réelle du navigateur pour cette police/taille. Cela reste
   // stable lorsque l'on passe de 8 px à une très grande police et entre Helvetica,
   // Times et Courier. Le cache évite de recréer un élément DOM à chaque frappe.
-  const px=Math.max(1,Number(size)||8),key=(fontFamilyName||'Helvetica')+'@'+px;
+  const px=Math.max(1,Number(size)||8),weight=normalizeFontWeight(fontWeight),key=(fontFamilyName||'Helvetica')+'@'+px+'@'+weight;
   const cache=browserBoxTextMetrics._cache||(browserBoxTextMetrics._cache=new Map());
   if(cache.has(key))return cache.get(key);
   let baseline=px*.82,lineHeight=px;
   let host=null;
   try{
     host=document.createElement('div');
-    Object.assign(host.style,{position:'absolute',left:'-10000px',top:'0',visibility:'hidden',pointerEvents:'none',whiteSpace:'nowrap',padding:'0',margin:'0',border:'0',fontFamily:cssFont(fontFamilyName),fontSize:px+'px',lineHeight:'1'});
+    Object.assign(host.style,{position:'absolute',left:'-10000px',top:'0',visibility:'hidden',pointerEvents:'none',whiteSpace:'nowrap',padding:'0',margin:'0',border:'0',fontFamily:cssFont(fontFamilyName),fontSize:px+'px',fontWeight:weight,lineHeight:'1'});
     host.appendChild(document.createTextNode('Mg'));
     const marker=document.createElement('span');
     Object.assign(marker.style,{display:'inline-block',width:'0',height:'0',padding:'0',margin:'0',border:'0',verticalAlign:'baseline'});
@@ -2022,7 +2671,25 @@ function browserBoxTextMetrics(fontFamilyName,size){
   }catch(_e){}finally{host?.remove();}
   const out={baseline,lineHeight};cache.set(key,out);return out;
 }
-function browserBoxTextAscent(fontFamilyName,size){return browserBoxTextMetrics(fontFamilyName,size).baseline;}
+function browserBoxTextAscent(fontFamilyName,size,fontWeight='normal'){return browserBoxTextMetrics(fontFamilyName,size,fontWeight).baseline;}
+
+function removeOriginalPdfWidgets(doc){
+  // Les formulaires CERFA contiennent souvent leurs propres widgets AcroForm.
+  // Les conserver dans le fichier final fait réapparaître les zones bleues/grises
+  // selon le lecteur PDF. Beaucoup n'ont aucune apparence enregistrée : les aplatir
+  // serait donc fragile. On retire seulement les widgets et le XFA ; le dessin du
+  // formulaire reste dans le contenu normal de la page.
+  const {PDFName,PDFArray,PDFDict}=PDFLib,widgetName=PDFName.of('Widget'),annotsName=PDFName.of('Annots');
+  for(const page of doc.getPages()){
+    const annots=page.node.lookupMaybe(annotsName,PDFArray);if(!annots)continue;
+    for(let i=annots.size()-1;i>=0;i--){
+      const dict=doc.context.lookup(annots.get(i),PDFDict),subtype=dict?.lookupMaybe(PDFName.of('Subtype'),PDFName);
+      if(subtype?.toString()===widgetName.toString())annots.remove(i);
+    }
+    if(annots.size()===0)page.node.delete(annotsName);
+  }
+  doc.catalog.delete(PDFName.of('AcroForm'));
+}
 
 async function exportDocument(){
   if(!pdfProxy||!window.PDFLib){setStatus('Unable to generate PDF: document or PDF library unavailable');return;}
@@ -2062,8 +2729,9 @@ async function exportDocument(){
     alert(msg);
   }
   collectCurrentPage();
+  sanitizePageStateLineYs();
   setStatus('Creating…');
-  try{const doc=await PDFLib.PDFDocument.load(new Uint8Array(pdfBytes));const pages=doc.getPages();const fonts={Helvetica:await doc.embedFont(PDFLib.StandardFonts.Helvetica),TimesRoman:await doc.embedFont(PDFLib.StandardFonts.TimesRoman),Courier:await doc.embedFont(PDFLib.StandardFonts.Courier)};for(let i=0;i<pages.length;i++){const st=pageStates[i+1];if(!st)continue;const p=pages[i],W=p.getWidth(),H=p.getHeight();for(const m of st.masks||[])p.drawRectangle({x:m.x,y:H-m.y-m.h,width:m.w,height:m.h,color:PDFLib.rgb(1,1,1)});for(const f of st.fields||[]){const ff=f.fontFamily||'Helvetica',font=fonts[ff]||fonts.Helvetica,size=Number.isFinite(+f.fontSize)?Math.max(5,Math.min(48,+f.fontSize)):8,tc=hexToRgb01(f.textColor||'#000000'),yOffset=stateFieldYOffset(f);const raw=(f.value||'');const boxes=f.boxes||[];const t=boxes.length>=2?raw:raw.trim();if(!t&&!boxes.length)continue;if(boxes.length>=2){const chars=Array.from(raw.replace(/\r?\n/g,''));/* Même baseline qu'à l'écran, indépendante de la taille de police. */const fm=browserBoxTextMetrics(ff,size),baselineGap=1.5,screenBaseline=(autoLineOn&&Number.isFinite(+f.lineY))?((+f.lineY)-baselineGap+yOffset):(f.y+(f.h-fm.lineHeight)/2+fm.baseline+yOffset),y=H-screenBaseline;for(let bi=0;bi<Math.min(chars.length,boxes.length);bi++){const ch=chars[bi];if(/\s/.test(ch))continue;const bw=boxes[bi].w||10,cx=boxes[bi].x+bw/2,tw=font.widthOfTextAtSize(ch,size);p.drawText(ch,{x:cx-tw/2,y,size,font,color:PDFLib.rgb(tc.r,tc.g,tc.b)});}}else{const maxW=Math.max(1,f.w-4),lineH=size*1.2,maxLines=Math.max(1,Math.floor((f.h-2)/lineH));const lines=[];for(const para of t.split(/\r?\n/)){let line='';for(const word of para.split(/\s+/)){const test=line?line+' '+word:word;if(font.widthOfTextAtSize(test,size)<=maxW)line=test;else{if(line)lines.push(line);line=word;}}lines.push(line);}const cfm=browserBoxTextMetrics(ff,size),classicBaselineGap=1.5,classicScreenBaseline=(autoLineOn&&Number.isFinite(+f.lineY))?((+f.lineY)-classicBaselineGap+yOffset):(f.y+(f.h-cfm.lineHeight)/2+cfm.baseline+yOffset);let y=H-classicScreenBaseline;for(const line of lines.slice(0,maxLines)){if(line){const tw=font.widthOfTextAtSize(line,size),ta=(f.textAlign==='center'||f.textAlign==='right')?f.textAlign:'left';let tx=f.x+2;if(ta==='center')tx=f.x+Math.max(2,(f.w-tw)/2);else if(ta==='right')tx=f.x+Math.max(2,f.w-tw-2);p.drawText(line,{x:tx,y,size,font,color:PDFLib.rgb(tc.r,tc.g,tc.b)});}y-=lineH;}}}for(const c of st.checks||[]){const sz=Math.min(c.w||12,c.h||12),baseY=H-c.y-sz;if(!c.detected)p.drawRectangle({x:c.x,y:baseY,width:sz,height:sz,borderColor:PDFLib.rgb(0,0,0),borderWidth:0.8});if(c.checked){/* A l'export PDF, reproduire une vraie coche plutôt qu'une croix en X. Les coordonnées restent proportionnelles à la case, donc le rendu reste propre même sur les petites cases détectées. */const thick=Math.max(.65,Math.min(1.25,sz*.10)),x0=c.x+sz*.20,y0=baseY+sz*.49,x1=c.x+sz*.41,y1=baseY+sz*.27,x2=c.x+sz*.80,y2=baseY+sz*.72;p.drawLine({start:{x:x0,y:y0},end:{x:x1,y:y1},thickness:thick,color:PDFLib.rgb(0,0,0)});p.drawLine({start:{x:x1,y:y1},end:{x:x2,y:y2},thickness:thick,color:PDFLib.rgb(0,0,0)});}}for(const im of st.images||[]){const src=im.src||'';if(!src)continue;let emb;const raw=Uint8Array.from(atob((src.split(',')[1]||'')),c=>c.charCodeAt(0));if(src.startsWith('data:image/png'))emb=await doc.embedPng(raw);else if(src.startsWith('data:image/jpeg')||src.startsWith('data:image/jpg'))emb=await doc.embedJpg(raw);else{const ci=new Image();ci.src=src;await ci.decode();const c=document.createElement('canvas');c.width=ci.naturalWidth;c.height=ci.naturalHeight;c.getContext('2d').drawImage(ci,0,0);const png=c.toDataURL('image/png');const rb=Uint8Array.from(atob(png.split(',')[1]),x=>x.charCodeAt(0));emb=await doc.embedPng(rb);}p.drawImage(emb,{x:im.x,y:H-im.y-im.h,width:im.w,height:im.h});}}
+  try{const doc=await PDFLib.PDFDocument.load(new Uint8Array(pdfBytes));removeOriginalPdfWidgets(doc);const pages=doc.getPages();const fontNames={Helvetica:{normal:PDFLib.StandardFonts.Helvetica,bold:PDFLib.StandardFonts.HelveticaBold},TimesRoman:{normal:PDFLib.StandardFonts.TimesRoman,bold:PDFLib.StandardFonts.TimesRomanBold},Courier:{normal:PDFLib.StandardFonts.Courier,bold:PDFLib.StandardFonts.CourierBold}},fonts={};for(const [family,variants] of Object.entries(fontNames))fonts[family]={normal:await doc.embedFont(variants.normal),bold:await doc.embedFont(variants.bold)};for(let i=0;i<pages.length;i++){const st=pageStates[i+1];if(!st)continue;const p=pages[i],W=p.getWidth(),H=p.getHeight();for(const m of st.masks||[])p.drawRectangle({x:m.x,y:H-m.y-m.h,width:m.w,height:m.h,color:PDFLib.rgb(1,1,1)});for(const f of st.fields||[]){const ff=f.fontFamily||'Helvetica',weight=normalizeFontWeight(f.fontWeight),familyFonts=fonts[ff]||fonts.Helvetica,font=familyFonts[weight]||familyFonts.normal,size=Number.isFinite(+f.fontSize)?Math.max(5,Math.min(48,+f.fontSize)):8,tc=hexToRgb01(f.textColor||'#000000'),yOffset=stateFieldYOffset(f);const raw=(f.value||'');const boxes=f.boxes||[];const t=boxes.length>=2?raw:raw.trim();if(!t&&!boxes.length)continue;if(boxes.length>=2){const chars=Array.from(raw.replace(/\r?\n/g,''));/* Même baseline qu'à l'écran, indépendante de la taille de police. */const fm=browserBoxTextMetrics(ff,size,weight),baselineGap=1.5,screenBaseline=(autoLineOn&&Number.isFinite(+f.lineY))?((+f.lineY)-baselineGap+yOffset):(f.y+(f.h-fm.lineHeight)/2+fm.baseline+yOffset),y=H-screenBaseline;for(let bi=0;bi<Math.min(chars.length,boxes.length);bi++){const ch=chars[bi];if(/\s/.test(ch))continue;const bw=boxes[bi].w||10,cx=boxes[bi].x+bw/2,tw=font.widthOfTextAtSize(ch,size);p.drawText(ch,{x:cx-tw/2,y,size,font,color:PDFLib.rgb(tc.r,tc.g,tc.b)});}}else{const maxW=Math.max(1,f.w-4),lineH=size*1.2,maxLines=Math.max(1,Math.floor((f.h-2)/lineH));const lines=[];for(const para of t.split(/\r?\n/)){let line='';for(const word of para.split(/\s+/)){const test=line?line+' '+word:word;if(font.widthOfTextAtSize(test,size)<=maxW)line=test;else{if(line)lines.push(line);line=word;}}lines.push(line);}const cfm=browserBoxTextMetrics(ff,size,weight),classicBaselineGap=1.5,classicScreenBaseline=(autoLineOn&&Number.isFinite(+f.lineY))?((+f.lineY)-classicBaselineGap+yOffset):(f.y+(f.h-cfm.lineHeight)/2+cfm.baseline+yOffset);let y=H-classicScreenBaseline;for(const line of lines.slice(0,maxLines)){if(line){const tw=font.widthOfTextAtSize(line,size),ta=(f.textAlign==='center'||f.textAlign==='right')?f.textAlign:'left';let tx=f.x+2;if(ta==='center')tx=f.x+Math.max(2,(f.w-tw)/2);else if(ta==='right')tx=f.x+Math.max(2,f.w-tw-2);p.drawText(line,{x:tx,y,size,font,color:PDFLib.rgb(tc.r,tc.g,tc.b)});}y-=lineH;}}}for(const c of st.checks||[]){const sz=Math.min(c.w||12,c.h||12),baseY=H-c.y-sz;if(!c.detected)p.drawRectangle({x:c.x,y:baseY,width:sz,height:sz,borderColor:PDFLib.rgb(0,0,0),borderWidth:0.8});if(c.checked){/* A l'export PDF, reproduire une vraie coche plutôt qu'une croix en X. Les coordonnées restent proportionnelles à la case, donc le rendu reste propre même sur les petites cases détectées. */const thick=Math.max(.65,Math.min(1.25,sz*.10)),x0=c.x+sz*.20,y0=baseY+sz*.49,x1=c.x+sz*.41,y1=baseY+sz*.27,x2=c.x+sz*.80,y2=baseY+sz*.72;p.drawLine({start:{x:x0,y:y0},end:{x:x1,y:y1},thickness:thick,color:PDFLib.rgb(0,0,0)});p.drawLine({start:{x:x1,y:y1},end:{x:x2,y:y2},thickness:thick,color:PDFLib.rgb(0,0,0)});}}for(const im of st.images||[]){const src=im.src||'';if(!src)continue;let emb;const raw=Uint8Array.from(atob((src.split(',')[1]||'')),c=>c.charCodeAt(0));if(src.startsWith('data:image/png'))emb=await doc.embedPng(raw);else if(src.startsWith('data:image/jpeg')||src.startsWith('data:image/jpg'))emb=await doc.embedJpg(raw);else{const ci=new Image();ci.src=src;await ci.decode();const c=document.createElement('canvas');c.width=ci.naturalWidth;c.height=ci.naturalHeight;c.getContext('2d').drawImage(ci,0,0);const png=c.toDataURL('image/png');const rb=Uint8Array.from(atob(png.split(',')[1]),x=>x.charCodeAt(0));emb=await doc.embedPng(rb);}p.drawImage(emb,{x:im.x,y:H-im.y-im.h,width:im.w,height:im.h});}}
 const out=await doc.save(),blob=new Blob([out],{type:'application/pdf'});
 if(saveHandle){
   const writable=await saveHandle.createWritable();
@@ -2092,7 +2760,7 @@ window.addEventListener('pageshow',()=>{document.querySelectorAll('.messages-pan
 // Ancien bouton de détection globale conservé pour réactivation :
 // document.getElementById('detectPageFields').addEventListener('click',detectEditableFieldsOnPage);
 document.getElementById('alignVertical').addEventListener('click',()=>alignSelected('vertical'));document.getElementById('alignHorizontal').addEventListener('click',()=>alignSelected('horizontal'));document.getElementById('alignLeft').addEventListener('click',()=>alignSelected('left'));document.getElementById('alignRight').addEventListener('click',()=>alignSelected('right'));document.getElementById('autoYUp').addEventListener('click',()=>adjustTextYOffset(-1));document.getElementById('autoYDown').addEventListener('click',()=>adjustTextYOffset(+1));document.getElementById('autoYReset').addEventListener('click',resetAllTextYOffsets);autoYAllDocument?.addEventListener('change',updateAutoYValue);autoLineEnabled.addEventListener('change',()=>setAutoLineEnabled(autoLineEnabled.checked));autoCheckDetect.addEventListener('change',()=>setAutoCheckDetect(autoCheckDetect.checked));autoBoxDetect.addEventListener('change',()=>setAutoBoxDetect(autoBoxDetect.checked));autoTextSize.addEventListener('change',()=>setAutoTextSize(autoTextSize.checked));document.getElementById('menuSmaller').addEventListener('click',()=>setMenuScale(menuScale/1.1));document.getElementById('menuLarger').addEventListener('click',()=>setMenuScale(menuScale*1.1));document.getElementById('addField').addEventListener('click',addText);document.getElementById('addCheck').addEventListener('click',addCheck);document.getElementById('addImage').addEventListener('click',()=>document.getElementById('imagePicker').click());document.getElementById('imagePicker').addEventListener('change',e=>{addImageFile(e.target.files[0]);e.target.value='';});document.getElementById('addMask').addEventListener('click',addMask);document.getElementById('deleteItem').addEventListener('click',deleteSelected);
-document.getElementById('textAlignLeft').addEventListener('click',()=>setTextAlignment('left'));document.getElementById('textAlignCenter').addEventListener('click',()=>setTextAlignment('center'));document.getElementById('textAlignRight').addEventListener('click',()=>setTextAlignment('right'));fontFamily.addEventListener('change',applyFontFamily);fontSize.addEventListener('change',applyFontSize);document.getElementById('fontSizeSmaller').addEventListener('click',()=>stepFontSize(-0.5));document.getElementById('fontSizeLarger').addEventListener('click',()=>stepFontSize(0.5));textColor.addEventListener('input',applyTextColor);document.getElementById('save').addEventListener('click',saveProject);document.getElementById('exportLayout').addEventListener('click',exportLayout);document.getElementById('importLayout').addEventListener('click',()=>document.getElementById('layoutPicker').click());document.getElementById('layoutPicker').addEventListener('change',e=>{importLayoutFile(e.target.files[0]);e.target.value='';});document.getElementById('clear').addEventListener('click',clearValues);document.getElementById('exportPdf').addEventListener('click',exportDocument);document.addEventListener('keydown',e=>{if(e.key==='Escape'&&pendingPlacement){e.preventDefault();cancelPlacement(true);return;}const typing=document.activeElement&&document.activeElement.classList&&document.activeElement.classList.contains('field');const mod=e.ctrlKey||e.metaKey,key=e.key.toLowerCase();if(mod&&key==='z'){e.preventDefault();if(e.shiftKey)redoAction();else undoAction();return;}if(mod&&key==='y'){e.preventDefault();redoAction();return;}if(mod&&key==='c'&&selected&&(!typing||document.body.classList.contains('adjust'))){e.preventDefault();copySelected();return;}if(mod&&key==='v'&&clipboardItem&&(!typing||document.body.classList.contains('adjust'))){e.preventDefault();pasteSelected();return;}if((e.key==='Delete'||e.key==='Backspace')&&selected){if(typing&&!document.body.classList.contains('adjust'))return;e.preventDefault();deleteSelected();}});
+document.getElementById('textAlignLeft').addEventListener('click',()=>setTextAlignment('left'));document.getElementById('textAlignCenter').addEventListener('click',()=>setTextAlignment('center'));document.getElementById('textAlignRight').addEventListener('click',()=>setTextAlignment('right'));fontFamily.addEventListener('change',applyFontFamily);fontBold.addEventListener('click',toggleFontWeight);fontAllDocument.addEventListener('change',syncFontWeightControl);fontSize.addEventListener('change',applyFontSize);document.getElementById('fontSizeSmaller').addEventListener('click',()=>stepFontSize(-0.5));document.getElementById('fontSizeLarger').addEventListener('click',()=>stepFontSize(0.5));textColor.addEventListener('input',applyTextColor);document.getElementById('save').addEventListener('click',saveProject);document.getElementById('exportLayout').addEventListener('click',exportLayout);document.getElementById('importLayout').addEventListener('click',()=>document.getElementById('layoutPicker').click());document.getElementById('layoutPicker').addEventListener('change',e=>{importLayoutFile(e.target.files[0]);e.target.value='';});document.getElementById('clear').addEventListener('click',clearValues);document.getElementById('exportPdf').addEventListener('click',exportDocument);document.addEventListener('keydown',e=>{if(e.key==='Escape'&&pendingPlacement){e.preventDefault();cancelPlacement(true);return;}const typing=document.activeElement&&document.activeElement.classList&&document.activeElement.classList.contains('field');const mod=e.ctrlKey||e.metaKey,key=e.key.toLowerCase();if(mod&&key==='z'){e.preventDefault();if(e.shiftKey)redoAction();else undoAction();return;}if(mod&&key==='y'){e.preventDefault();redoAction();return;}if(mod&&key==='c'&&selected&&(!typing||document.body.classList.contains('adjust'))){e.preventDefault();copySelected();return;}if(mod&&key==='v'&&clipboardItem&&(!typing||document.body.classList.contains('adjust'))){e.preventDefault();pasteSelected();return;}if((e.key==='Delete'||e.key==='Backspace')&&selected){if(typing&&!document.body.classList.contains('adjust'))return;e.preventDefault();deleteSelected();}});
 document.getElementById('prevPage').addEventListener('click',()=>renderPage(currentPage-1));document.getElementById('nextPage').addEventListener('click',()=>renderPage(currentPage+1));document.getElementById('pageNumber').addEventListener('change',e=>renderPage(parseInt(e.target.value)||1));
 document.getElementById('languageSelect').addEventListener('change',e=>applyLanguage(e.target.value));
 window.addEventListener('wheel',handleCtrlWheelZoom,{passive:false,capture:true});
