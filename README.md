@@ -1,78 +1,63 @@
 # PDF Field Helper
 
-A lightweight browser-based tool for creating overlays on top of existing PDF documents, with automatic field detection and snapping.
+Prepare, fill and save PDF forms in your browser. Save your work as an editable PDF, export a finished PDF, or create a standalone form that someone else can fill without installing PDF Field Helper.
 
 ## Download
 
 [**Download PDF Field Helper v1.4 — standalone HTML file**](https://github.com/nicklausFR/pdf-field-helper/releases/download/v1.4/PDF-Field-Helper-v1.4.html)
 
-No installation is required. Download the file, then open it with a double-click in Brave, Chrome or Edge. The standalone version works offline.
-
-## Features
-
-- Add editable text fields, checkboxes, images, masks and drawing areas
-- Draw with a mouse or pen in Edit mode; undo individual strokes
-- Select multiple areas with Ctrl+click or a dashed drag rectangle in creation and edit modes (Ctrl adds to the selection)
-- Copy, paste, align and delete groups of areas while preserving their content
-- Automatic detection of:
-  - text baselines
-  - field boundaries
-  - delimited character boxes
-  - printed checkboxes
-- Recognition and import of reliable interactive fields already embedded in a PDF (AcroForm text fields and checkboxes)
-- Automatic rejection of embedded widgets whose geometry or visual content cannot be confirmed reliably
-- Snapping to detected PDF elements when placing fields
-- Top-aligned multiline text with consistent screen and PDF line spacing
-- Recognition of text-based date and amount cells, including printed separators
-- Automatic width and height suggestions
-- Move, resize and align overlay elements manually, including horizontal and vertical axes
-- Snap text areas to printed table cells and align selected fields to their rows and columns
-- Preview empty table cells and create their fields together, excluding printed labels and occupied cells
-- Undo and redo changes with buttons or keyboard shortcuts
-- Per-field or document-wide font settings
-- Per-field vertical text adjustment with document-wide application/reset
-- Save editable AcroForm PDFs with embedded project data
-- Generate standalone HTML forms for offline filling and saving without installation
-- Generate a new PDF with the overlay applied
-- English / French interface
-- PWA support for a more app-like experience
+Open the downloaded file in Brave, Chrome or Edge. The standalone application works offline and requires no installation. Its interface is available in English and French.
 
 ## How it works
 
-The original PDF remains untouched and acts as the background layer.
+### Prepare and fill a document
 
-PDF Field Helper adds an overlay above it. When creating a field, the tool analyzes nearby PDF geometry and can automatically detect and snap to existing lines, boxes and other form structures.
+Open a PDF in PDF Field Helper. Existing AcroForm text fields and checkboxes are imported when their positions can be confirmed from the page. You can also add text fields, checkboxes, images, drawing areas, white masks and Strike / Circle areas.
 
-When a PDF contains interactive AcroForm fields, the application also inspects their widget geometry and imports only fields that can be visually confirmed on the rendered page. Imported fields become regular overlay fields, so they can be edited, moved, resized and included in the generated PDF. Widgets that do not have reliable visual geometry are ignored rather than creating incorrect overlay fields.
+Use **Overlay creation mode** to place, move, resize and align fields. Automatic recognition helps match printed lines, character cells and table cells. Manual moves keep the position you choose. Green outlines and separators identify a placement preview before you confirm it.
 
-This makes it possible to position fields quickly and accurately while keeping full manual control over their size, position and alignment.
+Switch to **Edit mode** to enter text, check boxes, draw and mark printed choices. Font, size, bold, color, alignment and text baseline settings can apply to a selected field or throughout the document.
 
-The overlay is preserved in editable PDF projects, or applied when generating the final PDF.
+### Save your work in the PDF
 
-**Save** writes the fields, entered values and complete project data into an editable PDF. The first save asks for a file; subsequent saves update that chosen file during the session. **Save as…** always asks for another destination. When the browser cannot provide file handles, the PDF is downloaded instead. Neither button saves the document in browser storage.
+**Save** and **Save as…** write an editable **PDF containing the fields, their values and the project data**. Reopen that PDF in PDF Field Helper to continue working with its saved fields and settings. There is no separate layout file to manage.
 
-**Save as…** creates an editable PDF. Text, multiline text, regular character cells and checkboxes become standard AcroForm fields with their current values. Irregularly spaced character cells are exported as separate character fields to preserve their positions. Drawings, images and strike/circle marks are visible graphics; a compatibility dialog explains that these are not standard editable form fields in other PDF editors. The PDF embeds the original document and project data in a JSON attachment so PDF Field Helper can restore the complete project. If a recipient changes the standard fields in another editor, reopening the PDF in PDF Field Helper imports their new values.
+On the first save, choose a destination file. Subsequent saves update that chosen file during the session. **Save as…** always asks for another destination. If the browser does not support choosing and updating files directly, it downloads the PDF instead. These buttons save to a file, not browser storage.
 
-**Generate PDF** produces the final PDF with the entries drawn on its pages. Download warnings follow the selected interface language. **Generate a fillable form** creates a separate, self-contained HTML file with empty response areas. It embeds the document, prepared fields, PDF libraries and worker, and works offline in desktop Chrome or Edge. The HTML opens directly in Edit mode and retains the text formatting controls, including fonts, alignment and baseline adjustments. The creation tabs and frame toggle are omitted; field highlights stay hidden. The top action row contains only **Save**, **Save as…**, **Reset all values** and **Generate PDF**. Zoom and page navigation remain in their usual top toolbar. **Save** and **Save as…** write editable PDFs here too.
+Text fields and checkboxes are saved as standard **AcroForm fields**, so recipients can edit them in compatible PDF editors. Multiline text and character cells are supported; irregular character spacing may use separate fields for individual characters. Changes to standard field values made in another editor are read back when the PDF is reopened in PDF Field Helper.
 
-**Delete all fields** removes the overlay areas and their contents throughout the document without automatically reimporting native fields. **Reset all values** keeps the areas and clears entered text, checkboxes, drawings and strike/circle marks. Undo and redo are available in the top Document toolbar.
+Drawings, images, Strike / Circle marks and some layout settings are not standard AcroForm fields. The saved PDF includes their visible appearance and the project data needed to edit them fully in PDF Field Helper. The save dialog explains this compatibility limit.
 
-Extending a delimited text area preserves its recognized cells and gaps while detecting additional cells in the enlarged area.
+### Generate a finished PDF
 
-For tables, **+ Text** snaps to the cell under the pointer. To correct existing fields, select them with Ctrl+click and choose **Align to cells**; their values are preserved. **Detect tables** previews available cells, then **Place fields** confirms their creation. Selecting a field first limits detection to its table; otherwise, tables on the current page are considered. Escape cancels the preview. Green borders appear only before placement is confirmed.
+**Generate PDF** creates the final document with the entered content drawn onto its pages. The prepared form fields are flattened. Use **Save** first if you also want to keep an editable version for later changes.
 
-Manual moves keep text fields and checkboxes exactly where they are dropped, including after reloading.
+### Share a form for someone else to fill
 
-Choose **+ Strike / Circle** to place empty areas over printed choices. During placement, vertical detection aligns the area to the printed text line with vertical padding. For Oui/Non choices, recognition fits each complete word separately; other line widths remain manual. Manual moves remain free. After each placement the tool stays ready with the same area size; press Escape or switch to Edit mode to stop. In **Edit mode**, successive clicks on the area strike through, circle, then clear the mark. The mark uses the font color and can be moved or resized in overlay creation mode. Saved projects keep the chosen mark; reusable overlays contain empty areas. **+ Mask** remains the white masking tool.
+**Generate a fillable form** creates a separate, self-contained **HTML file** containing the PDF and its prepared fields. Response fields start empty. Send this file to the recipient, who can open it in a supported browser and fill it offline without installing PDF Field Helper.
 
-Choose **+ Drawing area** and place the area, then draw directly in Edit mode. Only the generated fillable file offers **Draw** or **Import image** from a menu next to the selected area. The menu follows the area when scrolling or zooming. An imported image can be dragged and resized using its handle in Edit mode; **Adjust image** returns to those controls after drawing. Drawing areas can also be moved and resized in overlay creation mode, with independent width and height. Strokes and imported images, including their positions and sizes, remain editable in PDF projects and generated fillable forms and are included in the generated PDF. Reusable forms contain empty drawing areas.
+The generated form opens directly for filling. It retains font, size, bold, color, alignment and baseline controls. Field creation tabs and the frame visibility toggle are omitted; field backgrounds and frames stay hidden. Zoom and page navigation remain at the top.
 
-To select several areas in creation or edit mode, Ctrl+click individual areas or drag from an empty part of the page, with no placement tool active. Ctrl+click again removes an area from the selection; hold Ctrl while dragging to add areas, or Escape to cancel the selection rectangle. On macOS, use Command instead of Ctrl. Selection gestures do not change text, checkboxes, marks or drawings. Copy/paste keeps the relative positions of a selected group; Delete removes the selected areas. A normal click inside a field still edits its content.
+Its document actions are **Save**, **Save as…**, **Reset all values** and **Generate PDF**. Saving produces an editable PDF with the answers; generating a PDF produces the finished document.
+
+In a drawing area, the recipient can choose **Draw** or **Import image** from a menu near that area. Imported images can be moved and resized; **Adjust image** returns to those controls after drawing. This choice menu belongs to the generated form. In the main editor, drawing areas accept drawing directly in Edit mode.
+
+## Editing tools
+
+- **Character cells:** recognize dates, amounts, codes and similar printed guides. Resizing a delimited field preserves existing cells and gaps while detecting additional cells in the enlarged area.
+- **Tables:** use **+ Text** to place a field in a cell, **Align to cells** to fit selected fields, or **Detect tables** followed by **Place fields** to create fields in available cells. Selecting a field first limits recognition to its table. Escape cancels the preview.
+- **Multiple selection:** use Ctrl+click or drag a selection rectangle from empty page space in creation or edit mode. Hold Ctrl to add to the selection, or Ctrl+click again to remove an item. Use Command on macOS. Selected groups can be copied, pasted, aligned or deleted.
+- **Drawing areas:** add them with **+ Drawing area**, then draw with a mouse or pen in Edit mode. Their width and height can be resized independently in creation mode. Undo can remove individual strokes.
+- **Strike / Circle:** place an area over printed text. Successive clicks in Edit mode strike through, circle and clear the mark. Marks use the selected text color. The placement tool stays ready for another area until you press Escape or switch modes.
+- **Images and masks:** place an image with **+ Image**, or cover part of the page with **+ Mask**.
+- **Undo and redo:** use the toolbar buttons or Ctrl+Z, Ctrl+Y and Ctrl+Shift+Z.
+
+**Delete all fields** removes the prepared fields and their contents from the document. **Reset all values** keeps the fields and clears entered text, checkboxes, drawings and marks.
 
 ## Technology
 
-HTML, CSS and JavaScript using PDF.js and pdf-lib.
+HTML, CSS and JavaScript using PDF.js and pdf-lib. A PWA version is also supported.
 
-## Status
+## Version
 
-**v1.4**
+**v1.4** — [Release notes](https://github.com/nicklausFR/pdf-field-helper/releases/tag/v1.4)
