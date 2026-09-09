@@ -1,3 +1,8 @@
+async function clickMenuAction(page,id){
+  const action=page.locator('#'+id),menu=action.locator('xpath=ancestor::details[1]');
+  if(await menu.count()&&!await menu.evaluate(e=>e.open))await menu.locator('summary').click();
+  await action.click();
+}
 // Run with node tests/browser-storage.cjs (Playwright and Chrome required).
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -7,7 +12,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const root=path.resolve(__dirname,'..');
 fs.mkdirSync(path.join(root,'tmp'),{recursive:true});
 const profile=fs.mkdtempSync(path.join(root,'tmp','browser-storage-'));
-const url=pathToFileURL(path.join(root,'PDF-Field-Helper-v1.4.1.html')).href;
+const url=pathToFileURL(path.join(root,'PDF-Field-Helper-v2.0.0.html')).href;
 let context;
 async function open(){
   context=await chromium.launchPersistentContext(profile,{channel:'chrome',headless:true,viewport:{width:1550,height:950},serviceWorkers:'block'});
@@ -35,11 +40,11 @@ async function state(page){
     });
     const expected=await state(page);
     assert.equal(await page.locator('#resetDocument').innerText(),'Effacer tous les champs');
-    assert.equal(await page.locator('#clear').innerText(),'Réinitialiser toutes les valeurs');
+    assert.equal(await page.locator('#clear').textContent(),'Réinitialiser les champs');
     assert.equal(await page.locator('#autoYReset').innerText(),'Réinitialiser','baseline reset keeps its own label');
-    assert.equal(await page.locator('#save').innerText(),'Enregistrer');
+    assert.equal(await page.locator('#save').textContent(),'Enregistrer');
     assert.match(await page.locator('#save').getAttribute('title'),/dans le PDF/);
-    for(const id of ['undoAction','redoAction'])assert.equal(await page.locator('#'+id).evaluate(e=>!!e.closest('.toolgroup')),true);
+    for(const id of ['undoAction','redoAction'])assert.equal(await page.locator('#'+id).evaluate(e=>!!e.closest('.compact-popover')),true);
     // Legacy browser records remain readable; the Save button now writes a PDF.
     await page.evaluate(()=>saveProject());
     await page.waitForFunction(async()=>!!(await dbGet(docKey))?.state.pageStates[2].fields.find(f=>f.id==='storage-text'));
@@ -55,7 +60,8 @@ async function state(page){
     await page.reload();await page.waitForFunction(()=>!!document.querySelector('[data-id="storage-text"]'));
     assert.equal(await page.locator('[data-id="storage-text"]').inputValue(),'Réponse sauvegardée','saving is explicit, not automatic');
     const count=await page.locator('#overlay .field,#overlay .check-zone,#overlay .image-zone,#overlay .mask-zone').count();
-    await page.locator('#clear').click();
+    await page.evaluate(()=>selectAllPageFields());
+    await clickMenuAction(page,'clear');
     assert.equal(await page.locator('#overlay .field,#overlay .check-zone,#overlay .image-zone,#overlay .mask-zone').count(),count,'reset values preserves the fields');
     assert.deepEqual(await page.evaluate(()=>({text:document.querySelector('[data-id="storage-text"]').value,check:document.querySelector('[data-id="storage-check"] input').checked,strokes:document.querySelector('[data-id="storage-drawing"]')._drawing.strokes.length,mark:document.querySelector('[data-id="storage-mark"]').dataset.maskStyle})),{text:'',check:false,strokes:0,mark:'mark'});
     await page.evaluate(()=>resetDocument());
@@ -63,7 +69,7 @@ async function state(page){
     await page.evaluate(()=>renderPage(1));
     assert.equal(await page.locator('#overlay .field,#overlay .check-zone,#overlay .image-zone,#overlay .mask-zone').count(),0,'deleted fields are not automatically reimported on another page');
     await page.evaluate(()=>saveProject());
-    await page.locator('#closePdf').click();
+    await clickMenuAction(page,'closePdf');
     await page.reload();
     assert.equal(await page.evaluate(()=>localStorage.getItem(LAST_KEY)),null,'Close disables automatic reopening');
     console.log('PASS: browser restart restores the saved document; explicit save, clear values, delete fields and Close behavior verified.');

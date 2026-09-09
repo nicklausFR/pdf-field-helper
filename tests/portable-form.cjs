@@ -1,9 +1,14 @@
+async function clickMenuAction(page,id){
+  const action=page.locator('#'+id),menu=action.locator('xpath=ancestor::details[1]');
+  if(await menu.count()&&!await menu.evaluate(e=>e.open))await menu.locator('summary').click();
+  await action.click();
+}
 // Run with node tests/portable-form.cjs (Playwright and Chrome required).
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),http=require('node:http');
 const {pathToFileURL}=require('node:url');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const root=path.resolve(__dirname,'..'),out=path.join(root,'tmp','portable-form-qa');fs.mkdirSync(out,{recursive:true});
-const standalone=fs.readFileSync(path.join(root,'PDF-Field-Helper-v1.4.1.html'),'utf8');
+const standalone=fs.readFileSync(path.join(root,'PDF-Field-Helper-v2.0.0.html'),'utf8');
 const scripts=[...standalone.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
 const worker=Buffer.from(standalone.match(/const _pdfWorkerBinary=atob\('([^']+)'/)[1],'base64');
 const server=http.createServer((req,res)=>{
@@ -48,11 +53,11 @@ const server=http.createServer((req,res)=>{
     });
     assert.equal(await page.locator('#exportLayout').isVisible(),false,'only the two save actions are shown');
     assert.equal(await page.locator('#importLayout').count(),0,'obsolete Load overlay button is removed');
-    await page.locator('#save').click();assert.equal(await page.locator('#saveAsDialog').evaluate(e=>e.open),true);
+    await clickMenuAction(page,'save');assert.equal(await page.locator('#saveAsDialog').evaluate(e=>e.open),true);
     assert.match(await page.locator('#saveAsLimits').innerText(),/éditeur PDF classique/);
     await page.locator('#saveAsDialog').screenshot({path:path.join(out,'compatibility-dialog.png')});
     await page.locator('#cancelSaveAs').click();assert.equal(await page.evaluate(()=>window.exported.length),0,'cancel creates no file');
-    await page.locator('#save').click();await page.locator('#confirmSaveAs').click();
+    await clickMenuAction(page,'save');await page.locator('#confirmSaveAs').click();
     await page.waitForFunction(()=>window.exported.length===1||document.getElementById('status').textContent.startsWith('PDF error:'));
     assert.equal(await page.evaluate(()=>window.exported.length),1,await page.locator('#status').innerText());
     const pdfExport=await page.evaluate(()=>window.exported[0]);fs.writeFileSync(path.join(out,'editable.pdf'),Buffer.from(pdfExport.bytes));
@@ -87,7 +92,7 @@ const server=http.createServer((req,res)=>{
     assert.equal(changed.pageStates[1].checks.find(c=>c.id==='checked').textColor,'#173e80','checkbox color survives editable PDF roundtrip');
     assert.equal(changed.pageStates[1].images.find(f=>f.id==='drawing').drawing.strokes.length,1,'editable drawing survives PDF roundtrip');
     assert.deepEqual(changed.pageStates[1].fields.find(f=>f.id==='date').boxes,acro.project.state.pageStates[1].fields.find(f=>f.id==='date').boxes);
-    await page.locator('#exportForm').click();
+    await clickMenuAction(page,'exportForm');
     await page.waitForFunction(()=>window.exported.length===2||document.getElementById('status').textContent.startsWith('HTML error:'));
     assert.equal(await page.evaluate(()=>window.exported.length),2,await page.locator('#status').innerText());
     const htmlExport=await page.evaluate(()=>window.exported[1]),htmlFile=path.join(out,'form.html');fs.writeFileSync(htmlFile,Buffer.from(htmlExport.bytes));
@@ -115,13 +120,13 @@ const server=http.createServer((req,res)=>{
       assert.equal(await fill.locator(selector).isEnabled(),true);
     }
     await fill.locator('#languageSelect').selectOption('fr');
-    assert.equal(await fill.locator('#toggleClean').innerText(),'Masquer cadres');
+    assert.equal(await fill.locator('#toggleClean').innerText(),'Masquer les champs');
     await fill.locator('#toggleClean').click();
     assert.equal(await fill.evaluate(()=>document.body.classList.contains('clean')),true);
-    assert.equal(await fill.locator('#toggleClean').innerText(),'Afficher cadres');
+    assert.equal(await fill.locator('#toggleClean').innerText(),'Afficher les champs');
     await fill.locator('#toggleClean').click();
     assert.equal(await fill.evaluate(()=>document.body.classList.contains('clean')),false);
-    assert.equal(await fill.locator('#toggleClean').innerText(),'Masquer cadres');
+    assert.equal(await fill.locator('#toggleClean').innerText(),'Masquer les champs');
     assert.match(await fill.locator('[data-id="plain"]').evaluate(e=>getComputedStyle(e).backgroundImage),/linear-gradient/);
     await fill.evaluate(()=>setEditTab('edit'));
     assert.equal(await fill.evaluate(()=>document.body.classList.contains('clean')),false,'edit mode preserves visible frames');
@@ -212,7 +217,7 @@ const server=http.createServer((req,res)=>{
     assert.ok(strokeColors.some(c=>c.join(',')==='35,69,103'),'finished PDF uses the checkbox color');
     await fill.locator('.toolbar').screenshot({path:path.join(out,'fillable-toolbar.png')});
     const standalonePage=await offline.newPage();standalonePage.on('pageerror',e=>errors.push(e.message));
-    await standalonePage.goto(pathToFileURL(path.join(root,'PDF-Field-Helper-v1.4.1.html')).href);
+    await standalonePage.goto(pathToFileURL(path.join(root,'PDF-Field-Helper-v2.0.0.html')).href);
     await standalonePage.evaluate(async project=>{await loadPdf(base64ToBytes(project.sourcePdf),project.name,project.state);},acro.project);
     const fromStandalone=await standalonePage.evaluate(async()=>standaloneFormHtml(projectSnapshot()));
     const offlineExport=path.join(out,'standalone-generated.html');fs.writeFileSync(offlineExport,fromStandalone);

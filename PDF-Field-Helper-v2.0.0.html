@@ -201,18 +201,115 @@ body.fillable #documentActions{padding:8px}
 body:not(.adjust) .drawing-zone.selected.image-mode .drawing-import-box{display:block}
 .drawing-import-resize{position:absolute;right:-4px;bottom:-4px;width:9px;height:9px;background:#cc2424;border-radius:2px;cursor:nwse-resize;touch-action:none}
 </style>
+<style>
+/* Compact interface. */
+html{scroll-padding-top:180px;scroll-padding-bottom:90px}
+#alignmentLabel,#heightLabel,.toolbar .compact-align-label{font-size:calc(13px * var(--menu-scale));font-weight:400;color:inherit;margin-left:0;letter-spacing:normal}
+
+#openPdf[hidden]{display:none!important}
+.placing-table,.placing-table *{cursor:crosshair!important}
+#detectTables[aria-pressed="true"]{background:#e5f4e9;border-color:#2b8a3e;color:#20682f;box-shadow:inset 0 -2px #2b8a3e}
+
+.compact-popover button.compact-menu-shortcut{display:flex;align-items:center;justify-content:space-between;gap:24px}
+.compact-menu-shortcut kbd{font-family:inherit;font-size:.82em;color:#65707c;white-space:nowrap}
+.compact-menu:has(.compact-menu-shortcut)>.compact-popover{min-width:300px}
+
+.compact-align-row{display:flex;flex-wrap:nowrap;align-items:center;gap:6px}
+.compact-field-utilities{display:contents}
+#tabLayer{flex-wrap:wrap;overflow:visible;padding-bottom:5px}
+#tabLayer>button,#tabLayer>.compact-menu,#tabLayer .compact-align-row{flex-shrink:0;white-space:nowrap}
+#tabLayer .compact-menu{flex-shrink:0}
+.compact-tools-divider{display:block;width:1px;height:28px;flex:0 0 1px;background:#aeb6bf;margin:0 5px}
+#tabLayer .compact-popover{position:fixed;max-height:calc(100vh - 100px);overflow-y:auto}
+.compact-align-label{font-size:calc(13px * var(--menu-scale));color:#65707c}
+#compactDocumentMenu{max-width:min(40vw,380px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.compact-align-row button{display:inline-flex;align-items:center;justify-content:center;width:calc(38px * var(--menu-scale));height:calc(34px * var(--menu-scale));padding:5px}
+.compact-align-row svg{width:22px;height:22px;pointer-events:none}
+
+
+#zoomLabel,#languageLabel{display:none!important}
+#menuLabel{display:inline!important}
+button.magnifier-control{display:inline-flex;align-items:center;justify-content:center}
+.magnifier-control svg{width:20px;height:20px;pointer-events:none}
+
+.continuous-page{position:relative;margin:0 auto 20px;background:white;box-shadow:0 2px 12px #0002;overflow:hidden;scroll-margin-top:160px}
+.continuous-preview{display:block;width:100%;height:100%}.page-placeholder{padding:30px;color:#65707c;text-align:center}
+.continuous-next{display:block;margin:24px auto 40px}.continuous-snapshot{pointer-events:none}
+.compact-main>.toolbar-top-actions{margin-left:auto;flex-wrap:wrap}
+.compact-footer #viewControls{gap:8px}
+
+body{padding-bottom:78px}body.has-horizontal-scrollbar{padding-bottom:95px}
+.debug-footer[hidden]{display:none}
+.compact-footer{position:fixed;bottom:0;left:0;right:0;z-index:60;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:8px 12px;background:#f4f6f9;border-top:1px solid #ccd5df}
+body.has-horizontal-scrollbar .compact-footer{bottom:17px}
+.compact-footer .app-heading{margin-left:auto}.compact-footer .app-name{font-size:13px}.compact-footer .app-version{font-size:10px}
+.compact-footer #viewControls{margin:0;width:auto;flex-wrap:wrap}
+.compact-footer #viewControls>.sep:first-of-type{display:none}
+.compact-footer #zoomLabel{display:inline}
+.compact-main #exportPdf.compact-export{margin-left:0;background:#1769aa;color:#fff;border:1px solid #10548b;font-size:calc(15px * var(--menu-scale));font-weight:700;padding:10px 18px;box-shadow:0 2px 5px #1769aa33}
+.compact-main #exportPdf.compact-export:hover{background:#10548b}
+@media(max-width:700px){.compact-main #exportPdf.compact-export{margin-left:0}.compact-footer{gap:6px}.compact-footer .app-heading{width:auto}}
+
+.compact-history{display:flex;gap:3px;padding:0 8px;border-left:1px solid #ccd5df;border-right:1px solid #ccd5df}
+.compact-history button{min-width:38px;padding:4px 8px;font-size:calc(20px * var(--menu-scale));line-height:1.15;font-weight:700}
+.compact-history button:disabled{opacity:.4;cursor:default}
+.view-menu .compact-popover{width:285px}
+.view-menu #viewControls{display:flex;flex-wrap:wrap;margin:0;width:100%;gap:8px}
+.view-menu #toggleClean{width:100%;text-align:left}
+.view-menu #zoomLabel{display:inline}
+.view-menu #viewControls>.sep{display:none}
+.view-menu .navbar{flex-wrap:wrap;width:100%;padding-top:8px;border-top:1px solid #dde3eb}
+.view-menu .navbar .sep{display:none}
+
+.toolbar-top[hidden]{display:none}
+.toolbar{gap:6px;padding:8px 12px;background:#f4f6f9;border-bottom:1px solid #ccd5df}
+.compact-view-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px;border-top:1px solid #dde3eb;padding-top:6px}
+.compact-view-label{font-size:calc(12px * var(--menu-scale));font-weight:700;color:#65707c}
+.compact-view-row #viewControls{margin:0;width:auto;flex-wrap:wrap}
+.compact-view-row #zoomLabel{display:inline}
+.compact-main,.compact-navigation{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.compact-main .app-heading{margin-right:12px}.compact-main .app-version{font-size:10px;background:#e2eaf3;padding:5px;border-radius:4px}
+.compact-main button,.compact-main summary{white-space:nowrap}
+.compact-spacer{flex:1}.compact-menu{position:relative}.compact-menu>summary{list-style:none;cursor:pointer;border:1px solid #b6c0cc;border-radius:6px;padding:7px 10px;background:white;font-size:calc(14px * var(--menu-scale));user-select:none}
+.compact-menu>summary::-webkit-details-marker{display:none}.compact-menu>summary:after{content:' ▾';color:#65707c}.compact-menu[open]>summary{background:#e5eef8;border-color:#1769aa}
+.compact-popover{position:absolute;top:calc(100% + 6px);left:0;min-width:235px;max-width:calc(100vw - 24px);padding:8px;background:#fff;border:1px solid #bdc8d4;border-radius:9px;box-shadow:0 8px 28px #20354b26;z-index:150;display:flex;flex-direction:column;gap:5px}
+.compact-popover button{text-align:left;border-color:transparent}.compact-popover button:disabled{opacity:.45;cursor:default}.compact-popover button:not(:disabled):hover{background:#edf3f9;color:#174d79}.compact-popover label{padding:7px 3px}.compact-menu.settings .compact-popover{left:auto;right:0}
+.compact-popover .toolbar-top-actions{margin:0;align-items:stretch;flex-direction:column;gap:14px;padding:8px}.compact-popover .menu-scale-control{flex-wrap:wrap}
+.compact-navigation{border-top:1px solid #dde3eb;padding-top:6px}.edit-tabs{padding:0;border:0;gap:3px;background:#e5eaf0;border-radius:7px;align-items:center}
+.edit-tab-button{border:0;border-radius:5px;margin:3px;padding:7px 12px;background:transparent;box-shadow:none}.edit-tab-button.active{border:0;background:#fff;color:#145c96;box-shadow:0 1px 4px #20354b20}
+#viewControls{margin-left:auto;width:auto;padding:0;background:transparent;border:0;gap:6px}
+#viewControls>.group-title,#zoomLabel,#pagesLabel,#pageLabel{display:none}
+.edit-tab-panel{border:0;border-top:1px solid #dde3eb;border-radius:0;padding:6px 0 0;background:transparent;gap:6px}
+.edit-tab-panel>.sep{margin:0 3px}.compact-popover .subsection-label{margin:4px}
+button:focus-visible,summary:focus-visible{outline:2px solid #1769aa;outline-offset:2px}
+#tabEdit{row-gap:8px}.stage{padding-top:12px}
+@media(max-width:800px){.compact-main .app-heading{width:100%;margin-bottom:3px}.compact-navigation #viewControls{margin-left:0;flex-wrap:wrap}.compact-navigation{gap:6px}.compact-spacer{display:none}.compact-main .settings{margin-left:0}}
+</style>
+<style>
+/* Clearly connected mode tabs and their tool panel. */
+.compact-navigation{padding-top:8px;border-top:1px solid #d6dee8;border-bottom:2px solid #1769aa}
+.compact-navigation .edit-tabs{align-items:stretch;gap:6px;padding:0;background:transparent;border-radius:0;flex-wrap:wrap}
+.compact-navigation .edit-tab-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;margin:0 0 -2px;padding:9px 16px;border:1px solid #b8c5d3;border-bottom:2px solid #1769aa;border-radius:8px 8px 0 0;background:#e8edf3;color:#475668;font-weight:600;box-shadow:none}
+.compact-navigation .edit-tab-button svg{width:21px;height:21px;flex-shrink:0;pointer-events:none}
+.compact-navigation .edit-tab-button.active{background:#edf5fd;color:#104e83;border-color:#1769aa;border-bottom:2px solid #edf5fd;box-shadow:inset 0 3px 0 #1769aa;font-weight:700;z-index:2}
+.compact-navigation .edit-tab-button:not(.active):hover{background:#dce7f2;color:#104e83}
+.compact-navigation .edit-tab-button:focus-visible{outline:3px solid #1769aa;outline-offset:2px;z-index:3}
+.toolbar>.edit-section{margin-top:-6px}
+.toolbar .edit-tab-panel{background:#edf5fd;border:1px solid #b8cde1;border-top:0;border-radius:0 0 7px 7px;padding:8px}
+@media(max-width:600px){.compact-navigation .edit-tab-button{padding:8px 10px;font-size:calc(13px * var(--menu-scale))}}
+</style>
 </head>
 <body>
 <div class="toolbar">
   <div class="toolbar-top">
-    <div class="app-heading"><a class="app-name app-name-link" href="https://github.com/nicklausFR/pdf-field-helper" target="_blank" rel="noopener noreferrer" title="GitHub — PDF Field Helper">PDF Field Helper</a><span class="app-version">v1.4.1</span></div>
+    <div class="app-heading"><a class="app-name app-name-link" href="https://github.com/nicklausFR/pdf-field-helper" target="_blank" rel="noopener noreferrer" title="GitHub — PDF Field Helper">PDF Field Helper</a><span class="app-version">v2.0.0</span></div>
     <div class="toolbar-top-actions">
       <div class="menu-scale-control">
         <span id="menuLabel">Menu</span>
         <div class="pair"><button id="menuSmaller" class="bigctl" title="Reduce menu size">−</button><button id="menuLarger" class="bigctl" title="Increase menu size">+</button></div>
         <span id="menuPercent" class="menuval">100%</span>
       </div>
-      <div class="language-switch"><span id="languageLabel">Language</span><select id="languageSelect" aria-label="Language"><option value="en">ENG</option><option value="fr">FR</option></select></div>
+      <div class="language-switch"><span id="languageLabel">Language</span><select id="languageSelect" aria-label="Language"><option value="en">English</option><option value="fr">Français</option></select></div>
     </div>
   </div>
   <div id="documentActions" class="toolgroup">
@@ -395,6 +492,7 @@ const HISTORY_LIMIT=50;
 let undoHistory=[],redoHistory=[],historyRestoring=false,historyBusy=false,lastHistoryCoalesceKey='',lastHistoryCoalesceAt=0;
 let pageW=595,pageH=842;
 let pendingPlacement=null,tablePreview=null,tablePreviewSeq=0;
+let autoTableDetectionOn=true,automaticTableScan=null,tablePlacementMode=null;
 let suppressPlacementClickUntil=0;
 const stage=document.getElementById('stage'),status=document.getElementById('status');
 const horizontalScrollbar=document.getElementById('horizontalScrollbar'),horizontalScrollbarInner=document.getElementById('horizontalScrollbarInner');
@@ -413,13 +511,13 @@ function updateHorizontalScrollbar(){
 }
 stage.addEventListener('scroll',()=>{if(syncingHorizontalScroll||!horizontalScrollbar)return;syncingHorizontalScroll=true;horizontalScrollbar.scrollLeft=stage.scrollLeft;syncingHorizontalScroll=false;});
 horizontalScrollbar?.addEventListener('scroll',()=>{if(syncingHorizontalScroll)return;syncingHorizontalScroll=true;stage.scrollLeft=horizontalScrollbar.scrollLeft;syncingHorizontalScroll=false;});
-const APP_VERSION='1.4.1';
-const SNAP_GUARD_BUILD='2026-09-05-v1.4.1'; // internal build marker
+const APP_VERSION='2.0.0';
+const SNAP_GUARD_BUILD='2026-09-09-v2.0.0'; // internal build marker
 console.log('PDF Field Helper snap-guard build',SNAP_GUARD_BUILD);
 let uiLanguage=localStorage.getItem('pdfFieldHelperLanguage')||'en';
 const UI_TEXT={
-  en:{language:'Language',document:'Document',open:'Open',close:'Close',reset:'Reset',removeFields:'Delete all fields',undo:'Undo',redo:'Redo',save:'Save',saveAs:'Save as…',exportForm:'Generate a fillable form',saveOverlay:'Save overlay',loadOverlay:'Load overlay',clear:'Reset all values',generate:'Generate PDF',view:'View',hideFrames:'Hide frames',showFrames:'Show frames',zoom:'Zoom',pages:'Pages',page:'Page',menu:'Menu',layerMode:'Overlay creation mode',editMode:'Edit mode',addText:'+ Text',addCheck:'+ Checkbox',addImage:'+ Image',addMask:'+ Mask',addMark:'+ Strike / Circle',addDrawing:'+ Drawing area',alignFields:'Align fields:',alignV:'Vertical axis',alignH:'Horizontal axis',alignLeft:'Left edges',alignRight:'Right edges',alignCells:'Align to cells',detectTables:'Detect tables',fixTables:'Place fields',autoDetection:'Automatic detection',autoSize:'Automatic width / height',checkbox:'Checkbox',delimited:'Delimited text area',verticalAlign:'Vertical alignment',font:'Font',size:'Size',bold:'Bold',boldShort:'B',typographyAllTitle:'Apply font, size, bold and color to all text areas in the document',color:'Color',entire:'Entire document',alignment:'Alignment:',height:'Text baseline:',messages:'Messages / Debug',ready:'Ready.',empty:'Open a PDF document to begin.'},
-  fr:{language:'Langue',document:'Document',open:'Ouvrir',close:'Fermer',reset:'Réinitialiser',removeFields:'Effacer tous les champs',undo:'Annuler',redo:'Rétablir',save:'Enregistrer',saveAs:'Enregistrer sous…',exportForm:'Générer un formulaire à remplir',saveOverlay:'Enregistrer calque',loadOverlay:'Charger calque',clear:'Réinitialiser toutes les valeurs',generate:'Générer PDF',view:'Affichage',hideFrames:'Masquer cadres',showFrames:'Afficher cadres',zoom:'Zoom',pages:'Pages',page:'Page',menu:'Menu',layerMode:'Mode création calque',editMode:'Mode édition',addText:'+ Texte',addCheck:'+ Case à cocher',addImage:'+ Image',addMask:'+ Masque',addMark:'+ Barrer / Entourer',addDrawing:'+ Zone de dessin',alignFields:'Aligner les champs :',alignV:'Axe vertical',alignH:'Axe horizontal',alignLeft:'Bords gauches',alignRight:'Bords droits',alignCells:'Aligner sur les cellules',detectTables:'Reconnaître les tableaux',fixTables:'Fixer les champs',autoDetection:'Détection automatique',autoSize:'Largeur / hauteur automatique',checkbox:'Case à cocher',delimited:'Zone texte avec délimitation',verticalAlign:'Alignement vertical',font:'Police',size:'Taille',bold:'Gras',boldShort:'G',typographyAllTitle:'Appliquer la police, la taille, le gras et la couleur à toutes les zones de texte du document',color:'Couleur',entire:'Tout le document',alignment:'Alignement :',height:'Ligne de base du texte :',messages:'Messages / Debug',ready:'Prêt.',empty:'Ouvrir un document PDF pour commencer.'}
+  en:{language:'Language',document:'Document',open:'Open',close:'Close',reset:'Reset',removeFields:'Delete all fields',undo:'Undo',redo:'Redo',save:'Save',saveAs:'Save as…',exportForm:'Generate a fillable form',saveOverlay:'Save overlay',loadOverlay:'Load overlay',clear:'Reset fields',generate:'Generate PDF',view:'View',hideFrames:'Hide frames',showFrames:'Show frames',zoom:'Zoom',pages:'Pages',page:'Page',menu:'Menu',layerMode:'Overlay creation mode',editMode:'Edit mode',addText:'+ Text',addCheck:'+ Checkbox',addImage:'+ Image',addMask:'Masking',addMark:'+ Strike / Circle',addDrawing:'+ Drawing area',alignFields:'Align fields:',alignV:'Vertical axis',alignH:'Horizontal axis',alignLeft:'Left edges',alignRight:'Right edges',alignCells:'Align to cells',detectTables:'+ Table',fixTables:'+ Table',autoDetection:'Automatic detection',autoSize:'Automatic width / height',checkbox:'Checkbox',delimited:'Delimited text area',verticalAlign:'Vertical alignment',font:'Font',size:'Size',bold:'Bold',boldShort:'B',typographyAllTitle:'Apply font, size, bold and color to all text areas in the document',color:'Color',entire:'Entire document',alignment:'Alignment:',height:'Text baseline:',messages:'Messages / Debug',ready:'Ready.',empty:'Open a PDF document to begin.'},
+  fr:{language:'Langue',document:'Document',open:'Ouvrir',close:'Fermer',reset:'Réinitialiser',removeFields:'Effacer tous les champs',undo:'Annuler',redo:'Rétablir',save:'Enregistrer',saveAs:'Enregistrer sous…',exportForm:'Générer un formulaire à remplir',saveOverlay:'Enregistrer calque',loadOverlay:'Charger calque',clear:'Réinitialiser les champs',generate:'Générer PDF',view:'Affichage',hideFrames:'Masquer les champs',showFrames:'Afficher les champs',zoom:'Zoom',pages:'Pages',page:'Page',menu:'Menu',layerMode:'Mode création calque',editMode:'Mode édition',addText:'+ Texte',addCheck:'+ Case à cocher',addImage:'+ Image',addMask:'Masquage',addMark:'+ Barrer / Entourer',addDrawing:'+ Zone de dessin',alignFields:'Aligner les champs :',alignV:'Axe vertical',alignH:'Axe horizontal',alignLeft:'Bords gauches',alignRight:'Bords droits',alignCells:'Aligner sur les cellules',detectTables:'+ Tableau',fixTables:'+ Tableau',autoDetection:'Détection automatique',autoSize:'Largeur / hauteur automatique',checkbox:'Case à cocher',delimited:'Zone texte avec délimitation',verticalAlign:'Alignement vertical',font:'Police',size:'Taille',bold:'Gras',boldShort:'G',typographyAllTitle:'Appliquer la police, la taille, le gras et la couleur à toutes les zones de texte du document',color:'Couleur',entire:'Tout le document',alignment:'Alignement :',height:'Ligne de base du texte :',messages:'Messages / Debug',ready:'Prêt.',empty:'Ouvrir un document PDF pour commencer.'}
 };
 function t(k){return (UI_TEXT[uiLanguage]&&UI_TEXT[uiLanguage][k])||UI_TEXT.en[k]||k;}
 function updateWindowTitle(){document.title='PDF Field Helper'+(docName?' — '+docName:'');}
@@ -460,6 +558,7 @@ function applyLanguage(lang){
   if(status && (status.textContent==='Ready.' || status.textContent==='Prêt.')) status.textContent=t('ready');
   const empty=stage.querySelector('.empty'); if(empty)empty.textContent=t('empty');
   updateOpenPdfButton(); updateWindowTitle();
+  window.refreshCompactLabels?.();
 }
 
 const fontFamily=document.getElementById('fontFamily'),fontSize=document.getElementById('fontSize'),fontBold=document.getElementById('fontBold'),textColor=document.getElementById('textColor'),fontAllDocument=document.getElementById('fontAllDocument');
@@ -473,6 +572,7 @@ function setEditTab(which){
   tabEditButton.classList.toggle('active',!layer);
   tabLayerButton.setAttribute('aria-selected',layer?'true':'false');
   tabEditButton.setAttribute('aria-selected',layer?'false':'true');
+  tabLayerButton.tabIndex=layer?0:-1;tabEditButton.tabIndex=layer?-1:0;
   tabLayer.classList.toggle('active',layer);
   tabEdit.classList.toggle('active',!layer);
   tabLayer.hidden=!layer;
@@ -612,6 +712,17 @@ console.error=(...a)=>{_consoleError(...a);debugToPanel('ERREUR',a);};
 function select(el,additive=false){if(!additive){for(const x of selectedItems)x.classList.remove('selected');selectedItems.clear();}if(!el){selected=null;updateAutoYValue();syncFontWeightControl();syncDrawingTools();return;}if(additive&&selectedItems.has(el)){el.classList.remove('selected');selectedItems.delete(el);selected=[...selectedItems].at(-1)||null;if(selected?.classList?.contains('check-zone'))textColor.value=selected.dataset.textColor||'#000000';if(selected?.classList?.contains('field')){fontFamily.value=fieldFontFamily(selected);fontSize.value=fieldFontSize(selected);textColor.value=fieldTextColor(selected);}updateAutoYValue();syncFontWeightControl();syncDrawingTools();return;}selectedItems.add(el);el.classList.add('selected');selected=el;if(el.classList.contains('mark-mask')||el.classList.contains('check-zone'))textColor.value=el.dataset.textColor||'#000000';if(el.classList.contains('field')){fontFamily.value=fieldFontFamily(el);fontSize.value=fieldFontSize(el);textColor.value=fieldTextColor(el);}updateAutoYValue();syncFontWeightControl();syncDrawingTools();}
 function selectFromEvent(ev,el){select(el,!!(ev.ctrlKey||ev.metaKey));}
 function selectedAreas(){return [...selectedItems].filter(e=>e?.isConnected);}
+function selectAllPageFields(){
+  window.getSelection()?.removeAllRanges();
+  if(!pdfProxy)return;
+  document.activeElement?.blur();cancelPlacement(false);
+  setAreaSelection(document.querySelectorAll('#overlay > .field,#overlay > .check-zone,#overlay > .image-zone,#overlay > .mask-zone'));
+}
+function handleSelectAllShortcut(event){
+  if(!(event.ctrlKey||event.metaKey)||event.altKey||event.key.toLowerCase()!=='a')return;
+  event.preventDefault();event.stopImmediatePropagation();selectAllPageFields();
+}
+document.addEventListener('keydown',handleSelectAllShortcut,true);
 function setAreaSelection(items){
   for(const e of selectedItems)e.classList.remove('selected');selectedItems.clear();selected=null;
   for(const e of items)if(e.isConnected){selectedItems.add(e);e.classList.add('selected');selected=e;}
@@ -670,6 +781,7 @@ function enableMarqueeSelection(surface){
 }
 function enterAdjust(){setEditTab('layer');}
 function cancelPlacement(announce=false){
+  tablePlacementMode=null;document.getElementById('pageSurface')?.classList.remove('placing-table');document.getElementById('detectTables')?.setAttribute('aria-pressed','false');
   cancelMarqueeSelection();
   tablePreviewSeq++;tablePreview=null;document.getElementById('tablePlacementPreview')?.remove();
   const tableButton=document.getElementById('detectTables');if(tableButton)tableButton.textContent=t('detectTables');
@@ -1188,8 +1300,9 @@ function setNavigationEnabled(on){
 
 function updateOpenPdfButton(){
   const b=document.getElementById('openPdf');if(!b)return;
-  if(docName){b.textContent=docName;b.title=(uiLanguage==='fr'?'Ouvrir un autre PDF — ':'Open another PDF — ')+docName;}
-  else{b.textContent=t('open');b.title=uiLanguage==='fr'?'Ouvrir un PDF':'Open a PDF';}
+  const menu=document.getElementById('compactDocumentMenu');if(menu){menu.textContent=docName||'Documents';menu.title=docName||'Documents';}
+  b.textContent=t('open');b.hidden=!!pdfProxy;b.disabled=!!pdfProxy;b.title=pdfProxy?(uiLanguage==='fr'?'Fermez le document actuel pour ouvrir un autre PDF.':'Close the current document to open another PDF.'):(uiLanguage==='fr'?'Ouvrir un PDF':'Open a PDF');
+  const close=document.getElementById('closePdf');if(close)close.disabled=!pdfProxy;
 }
 
 function nativeWidgetRect(annotation,viewport){
@@ -1328,11 +1441,91 @@ async function loadPdf(data,name,savedState=null){
   }catch(err){console.error(err);setStatus('PDF error: '+err.message);}
 }
 
-async function renderPage(n){cancelPlacement(false);
+// Continuous reading: only the active page owns editable DOM IDs.
+let continuousPdf=null,continuousSlots=new Map(),continuousTarget=null,continuousBusy=false,continuousQueue=Promise.resolve(),continuousScrollBlockUntil=0;
+const LARGE_DOCUMENT_PAGES=20;
+function resizeContinuousSlots(){
+ for(const slot of continuousSlots.values()){
+  const z=Math.max(.15,Math.min(4,Math.max(300,innerWidth-36)/slot._width*userZoom));
+  slot.style.width=slot._width*z+'px';slot.style.height=slot._height*z+'px';
+  const v=slot._shadow?.querySelector('.viewport'),surface=slot._shadow?.querySelector('.pageSurface');
+  if(v){v.style.width=slot.style.width;v.style.height=slot.style.height;surface.style.transform=`scale(${z})`;}
+ }
+}
+async function continuousSlot(n){
+ if(continuousSlots.has(n))return continuousSlots.get(n);
+ const pdf=pdfProxy,pg=await pdf.getPage(n);if(pdf!==pdfProxy)return null;
+ const vp=pg.getViewport({scale:1}),slot=document.createElement('section');slot.className='continuous-page';slot.dataset.page=n;slot.setAttribute('aria-label','Page '+n);slot._width=vp.width;slot._height=vp.height;
+ slot.innerHTML='<div class="page-placeholder">Page '+n+'</div>';
+ const next=[...continuousSlots.entries()].find(([number])=>number>n)?.[1];stage.insertBefore(slot,next||stage.querySelector('.continuous-next'));
+ continuousSlots.set(n,slot);resizeContinuousSlots();previewObserver.observe(slot);
+ slot.addEventListener('pointerdown',()=>{if(n!==currentPage&&!continuousBusy)renderPage(n,{scroll:false});},true);
+ return slot;
+}
+const previewObserver=new IntersectionObserver(entries=>{for(const e of entries)if(e.isIntersecting)previewContinuousPage(e.target);},{rootMargin:'700px'});
+async function previewContinuousPage(slot){
+ if(slot._previewBusy||slot._shadow||slot.querySelector('#viewport')||slot.querySelector('canvas')||!pdfProxy)return;
+ slot._previewBusy=true;const pdf=pdfProxy;
+ try{const pg=await pdf.getPage(+slot.dataset.page),vp=pg.getViewport({scale:1.25}),canvas=document.createElement('canvas');canvas.width=vp.width;canvas.height=vp.height;canvas.className='continuous-preview';
+ await pg.render({canvasContext:canvas.getContext('2d'),viewport:vp,annotationMode:pdfjsLib.AnnotationMode.DISABLE}).promise;
+ if(pdf===pdfProxy&&slot.isConnected&&!slot._shadow&&!slot.querySelector('#viewport'))slot.replaceChildren(canvas);
+ }catch(e){console.warn('Page preview',e);}finally{slot._previewBusy=false;}
+}
+function parkContinuousViewport(){
+ const viewport=document.getElementById('viewport');if(!viewport)return;
+ const slot=viewport.closest('.continuous-page');if(!slot)return;
+ const host=document.createElement('div');host.className='continuous-snapshot '+document.body.className;host.inert=true;
+ for(const canvas of viewport.querySelectorAll('canvas')){if(canvas.width>1200){const copy=document.createElement('canvas');copy.width=1200;copy.height=Math.round(canvas.height*1200/canvas.width);copy.getContext('2d').drawImage(canvas,0,0,copy.width,copy.height);canvas.width=copy.width;canvas.height=copy.height;canvas.getContext('2d').drawImage(copy,0,0);}}
+ const shadow=host.attachShadow({mode:'open'}),style=document.createElement('style');style.textContent=[...document.querySelectorAll('style')].map(s=>s.textContent.replace(/\bbody\b/g,':host')).join('\n');
+ shadow.append(style,viewport);slot.replaceChildren(host);slot._shadow=shadow;
+}
+function mountContinuousViewport(html){
+ if(!continuousTarget){stage.innerHTML=html;return;}
+ continuousTarget._shadow=null;continuousTarget.innerHTML=html;
+}
+function updateContinuousNext(){
+ stage.querySelector('.continuous-next')?.remove();
+ if(!pdfProxy||pdfProxy.numPages<=LARGE_DOCUMENT_PAGES)return;
+ const last=Math.max(...continuousSlots.keys());if(last>=pdfProxy.numPages)return;
+ const button=document.createElement('button');button.className='continuous-next primary';button.textContent=uiLanguage==='fr'?'Afficher la page suivante':'Show next page';
+ button.addEventListener('click',async()=>{button.disabled=true;try{await renderPage(last+1);}finally{button.disabled=false;}});stage.append(button);
+}
+function renderPage(n,options={}){
+ const pdf=pdfProxy;
+ const job=continuousQueue.catch(()=>{}).then(async()=>{
+  if(!pdf||pdf!==pdfProxy)return;
+  continuousBusy=true;
+  try{
+   if(continuousPdf!==pdf||!stage.querySelector('.continuous-page')){
+    previewObserver.disconnect();continuousSlots.clear();continuousPdf=pdf;stage.innerHTML='';
+    if(pdf.numPages<=LARGE_DOCUMENT_PAGES)for(let i=1;i<=pdf.numPages;i++)await continuousSlot(i);
+   }
+   n=Math.max(1,Math.min(pdf.numPages,n));
+   if(!historyRestoring)collectCurrentPage();select(null);parkContinuousViewport();
+   continuousTarget=await continuousSlot(n);if(!continuousTarget||pdf!==pdfProxy)return;
+   const result=await renderSinglePage(n);updateContinuousNext();
+   if(options.scroll!==false){continuousScrollBlockUntil=performance.now()+250;const top=continuousTarget.getBoundingClientRect().top+scrollY-document.querySelector('.toolbar').offsetHeight-12;window.scrollTo({top:Math.max(0,top),behavior:'instant'});}
+   return result;
+  }finally{continuousBusy=false;continuousTarget=null;}
+ });continuousQueue=job;return job;
+}
+new MutationObserver(()=>{for(const slot of continuousSlots.values())if(slot._shadow)slot._shadow.host.className='continuous-snapshot '+document.body.className;}).observe(document.body,{attributes:true,attributeFilter:['class']});
+let continuousScrollTimer;
+window.addEventListener('scroll',()=>{
+ clearTimeout(continuousScrollTimer);continuousScrollTimer=setTimeout(()=>{
+  if(continuousBusy||performance.now()<continuousScrollBlockUntil||!pdfProxy||pendingPlacement||tablePlacementMode||tablePreview||document.querySelector('.dragging'))return;
+  const line=document.querySelector('.toolbar').getBoundingClientRect().bottom+Math.min(180,innerHeight*.2);
+  let candidate=null;
+  for(const slot of continuousSlots.values()){const r=slot.getBoundingClientRect();if(r.top<=line&&r.bottom>line){candidate=slot;break;}}
+  if(candidate&&+candidate.dataset.page!==currentPage){document.querySelector('.field:focus')?.blur();renderPage(+candidate.dataset.page,{scroll:false});}
+ },100);
+},{passive:true});
+
+async function renderSinglePage(n){cancelPlacement(false);
   if(!pdfProxy)return;if(!historyRestoring)collectCurrentPage();select(null);currentPage=Math.max(1,Math.min(pdfProxy.numPages,n));document.getElementById('pageNumber').value=currentPage;
   const token=++renderToken;const pg=await pdfProxy.getPage(currentPage);if(token!==renderToken)return;
   const vp=pg.getViewport({scale:1});pageW=vp.width;pageH=vp.height;
-  stage.innerHTML='<div id="viewport" class="viewport"><div id="pageSurface" class="pageSurface"><canvas id="pdfCanvas"></canvas><div id="overlay" class="overlay"></div></div></div>';
+  mountContinuousViewport('<div id="viewport" class="viewport"><div id="pageSurface" class="pageSurface"><canvas id="pdfCanvas"></canvas><div id="overlay" class="overlay"></div></div></div>');
   const viewport=document.getElementById('viewport'),surface=document.getElementById('pageSurface'),canvas=document.getElementById('pdfCanvas');
   surface.style.width=pageW+'px';surface.style.height=pageH+'px';
   // Rendu haute définition : le canvas est calculé bien au-dessus de sa taille CSS,
@@ -1372,10 +1565,11 @@ async function renderPage(n){cancelPlacement(false);
   surface.addEventListener('click',handlePlacementClick,true);
   // Ancien ajout/détection au clic conservé pour réactivation :
   // surface.addEventListener('click',detectFieldAtClick);
+  if(autoTableDetectionOn)void scanTablesAutomatically();
   return nativeCounts;
 }
 function updateZoomLabel(){const e=document.getElementById('zoomPercent');if(e)e.textContent=Math.round(userZoom*100)+'%';}
-function resizeView(){const surface=document.getElementById('pageSurface'),viewport=document.getElementById('viewport');if(!surface||!viewport)return;const avail=Math.max(300,window.innerWidth-36),baseScale=avail/pageW;scaleNow=Math.max(.15,Math.min(4,baseScale*userZoom));surface.style.transform=`scale(${scaleNow})`;viewport.style.width=(pageW*scaleNow)+'px';viewport.style.height=(pageH*scaleNow)+'px';updateZoomLabel();requestAnimationFrame(updateHorizontalScrollbar);}
+function resizeView(){resizeContinuousSlots();const surface=document.getElementById('pageSurface'),viewport=document.getElementById('viewport');if(!surface||!viewport)return;const avail=Math.max(300,window.innerWidth-36),baseScale=avail/pageW;scaleNow=Math.max(.15,Math.min(4,baseScale*userZoom));surface.style.transform=`scale(${scaleNow})`;viewport.style.width=(pageW*scaleNow)+'px';viewport.style.height=(pageH*scaleNow)+'px';updateZoomLabel();requestAnimationFrame(updateHorizontalScrollbar);}
 let canvasOnlyRenderToken=0;
 async function rerenderPdfCanvasOnly(){
   if(!pdfProxy)return;
@@ -2088,7 +2282,9 @@ function detectPageTableCells(ctx,W,H,q,textBoxes=[]){
         while(b<along&&on(a,b))b++;
         if(b-start<min)continue;
         const mid=Math.floor((start+b-1)/2),thin=Math.ceil(2*q);
-        if(on(Math.max(0,a-thin),mid)&&on(Math.min(across-1,a+thin),mid))continue;
+        // A grid intersection can make the midpoint look thick; sample away from it too.
+        const samples=[.23,.47,.73].map(f=>Math.floor(start+(b-start-1)*f));
+        if(samples.every(point=>on(Math.max(0,a-thin),point)&&on(Math.min(across-1,a+thin),point)))continue;
         raw.push({pos:a/q,start:start/q,end:(b-1)/q});
       }
     }
@@ -2145,6 +2341,62 @@ function pageTableCells(ctx,W,H,q,textBoxes){
 }
 function tableCellAtPoint(cells,x,y){return cells.find(c=>x>c.x+.5&&x<c.x+c.w-.5&&y>c.y+.5&&y<c.y+c.h-.5)||null;}
 function tableCellFieldRect(cell){const pad=2;return {x:+(cell.x+pad).toFixed(2),y:+(cell.y+pad).toFixed(2),w:+(cell.w-pad*2).toFixed(2),h:+(cell.h-pad*2).toFixed(2)};}
+async function scanTablesAutomatically(){
+  if(!autoTableDetectionOn||!pdfProxy)return;
+  const token=renderToken,canvas=document.getElementById('pdfCanvas');if(!canvas)return;
+  if(automaticTableScan?.token===token)return automaticTableScan.promise;
+  const promise=(async()=>{const ac=makeAnalysisCanvas();if(!ac)return;const text=await getPagePrintedTextBoxes();if(token!==renderToken||canvas!==document.getElementById('pdfCanvas'))return;return pageTableCells(ac.ctx,ac.canvas.width,ac.canvas.height,ac.q,text);})();
+  automaticTableScan={token,promise};try{return await promise;}catch(error){automaticTableScan=null;console.warn('Automatic table recognition',error);}
+}
+function tableGroupAtPointer(cells,x,y,tolerance=10){
+  const groups=new Map();
+  for(const c of cells){if(!groups.has(c.tableId))groups.set(c.tableId,[]);groups.get(c.tableId).push(c);}
+  let best=null,bestDistance=Infinity,bestArea=Infinity;
+  for(const group of groups.values()){
+    const left=Math.min(...group.map(c=>c.x)),top=Math.min(...group.map(c=>c.y)),right=Math.max(...group.map(c=>c.x+c.w)),bottom=Math.max(...group.map(c=>c.y+c.h));
+    const distance=Math.hypot(Math.max(left-x,0,x-right),Math.max(top-y,0,y-bottom)),area=(right-left)*(bottom-top);
+    if(distance<=tolerance&&(distance<bestDistance||(distance===bestDistance&&area<bestArea))){best={cells:group,left,top,right,bottom};bestDistance=distance;bestArea=area;}
+  }
+  return best;
+}
+function updateTablePointerPreview(clientX,clientY){
+  const mode=tablePlacementMode,surface=document.getElementById('pageSurface');if(!mode||!surface)return;
+  mode.pointer={clientX,clientY};if(!mode.cells)return;
+  document.getElementById('tablePlacementPreview')?.remove();tablePreview={cells:[]};
+  const r=surface.getBoundingClientRect(),x=(clientX-r.left)/scaleNow,y=(clientY-r.top)/scaleNow;
+  const group=tableGroupAtPointer(mode.cells,x,y,12/scaleNow);if(!group)return;
+  const existing=existingRects(),cells=group.cells.filter(c=>!c.printed&&!existing.some(rect=>significantFieldOverlap(tableCellFieldRect(c),rect,1)));
+  const layer=document.createElement('div');layer.id='tablePlacementPreview';Object.assign(layer.style,{pointerEvents:'none',position:'absolute',inset:'0'});
+  const boundary=document.createElement('div');Object.assign(boundary.style,{position:'absolute',left:group.left+'px',top:group.top+'px',width:(group.right-group.left)+'px',height:(group.bottom-group.top)+'px',border:'2px solid #2b8a3e',boxSizing:'border-box'});layer.append(boundary);
+  for(const cell of cells){const rect=tableCellFieldRect(cell),ghost=document.createElement('div');ghost.className='placement-ghost detected';Object.assign(ghost.style,{left:rect.x+'px',top:rect.y+'px',width:rect.w+'px',height:rect.h+'px',display:'block'});layer.append(ghost);}
+  document.getElementById('overlay').append(layer);tablePreview={cells};
+}
+async function addTableFields(){
+  if(FILL_MODE||!pdfProxy)return;
+  cancelPlacement(false);enterAdjust();select(null);
+  const mode={token:renderToken,cells:null,pointer:null};tablePlacementMode=mode;tablePreview={cells:[]};
+  document.getElementById('detectTables').setAttribute('aria-pressed','true');document.getElementById('pageSurface')?.classList.add('placing-table');
+  setStatus(uiLanguage==='fr'?'Placez la souris au début du tableau : aperçu vert, puis cliquez pour ajouter les champs. Échap pour annuler.':'Point at the start of the table: green preview, then click to add fields. Escape cancels.');
+  let cells;
+  if(autoTableDetectionOn)cells=await scanTablesAutomatically();
+  else{const ac=makeAnalysisCanvas();if(!ac)return;const text=await getPagePrintedTextBoxes();if(mode.token!==renderToken||tablePlacementMode!==mode)return;cells=pageTableCells(ac.ctx,ac.canvas.width,ac.canvas.height,ac.q,text);}
+  if(mode.token!==renderToken||tablePlacementMode!==mode)return;
+  mode.cells=cells||[];if(mode.pointer)updateTablePointerPreview(mode.pointer.clientX,mode.pointer.clientY);
+}
+document.addEventListener('pointermove',event=>{
+ if(!tablePlacementMode)return;
+ const surface=document.getElementById('pageSurface');
+ if(surface?.contains(event.target)){updateTablePointerPreview(event.clientX,event.clientY);event.stopImmediatePropagation();}
+ else{document.getElementById('tablePlacementPreview')?.remove();tablePreview={cells:[]};tablePlacementMode.pointer=null;}
+},true);
+for(const type of ['pointerdown','pointerup'])document.addEventListener(type,event=>{
+ if(tablePlacementMode&&document.getElementById('pageSurface')?.contains(event.target)){event.preventDefault();event.stopImmediatePropagation();}
+},true);
+document.addEventListener('click',event=>{
+ if(!tablePlacementMode||!document.getElementById('pageSurface')?.contains(event.target)||event.button!==0)return;
+ event.preventDefault();event.stopImmediatePropagation();updateTablePointerPreview(event.clientX,event.clientY);
+ if(tablePreview?.cells.length)void previewOrFixTableFields();
+},true);
 async function alignFieldsToTableCells(){
   const fields=selectedFields();if(!fields.length){setStatus(uiLanguage==='fr'?'Sélectionnez les champs à recaler sur le tableau.':'Select fields to align to table cells.');return;}
   cancelPlacement(false);
@@ -2197,7 +2449,7 @@ async function previewOrFixTableFields(){
   }
   document.getElementById('overlay').appendChild(layer);tablePreview={cells};
   document.getElementById('detectTables').textContent=t('fixTables');
-  setStatus(uiLanguage==='fr'?`${cells.length} cellule(s) en aperçu. Cliquez sur « Fixer les champs » pour valider, ou Échap pour annuler.`:`${cells.length} cell(s) previewed. Click “Place fields” to confirm, or Escape to cancel.`);
+  setStatus(uiLanguage==='fr'?`${cells.length} cellule(s) en aperçu. Cliquez sur « + Tableau » pour ajouter les champs, ou Échap pour annuler.`:`${cells.length} cell(s) previewed. Click “+ Table” to add fields, or Escape to cancel.`);
 }
 function detectPageUnderlineBoxGroups(ctx,W,H,q,textBoxes=[]){
   // Certains CERFA dessinent chaque caractère avec un court souligné coloré,
@@ -3373,22 +3625,23 @@ function setTextAlignment(mode){
   setStatus(`Text ${align==='left'?'aligned left':align==='center'?'centered':'aligned right'} in the active area`);
 }
 function alignSelected(mode){
+  if(!['left','right','bottom'].includes(mode))return;
   const items=selectedAreas();if(items.length<2){setStatus('Select at least 2 fields with Ctrl+click');return;}
   const rects=items.map(el=>({el,x:parseFloat(el.style.left)||0,y:parseFloat(el.style.top)||0,w:parseFloat(el.style.width)||0,h:parseFloat(el.style.height)||0}));
-  const horizontal=mode==='horizontal';
-  const target=horizontal?rects.reduce((sum,r)=>sum+r.y+r.h/2,0)/rects.length:mode==='left'?Math.min(...rects.map(r=>r.x)):mode==='right'?Math.max(...rects.map(r=>r.x+r.w)):rects.reduce((sum,r)=>sum+r.x+r.w/2,0)/rects.length;
+  const bottom=mode==='bottom';
+  const target=bottom?Math.max(...rects.map(r=>r.y+r.h)):mode==='left'?Math.min(...rects.map(r=>r.x)):Math.max(...rects.map(r=>r.x+r.w));
   for(const {el,x,y,w,h} of rects){
-    const nextX=mode==='left'?target:mode==='right'?target-w:target-w/2;
-    const boundedX=horizontal?x:Math.max(0,Math.min(pageW-w,nextX)),dx=boundedX-x,boxes=fieldBoxData(el);
-    const boundedY=horizontal?Math.max(0,Math.min(pageH-h,target-h/2)):y,dy=boundedY-y;
+    const nextX=mode==='left'?target:target-w;
+    const boundedX=bottom?x:Math.max(0,Math.min(pageW-w,nextX)),dx=boundedX-x,boxes=fieldBoxData(el);
+    const boundedY=bottom?Math.max(0,Math.min(pageH-h,target-h)):y,dy=boundedY-y;
     el.style.left=boundedX+'px';el.style.top=boundedY+'px';
     // Les cases détectées font partie du champ : elles suivent son déplacement,
     // sans toucher à l'alignement du texte contenu dans le champ.
     if(boxes.length)el.dataset.boxes=JSON.stringify(boxes.map(b=>({...b,x:+(b.x+dx).toFixed(2),lineY:Number.isFinite(+b.lineY)?+(+b.lineY+dy).toFixed(2):b.lineY})));
-    const lineY=fieldLineData(el);if(horizontal&&lineY!=null)el.dataset.lineY=(lineY+dy).toFixed(2);
+    const lineY=fieldLineData(el);if(bottom&&lineY!=null)el.dataset.lineY=(lineY+dy).toFixed(2);
     const handle=document.querySelector(`.text-resize[data-for-id="${el.dataset.id}"]`);if(handle)updateTextHandle(el,handle);if(el.classList.contains('field'))syncBoxLayerGeometry(el);
   }
-  collectCurrentPage();historyCheckpoint('Align fields');setStatus(horizontal?'Items aligned on the same horizontal axis':mode==='left'?'Items aligned to their left edges':mode==='right'?'Items aligned to their right edges':'Items aligned on the same vertical axis');
+  collectCurrentPage();historyCheckpoint('Align fields');setStatus(bottom?'Items aligned to their bottom edges':mode==='left'?'Items aligned to their left edges':'Items aligned to their right edges');
 }
 function applyMenuScale(){menuScale=Math.max(.65,Math.min(1.5,menuScale||1));document.documentElement.style.setProperty('--menu-scale',menuScale);const e=document.getElementById('menuPercent');if(e)e.textContent=Math.round(menuScale*100)+'%';}
 function setMenuScale(v){menuScale=v;applyMenuScale();}
@@ -3407,7 +3660,19 @@ function importLayoutFile(file){if(!file)return;const r=new FileReader();r.onloa
 
 async function saveProject(){if(!pdfProxy)return;collectCurrentPage();try{const state=projectSnapshot();await dbPut({key:docKey,name:docName,pdfData:new Uint8Array(pdfBytes),state,updated:Date.now()});localStorage.setItem(LAST_KEY,docKey);setStatus(uiLanguage==='fr'?'Document et saisie enregistrés dans ce navigateur':'Document and entries saved in this browser');flashSaveSuccess('save',uiLanguage==='fr'?'Enregistré dans le navigateur':'Saved in browser');}catch(err){console.error(err);setStatus('Unable to save');}}
 async function restoreLast(){const key=localStorage.getItem(LAST_KEY);if(!key)return;try{const rec=await dbGet(key);if(rec)await loadPdf(rec.pdfData,rec.name,rec.state);}catch(err){console.warn(err);}}
-function clearValues(){collectCurrentPage();Object.values(pageStates).forEach(st=>{st.fields.forEach(f=>f.value='');(st.checks||[]).forEach(c=>c.checked=false);for(const im of st.images||[])if(im.drawing){im.drawing.strokes=[];delete im.drawing.image;im.drawing.mode='choose';im.src='';}});document.querySelectorAll('.field').forEach(e=>{e.value='';updateBoxCharLayer(e);updateFieldTextLayer(e);});document.querySelectorAll('.drawing-zone').forEach(e=>{e._drawing.strokes=[];delete e._drawing.image;e._drawing.mode='choose';renderDrawing(e,true);});for(const st of Object.values(pageStates))for(const m of st.masks||[])if(['strike','ellipse'].includes(m.maskStyle))m.maskStyle='mark';document.querySelectorAll('.mask-zone.mark-mask').forEach(e=>{e.dataset.maskStyle='mark';renderMaskMark(e,'mark',e.dataset.textColor);});document.querySelectorAll('.check-zone input').forEach(e=>{e.checked=false;e.closest('.check-zone')?.classList.remove('checked');});syncDrawingTools();collectCurrentPage();historyCheckpoint('Clear values');setStatus('Values cleared (not saved)');}
+function clearValues(){
+  const items=selectedAreas();
+  if(!items.length){setStatus(uiLanguage==='fr'?'Sélectionnez les champs à réinitialiser.':'Select the fields to reset.');return;}
+  for(const e of items){
+    if(e.classList.contains('field')){e.value='';updateBoxCharLayer(e);updateFieldTextLayer(e);}
+    else if(e.classList.contains('check-zone')){e.querySelector('input').checked=false;e.classList.remove('checked');}
+    else if(e.classList.contains('drawing-zone')){e._drawing.strokes=[];delete e._drawing.image;e._drawing.mode='choose';renderDrawing(e,true);}
+    else if(e.classList.contains('image-zone')){e.querySelector('img')?.removeAttribute('src');}
+    else if(e.classList.contains('mark-mask')){e.dataset.maskStyle='mark';renderMaskMark(e,'mark',e.dataset.textColor);}
+  }
+  syncDrawingTools();collectCurrentPage();historyCheckpoint('Reset selected fields');
+  setStatus(uiLanguage==='fr'?'Contenu des champs sélectionnés réinitialisé.':'Selected fields reset.');
+}
 
 function browserBoxTextMetrics(fontFamilyName,size,fontWeight='normal'){
   // Mesure la baseline CSS réelle du navigateur pour cette police/taille. Cela reste
@@ -3698,7 +3963,7 @@ window.addEventListener('pageshow',()=>{document.querySelectorAll('.messages-pan
 
 // Ancien bouton de détection globale conservé pour réactivation :
 // document.getElementById('detectPageFields').addEventListener('click',detectEditableFieldsOnPage);
-document.getElementById('detectTables').addEventListener('click',previewOrFixTableFields);
+document.getElementById('detectTables').addEventListener('click',addTableFields);
 document.getElementById('alignTableCells').addEventListener('click',alignFieldsToTableCells);
 document.getElementById('alignVertical').addEventListener('click',()=>alignSelected('vertical'));document.getElementById('alignHorizontal').addEventListener('click',()=>alignSelected('horizontal'));document.getElementById('alignLeft').addEventListener('click',()=>alignSelected('left'));document.getElementById('alignRight').addEventListener('click',()=>alignSelected('right'));document.getElementById('autoYUp').addEventListener('click',()=>adjustTextYOffset(-1));document.getElementById('autoYDown').addEventListener('click',()=>adjustTextYOffset(+1));document.getElementById('autoYReset').addEventListener('click',resetAllTextYOffsets);autoYAllDocument?.addEventListener('change',updateAutoYValue);autoLineEnabled.addEventListener('change',()=>setAutoLineEnabled(autoLineEnabled.checked));autoCheckDetect.addEventListener('change',()=>setAutoCheckDetect(autoCheckDetect.checked));autoBoxDetect.addEventListener('change',()=>setAutoBoxDetect(autoBoxDetect.checked));autoTextSize.addEventListener('change',()=>setAutoTextSize(autoTextSize.checked));document.getElementById('menuSmaller').addEventListener('click',()=>setMenuScale(menuScale/1.1));document.getElementById('menuLarger').addEventListener('click',()=>setMenuScale(menuScale*1.1));document.getElementById('addField').addEventListener('click',addText);document.getElementById('addCheck').addEventListener('click',addCheck);document.getElementById('addImage').addEventListener('click',()=>document.getElementById('imagePicker').click());document.getElementById('imagePicker').addEventListener('change',e=>{addImageFile(e.target.files[0]);e.target.value='';});document.getElementById('addMask').addEventListener('click',addMask);document.getElementById('addMark').addEventListener('click',addMark);document.getElementById('addDrawing').addEventListener('click',()=>beginPlacement('drawing'));
 document.getElementById('textAlignLeft').addEventListener('click',()=>setTextAlignment('left'));document.getElementById('textAlignCenter').addEventListener('click',()=>setTextAlignment('center'));document.getElementById('textAlignRight').addEventListener('click',()=>setTextAlignment('right'));fontFamily.addEventListener('change',applyFontFamily);fontBold.addEventListener('click',toggleFontWeight);fontAllDocument.addEventListener('change',syncFontWeightControl);fontSize.addEventListener('change',applyFontSize);document.getElementById('fontSizeSmaller').addEventListener('click',()=>stepFontSize(-0.5));document.getElementById('fontSizeLarger').addEventListener('click',()=>stepFontSize(0.5));textColor.addEventListener('input',applyTextColor);document.getElementById('save').addEventListener('click',()=>requestPdfSave(false));
@@ -3781,6 +4046,105 @@ if (!FILL_MODE && 'launchQueue' in window && 'files' in LaunchParams.prototype) 
     }
   });
 }
+</script>
+<script>
+(()=>{
+ if(FILL_MODE)return;
+ const q=id=>document.getElementById(id), toolbar=document.querySelector('.toolbar');
+ const main=document.createElement('div');main.className='compact-main';
+ const nav=document.createElement('div');nav.className='compact-navigation';
+
+ function menu(parent,label,items,cls=''){
+  const d=document.createElement('details');d.className='compact-menu '+cls;
+  const s=document.createElement('summary');s.textContent=label;d.append(s);
+  const p=document.createElement('div');p.className='compact-popover';d.append(p);
+  items.forEach(el=>{if(el)p.append(el)});parent.append(d);
+  p.addEventListener('click',e=>{if(e.target.closest('button')&&!d.classList.contains('settings')&&!d.classList.contains('view-menu'))d.open=false});
+  d.addEventListener('toggle',()=>{if(d.open){
+   document.querySelectorAll('.compact-menu').forEach(other=>{if(other!==d)other.open=false});
+   if(d.closest('#tabLayer')){const rect=s.getBoundingClientRect();p.style.left=Math.max(8,Math.min(rect.left,innerWidth-p.offsetWidth-8))+'px';p.style.top=(rect.bottom+6)+'px';p.style.maxHeight=Math.max(80,innerHeight-rect.bottom-80)+'px';}
+  }});
+  return s;
+ }
+ const heading=document.querySelector('.app-heading');heading.querySelector('.app-version').textContent='v'+APP_VERSION;
+ nav.append(document.querySelector('.edit-tabs'));
+ nav.addEventListener('keydown',event=>{
+  if(!event.target.matches('[role="tab"]')||!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+  event.preventDefault();const create=event.key==='Home'||(event.key!=='End'&&event.target.id==='tabEditButton');
+  setEditTab(create?'layer':'edit');q(create?'tabLayerButton':'tabEditButton').focus();
+ });
+ q('viewControls').prepend(q('toggleClean'));
+ const docMenu=menu(main,'Documents',[q('closePdf'),q('openPdf'),q('save'),q('saveAs'),q('exportForm')]);
+ docMenu.id='compactDocumentMenu';
+ const selectAll=document.createElement('button');selectAll.type='button';selectAll.textContent='Tout sélectionner';selectAll.title='Sélectionner tous les champs de la page active';selectAll.addEventListener('click',selectAllPageFields);
+
+ const remove=document.createElement('button');remove.type='button';remove.textContent='Supprimer les champs';remove.addEventListener('click',deleteSelected);
+ const editMenu=menu(main,'Edition',[selectAll,remove,q('clear'),q('undoAction'),q('redoAction')]);
+ const settings=document.querySelector('.toolbar-top-actions');
+ const exportButton=q('exportPdf');exportButton.classList.add('compact-export');main.append(exportButton,settings);
+ const footer=document.createElement('footer');footer.className='compact-footer';footer.append(q('viewControls'),heading);document.body.append(footer);
+ toolbar.prepend(main,nav);document.querySelector('.toolbar-top').hidden=true;q('documentActions').hidden=true;q('documentActions').style.display='none';
+ document.querySelector('.debug-footer').hidden=true;
+ const layer=q('tabLayer');
+ layer.addEventListener('scroll',()=>layer.querySelectorAll('details[open]').forEach(d=>d.open=false),{passive:true});
+ const alignRow=document.createElement('div');alignRow.className='compact-align-row';alignRow.setAttribute('role','group');
+ const alignLabel=document.createElement('span');alignLabel.className='compact-align-label';alignLabel.textContent='Aligner';
+ const alignBottom=document.createElement('button');alignBottom.type='button';alignBottom.id='alignBottom';alignBottom.addEventListener('click',()=>alignSelected('bottom'));
+ for(const id of ['alignVertical','alignHorizontal']){q(id).hidden=true;q(id).disabled=true;q('documentActions').append(q(id));}
+ alignRow.append(alignLabel,q('alignTableCells'),q('alignLeft'),q('alignRight'),alignBottom);layer.append(alignRow);
+ const autoTablesLabel=document.createElement('label');autoTablesLabel.className='inline';
+ const autoTables=document.createElement('input');autoTables.type='checkbox';autoTables.checked=autoTableDetectionOn;autoTables.id='autoTables';
+ const autoTablesText=document.createElement('span');autoTablesText.textContent='Tableaux';autoTablesLabel.append(autoTables,autoTablesText);
+ autoTables.addEventListener('change',()=>{autoTableDetectionOn=autoTables.checked;if(autoTableDetectionOn)void scanTablesAutomatically();else if(tablePreview)cancelPlacement(false);});
+ const detectionMenu=menu(layer,'Détection',[autoTablesLabel,q('autoTextSize').closest('label'),q('autoCheckDetect').closest('label'),q('autoBoxDetect').closest('label'),q('autoLineEnabled').closest('label')]);
+ const advanced=document.createElement('div');advanced.className='compact-field-utilities';const divider=document.createElement('span');divider.className='compact-tools-divider';divider.setAttribute('aria-hidden','true');layer.insertBefore(q('detectTables'),q('addMask'));advanced.append(divider,detectionMenu.parentElement,alignRow);layer.append(advanced);
+ layer.querySelectorAll(':scope > .subsection-label,:scope > .sep').forEach(el=>el.hidden=true);
+ function alignmentIcons(){
+  const fr=uiLanguage==='fr';alignLabel.textContent=fr?'Aligner':'Align';alignRow.setAttribute('aria-label',fr?'Alignement des champs':'Field alignment');
+  const icons=[
+   ['alignBottom','Aligner les bords inférieurs (bas)','Align bottom edges','<path d="M2 21h20"/><rect x="5" y="3" width="5" height="15" rx="1"/><rect x="14" y="9" width="5" height="9" rx="1"/>'],
+   ['alignLeft','Aligner les bords gauches','Align left edges','<path d="M3 2v20"/><rect x="6" y="5" width="15" height="5" rx="1"/><rect x="6" y="14" width="9" height="5" rx="1"/>'],
+   ['alignRight','Aligner les bords droits','Align right edges','<path d="M21 2v20"/><rect x="3" y="5" width="15" height="5" rx="1"/><rect x="9" y="14" width="9" height="5" rx="1"/>'],
+   ['alignTableCells','Ajuster aux cellules du tableau','Fit fields to table cells','<rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M3 15h18M12 3v18"/><rect x="5" y="11" width="5" height="2" fill="currentColor" stroke="none"/>']
+  ];
+  for(const [id,french,english,shapes] of icons){const button=q(id);button.title=fr?french:english;button.setAttribute('aria-label',button.title);button.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'+shapes+'</svg>';}
+ }
+ function menuShortcuts(){
+  const fr=uiLanguage==='fr';
+  for(const [button,label,shortcut,keys] of [[selectAll,fr?'Tout sélectionner':'Select all','Ctrl+A','Control+A Meta+A'],[q('undoAction'),fr?'Annuler':'Undo','Ctrl+Z','Control+Z Meta+Z'],[q('redoAction'),fr?'Rétablir':'Redo',fr?'Ctrl+Y / Ctrl+Maj+Z':'Ctrl+Y / Ctrl+Shift+Z','Control+Y Control+Shift+Z Meta+Y Meta+Shift+Z'],[remove,fr?'Supprimer les champs':'Delete fields',fr?'Suppr':'Del','Delete Backspace']]){
+   const text=document.createElement('span');text.textContent=label;const key=document.createElement('kbd');key.textContent=shortcut;button.replaceChildren(text,key);button.classList.add('compact-menu-shortcut');button.setAttribute('aria-keyshortcuts',keys);
+  }
+  q('clear').textContent=fr?'Réinitialiser les champs':'Reset fields';q('clear').title=fr?'Vider uniquement les champs sélectionnés en conservant leur position et leurs réglages.':'Clear only selected fields while keeping their positions and settings.';
+  remove.title=fr?'Supprimer les champs sélectionnés et leur contenu.':'Delete the selected fields and their contents.';
+  autoTablesText.textContent=fr?'Tableaux':'Tables';autoTablesLabel.title=fr?'Reconnaître automatiquement les tableaux de la page active. + Tableau ajoute des champs dans les cellules vides.':'Automatically recognize tables on the active page. + Table adds fields in empty cells.';
+  q('detectTables').textContent=fr?'+ Tableau':'+ Table';q('detectTables').title=fr?'Pointez le début du tableau : aperçu vert, puis cliquez pour ajouter ses champs. Échap pour annuler.':'Point at the start of a table for a green preview, then click to add its fields. Escape cancels.';
+ }
+ function modeLabels(){
+  const fr=uiLanguage==='fr';
+  const modes=[
+   ['tabLayerButton',fr?'Créer et modifier les champs':'Create and edit fields',fr?'Ajouter, déplacer, redimensionner et aligner les champs du formulaire.':'Add, move, resize and align form fields.'],
+   ['tabEditButton',fr?'Remplir le document':'Fill in the document',fr?'Saisir les réponses, cocher les cases et compléter le document.':'Enter answers, tick boxes and complete the document.']
+  ];
+  document.querySelector('.edit-tabs').setAttribute('aria-label',fr?'Mode de travail':'Work mode');
+  for(const [id,label,hint] of modes){const button=q(id);button.title=hint;button.textContent=label;button.tabIndex=button.classList.contains('active')?0:-1;}
+ }
+ function magnifiers(){
+  const fr=uiLanguage==='fr';
+  for(const [id,plus,label] of [
+   ['menuSmaller',false,fr?'Réduire la taille du menu':'Reduce menu size'],
+   ['menuLarger',true,fr?'Agrandir le menu':'Increase menu size'],
+   ['zoomOut',false,fr?'Réduire le PDF':'Zoom out of PDF'],
+   ['zoomIn',true,fr?'Agrandir le PDF':'Zoom into PDF']]){
+   const button=q(id);button.classList.add('magnifier-control');button.title=label;button.setAttribute('aria-label',label);
+   button.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="6.8"/><path d="M15 15l6 6M7 10h6"/>'+(plus?'<path d="M10 7v6"/>':'')+'</svg>';
+  }
+ }
+ function labels(){magnifiers();const fr=uiLanguage==='fr';modeLabels();updateOpenPdfButton();q('exportPdf').textContent=fr?'Générer un PDF':'Generate PDF';q('undoAction').textContent=fr?'Annuler':'Undo';q('redoAction').textContent=fr?'Rétablir':'Redo';selectAll.textContent=fr?'Tout sélectionner':'Select all';remove.textContent=fr?'Supprimer les champs':'Delete fields';editMenu.textContent=fr?'Edition':'Edit';q('undoAction').title=fr?'Annuler (Ctrl+Z)':'Undo (Ctrl+Z)';q('redoAction').title=fr?'Rétablir (Ctrl+Y / Ctrl+Maj+Z)':'Redo (Ctrl+Y / Ctrl+Shift+Z)';q('undoAction').setAttribute('aria-label',fr?'Annuler':'Undo');q('redoAction').setAttribute('aria-label',fr?'Rétablir':'Redo');alignmentIcons();detectionMenu.textContent=fr?'Détection automatique':'Automatic detection';menuShortcuts();}
+ window.refreshCompactLabels=labels;applyLanguage(uiLanguage);
+
+ document.addEventListener('click',e=>{document.querySelectorAll('.compact-menu[open]').forEach(d=>{if(!d.contains(e.target))d.open=false})});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.compact-menu[open]').forEach(d=>{d.open=false;d.querySelector('summary').focus()})});
+})();
 </script>
 </body>
 </html>

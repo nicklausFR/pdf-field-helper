@@ -6,7 +6,7 @@ const path=require('node:path');
 const http=require('node:http');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const root=path.resolve(__dirname,'..');
-const standalone=fs.readFileSync(path.join(root,'PDF-Field-Helper-v1.4.1.html'),'utf8');
+const standalone=fs.readFileSync(path.join(root,'PDF-Field-Helper-v2.0.0.html'),'utf8');
 const scripts=[...standalone.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
 const worker=Buffer.from(standalone.match(/const _pdfWorkerBinary=atob\('([^']+)'/)[1],'base64');
 const server=http.createServer((req,res)=>{
@@ -176,26 +176,21 @@ const server=http.createServer((req,res)=>{
     assert.equal(await page.evaluate(()=>getPageState(4).fields.find(f=>f.id==='table-a').w),211);
     await page.evaluate(()=>redoAction());
     assert.equal(await page.evaluate(()=>getPageState(4).fields.find(f=>f.id==='table-a').w),aligned[0].w);
-    // Focus selects a single field; the table action uses that table as its scope.
-    await page.evaluate(()=>select(document.querySelector('[data-id="table-a"]')));
+    // + Table targets only the printed table beneath the pointer.
+    const tablePoint=async()=>page.evaluate(()=>{const slot=continuousSlots.get(currentPage);window.scrollTo(0,slot.offsetTop-document.querySelector('.toolbar').offsetHeight-12);const r=document.getElementById('pageSurface').getBoundingClientRect();return {x:r.left+55*scaleNow,y:r.top+150*scaleNow};});
     await page.locator('#detectTables').click();
+    let point=await tablePoint();await page.mouse.move(point.x,point.y);
     await page.waitForSelector('#tablePlacementPreview');
     assert.equal(await page.locator('#tablePlacementPreview .placement-ghost').count(),45);
     assert.equal(await page.locator('.field').count(),3,'preview creates no fields');
-    if(process.env.QA_DIR){
-      const crop=await page.evaluate(()=>{window.scrollTo(0,0);const r=document.getElementById('pageSurface').getBoundingClientRect();return {x:r.x+48*scaleNow,y:r.y+120*scaleNow,width:522*scaleNow,height:189*scaleNow};});
-      await page.screenshot({path:path.join(process.env.QA_DIR,'table-preview.png'),clip:crop,fullPage:true});
-    }
-    await page.keyboard.press('Escape');
-    assert.equal(await page.locator('#tablePlacementPreview').count(),0);
-    assert.equal(await page.locator('.field').count(),3);
-    await page.locator('#detectTables').click();await page.waitForSelector('#tablePlacementPreview');await page.locator('#detectTables').click();
+    await page.keyboard.press('Escape');assert.equal(await page.locator('#tablePlacementPreview').count(),0);
+    await page.locator('#detectTables').click();point=await tablePoint();await page.mouse.move(point.x,point.y);await page.waitForSelector('#tablePlacementPreview');await page.mouse.click(point.x,point.y);
     assert.equal(await page.locator('.field').count(),48);
     assert.equal(await page.locator('#tablePlacementPreview').count(),0);
     assert.equal(await page.locator('.box-frame,.placement-box-separator').count(),0);
-    await page.locator('#detectTables').click();
-    assert.equal(await page.locator('.field').count(),48,'global recognition does not duplicate existing fields');
-    assert.equal(await page.locator('#tablePlacementPreview').count(),0);
+    await page.locator('#detectTables').click();point=await tablePoint();await page.mouse.move(point.x,point.y);await page.mouse.click(point.x,point.y);
+    assert.equal(await page.locator('.field').count(),48,'recognition does not duplicate existing fields');
+    await page.keyboard.press('Escape');
     const tableValues=await page.evaluate(()=>getPageState(4).fields.filter(f=>f.value).map(f=>f.value));
     assert.deepEqual(tableValues,['Dupont','Camille','Martin']);
     if(process.env.QA_DIR){
@@ -452,7 +447,7 @@ const server=http.createServer((req,res)=>{
       return {group,boxes,w};
     });
     const resizeTo=async width=>{
-      const handle=page.locator('.text-resize[data-for-id="resize-date"]');await handle.scrollIntoViewIfNeeded();
+      const handle=page.locator('.text-resize[data-for-id="resize-date"]');await handle.evaluate(e=>e.scrollIntoView({block:'center'}));
       const b=await handle.boundingBox(),delta=await page.evaluate(width=>(width-parseFloat(document.querySelector('[data-id="resize-date"]').style.width))*scaleNow,width);
       await page.mouse.move(b.x+b.width/2,b.y+b.height/2);await page.mouse.down();await page.mouse.move(b.x+b.width/2+delta,b.y+b.height/2,{steps:8});await page.mouse.up();
       return page.evaluate(()=>selectedData(document.querySelector('[data-id="resize-date"]')));
